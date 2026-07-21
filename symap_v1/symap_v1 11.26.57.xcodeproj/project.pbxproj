@@ -56,8 +56,8 @@
 		39BF68172FA2700800CA0EFC = {
 			isa = PBXGroup;
 			children = (
-				39BF68222FA2700800CA0EFC /* symap_v1 */,
 				39BF68212FA2700800CA0EFC /* Products */,
+				39BF68222FA2700800CA0EFC /* symap_v1 */,
 			);
 			sourceTree = "<group>";
 		};
@@ -113,7 +113,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 39BF681B2FA2700800CA0EFC /* Build configuration list for PBXProject "symap_v1" */;
+			buildConfigurationList = 39BF681B2FA2700800CA0EFC /* Build configuration list for PBXProject "symap_v1 11.26.57" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -352,7 +352,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		39BF681B2FA2700800CA0EFC /* Build configuration list for PBXProject "symap_v1" */ = {
+		39BF681B2FA2700800CA0EFC /* Build configuration list for PBXProject "symap_v1 11.26.57" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				39BF68362FA2700A00CA0EFC /* Debug */,
