@@ -76,7 +76,6 @@ extension MeasurementViewController {
                 bottomStack.isHidden = false
             }
             
-            // 🔴 ERRO 1.1 CORRIGIDO: Esconde Tripé, Provador Virtual e Tutorial durante as medidas!
             self.view.viewWithTag(880)?.isHidden = true
             self.view.viewWithTag(882)?.isHidden = true
             self.tutorialButton?.isHidden = true
@@ -96,14 +95,10 @@ extension MeasurementViewController {
             
             savedFrontalSnapshot = nil
             freezeOverlayImageView?.isHidden = true
-            if let origBg = self.originalBackgroundCache as? Any {
-                self.sceneView.scene.background.contents = origBg
-            }
-            if let origCam = self.originalCameraNodeCache {
-                self.sceneView.pointOfView = origCam
-            }
             
-            // 🔴 ERRO 3 CORRIGIDO: Reativa a renderização (Evita a Tela Preta no iOS!)
+            // 🔴 CORREÇÃO DA TELA PRETA: NÃO sobrescrevemos o background! O ARKit gerencia a opacidade dele mesmo.
+            self.sceneView.isHidden = false
+            self.sceneView.alpha = 1.0
             self.sceneView.isPlaying = true
             
             self.safeFaceCache?.removeFromParentNode()
@@ -118,11 +113,10 @@ extension MeasurementViewController {
             self.faceNode = nil
             self.techMaskNode = nil
             
-            let config = ARFaceTrackingConfiguration()
-            config.isLightEstimationEnabled = true
-            sceneView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
+            // 🔴 Inicia a câmera e o motor UMA ÚNICA VEZ!
+            self.startARSession()
+            self.startLevelMonitoring()
             
-            startLevelMonitoring()
             levelContainerView.isHidden = false
             levelLabel.isHidden = false
             headLevelContainerView.isHidden = false
@@ -152,10 +146,11 @@ extension MeasurementViewController {
             techMaskNode?.isHidden = false
             btnToggleGuides.backgroundColor = UIColor.systemBlue
             
-            // 🔴 Restaura os botões essenciais da tela viva
             self.view.viewWithTag(880)?.isHidden = false
             self.view.viewWithTag(882)?.isHidden = false
             self.tutorialButton?.isHidden = false
+            
+            self.stabilityStartTime = nil
         }
     }
     

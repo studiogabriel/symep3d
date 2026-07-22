@@ -53,18 +53,16 @@ extension MeasurementViewController {
         let holoScene = SCNScene()
         holoView.scene = holoScene
         
-        // 🔴 ERRO 2 CORRIGIDO: Fazemos um "clone() profundo" para proteger a matriz original!
-        if let baseFace = self.safeFaceCache {
-            let clonedFace = baseFace.clone()
-            clonedFace.transform = SCNMatrix4Identity
-            clonedFace.position = SCNVector3(0, 0, 0)
-            
-            if clonedFace.childNodes.count > 0 {
-                // Nossa blindagem estrutural matriz
-                let maskNode = clonedFace.childNodes[ 0 ]
-                maskNode.isHidden = false
+        let presentationNode = SCNNode()
+        
+        if let originalFace = self.safeFaceCache {
+            if originalFace.childNodes.count > 0 {
+                // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL (Índice Seguro)
+                let maskClone = originalFace.childNodes[ 0 ].clone()
+                maskClone.transform = SCNMatrix4Identity
+                maskClone.position = SCNVector3(0, 0, 0)
                 
-                if let oldGeo = maskNode.geometry {
+                if let oldGeo = maskClone.geometry {
                     let newGeo = oldGeo.copy() as! SCNGeometry
                     let holoMaterial = SCNMaterial()
                     holoMaterial.diffuse.contents = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 0.8)
@@ -74,16 +72,20 @@ extension MeasurementViewController {
                     holoMaterial.colorBufferWriteMask = .all
                     
                     newGeo.materials = [holoMaterial]
-                    maskNode.geometry = newGeo
+                    maskClone.geometry = newGeo
                 }
-                
-                // Oculta linhas indesejadas (sensores), deixa só o óculos customizado
-                for (index, child) in clonedFace.childNodes.enumerated() {
-                    if index != 0 && child.name != "customGlasses" { child.isHidden = true }
-                }
+                maskClone.isHidden = false
+                presentationNode.addChildNode(maskClone)
             }
-            holoScene.rootNode.addChildNode(clonedFace)
+            
+            if let customGlasses = originalFace.childNodes.first(where: { $0.name == "customGlasses" })?.clone() {
+                customGlasses.isHidden = false
+                presentationNode.addChildNode(customGlasses)
+            }
         }
+        
+        presentationNode.position = SCNVector3(0, 0, 0)
+        holoScene.rootNode.addChildNode(presentationNode)
         
         let cameraNode = SCNNode()
         let camera = SCNCamera()
@@ -216,8 +218,10 @@ extension MeasurementViewController {
         configVC.onApplyCustomization = { [weak self] (edits, newColor, customNode) in
             guard let self = self, let newNode = customNode?.clone() else { return }
             
+            // 🔴 CORREÇÃO DO ÓCULOS SUMINDO: Etiquetando o nó para o Resumo encontrar!
+            newNode.name = "customGlasses"
+            
             let tFace = self.safeFaceCache ?? self.faceNode
-            // 🔴 ERRO 2 CORRIGIDO: Limpa todos os óculos anteriores antes de colocar o novo parametrizado
             tFace?.childNodes.filter({ $0.name == "customGlasses" }).forEach({ $0.removeFromParentNode() })
             
             if let oldGlasses = self.glassesNode {
@@ -275,14 +279,12 @@ extension MeasurementViewController {
                         self.summaryContainer?.isHidden = true
                         self.measurementsContainer.isHidden = false
                         self.measurementTypeSegment.isHidden = false
-                        
-                        // 🔴 ERRO 1 CORRIGIDO: Exibe apenas o botão AZUL (Avançar). Esconde os demais!
                         self.captureButton.isHidden = false
-                        self.startCaptureButton.isHidden = true // Este é o vermelho (Refazer)!
+                        self.startCaptureButton.isHidden = true
                         
-                        self.view.viewWithTag(880)?.isHidden = true // Esconde botão Tripé
-                        self.view.viewWithTag(882)?.isHidden = true // Esconde botão Provador Virtual
-                        self.tutorialButton?.isHidden = true      // Esconde Tutorial
+                        self.view.viewWithTag(880)?.isHidden = true
+                        self.view.viewWithTag(882)?.isHidden = true
+                        self.tutorialButton?.isHidden = true
                         
                         if let bottomStack = self.view.subviews.first(where: { $0 is UIStackView }) {
                             bottomStack.isHidden = false
@@ -318,12 +320,8 @@ extension MeasurementViewController {
         performExitAction {
             let blackCurtain = UIView(frame: self.view.bounds)
             blackCurtain.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
-            if let window = UIApplication.shared.windows.first(where: { $0 is UIWindow }) {
-                window.addSubview(blackCurtain)
-            } else {
-                self.view.addSubview(blackCurtain)
-                self.view.bringSubviewToFront(blackCurtain)
-            }
+            self.view.addSubview(blackCurtain)
+            self.view.bringSubviewToFront(blackCurtain)
             
             self.summaryContainer?.isHidden = true
             self.summaryContainer?.alpha = 0
@@ -337,10 +335,14 @@ extension MeasurementViewController {
             self.pupillaryHeight = 0.0
             self.updateSegmentTitles()
             
+            self.glassesNode?.removeFromParentNode()
+            self.glassesNode = nil
+            self.currentCloudModel = nil
+            
             self.isFrozen = true
             self.toggleFreeze()
             
-            UIView.animate(withDuration: 0.5, delay: 0.8, animations: {
+            UIView.animate(withDuration: 0.5, delay: 0.6, animations: {
                 blackCurtain.alpha = 0
             }) { _ in
                 blackCurtain.removeFromSuperview()
