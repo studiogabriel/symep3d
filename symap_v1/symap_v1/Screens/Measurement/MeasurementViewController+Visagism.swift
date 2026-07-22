@@ -184,46 +184,108 @@ extension MeasurementViewController {
     }
     
     @objc func finishVisagismAndStartMeasurement() {
-        guard let visagismView = self.view.viewWithTag(8888) else { return }
-        
-        self.isVisagismCompleted = true
-        
-        UIView.animate(withDuration: 0.3, animations: { visagismView.alpha = 0.0 }) { _ in
-            visagismView.removeFromSuperview()
+            guard let visagismView = self.view.viewWithTag(8888) else { return }
+            self.isVisagismCompleted = true
             
-            // 🔴 3. CORREÇÃO DA CÂMERA E DO ÓCULOS SUMINDO
-            // Limpamos o holograma falso
-            self.safeFaceCache?.removeFromParentNode()
-            self.safeFaceCache = nil
-            
-            // Religa o ARKit SEM RESETAR AS ÂNCORAS (A mágica que mantém o rosto colado!)
-            let config = ARFaceTrackingConfiguration()
-            config.isLightEstimationEnabled = true
-            self.sceneView.session.run(config) // <-- Sem removeExistingAnchors!
-            
-            self.startLevelMonitoring()
-            self.topFeedbackLabel?.isHidden = false
-            self.faceGuideLayer?.isHidden = false
-            self.levelContainerView.isHidden = false
-            self.phonePitchContainerView.isHidden = false
-            
-            self.startCaptureButton.isHidden = false
-            self.startCaptureButton.setTitle("Iniciar Captura (Medição)", for: .normal)
-            
-            self.view.viewWithTag(882)?.isHidden = false // Habilita Botão Try-On
-            self.view.viewWithTag(880)?.isHidden = false // Habilita Botão Tripé
-            
-            // 🔴 AGORA sim aplica o modelo no rosto vivo!
-            self.applyRecommendedModel(modelIdOrName: self.recommendedAutoModel)
+            UIView.animate(withDuration: 0.3, animations: { visagismView.alpha = 0.0 }) { _ in
+                visagismView.removeFromSuperview()
+                self.safeFaceCache?.removeFromParentNode()
+                self.safeFaceCache = nil
+                
+                // =======================================================
+                // 🔴 3. EXPERIÊNCIA UX: FAKE LOADING DA MODELAGEM 3D
+                // =======================================================
+                let adaptContainer = UIView(frame: self.view.bounds)
+                adaptContainer.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
+                adaptContainer.alpha = 0.0
+                self.view.addSubview(adaptContainer)
+                
+                let title = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 - 60, width: self.view.bounds.width - 40, height: 30))
+                title.text = "PARAMETRIZANDO ARMAÇÃO 3D..."
+                title.textAlignment = .center
+                title.textColor = UIColor.systemPurple
+                title.font = UIFont.systemFont(ofSize: 18, weight: .black)
+                adaptContainer.addSubview(title)
+                
+                let barBg = UIView(frame: CGRect(x: 50, y: self.view.bounds.height / 2, width: self.view.bounds.width - 100, height: 6))
+                barBg.backgroundColor = UIColor.white.withAlphaComponent(0.1)
+                barBg.layer.cornerRadius = 3
+                adaptContainer.addSubview(barBg)
+                
+                let barFill = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 6))
+                barFill.backgroundColor = UIColor.systemPurple
+                barFill.layer.cornerRadius = 3
+                barBg.addSubview(barFill)
+                
+                let stepLabel = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 + 30, width: self.view.bounds.width - 40, height: 20))
+                stepLabel.text = "Ajustando largura temporal com +2.0mm de folga..."
+                stepLabel.textAlignment = .center
+                stepLabel.textColor = .lightGray
+                stepLabel.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
+                adaptContainer.addSubview(stepLabel)
+                
+                UIView.animate(withDuration: 0.3) { adaptContainer.alpha = 1.0 }
+                
+                UIView.animate(withDuration: 1.0, delay: 0, options: .curveEaseInOut, animations: {
+                    barFill.frame.size.width = barBg.bounds.width * 0.5
+                }) { _ in
+                    stepLabel.text = "Ajustando ergonomia da ponte nasal..."
+                    UIView.animate(withDuration: 1.5, delay: 0.2, options: .curveEaseInOut, animations: {
+                        barFill.frame.size.width = barBg.bounds.width
+                    }) { _ in
+                        
+                        UIView.animate(withDuration: 0.3, animations: { adaptContainer.alpha = 0.0 }) { _ in
+                            adaptContainer.removeFromSuperview()
+                            
+                            // Fim do Teatro: Acende a Câmera e Oculta o Loading
+                            let config = ARFaceTrackingConfiguration()
+                            config.isLightEstimationEnabled = true
+                            self.sceneView.session.run(config)
+                            
+                            self.startLevelMonitoring()
+                            self.topFeedbackLabel?.isHidden = false
+                            self.faceGuideLayer?.isHidden = false
+                            self.levelContainerView.isHidden = false
+                            self.phonePitchContainerView.isHidden = false
+                            self.startCaptureButton.isHidden = false
+                            self.startCaptureButton.setTitle("Iniciar Captura (Medição)", for: .normal)
+                            
+                            self.view.viewWithTag(882)?.isHidden = false
+                            self.view.viewWithTag(880)?.isHidden = false
+                            
+                            // 🔴 Aplica o modelo já distorcido pelas regras matemáticas
+                            self.applyRecommendedModel(modelIdOrName: self.recommendedAutoModel)
+                        }
+                    }
+                }
+            }
         }
-    }
-    
-    func applyRecommendedModel(modelIdOrName: String) {
-            // 🔴 INTELIGÊNCIA ESCALÁVEL: Ele varre o banco de dados e encontra o óculos que contém a palavra-chave (ex: "suki" encontra "SL Suki Feminino")
+        
+        func applyRecommendedModel(modelIdOrName: String) {
             if let cloudModel = CloudManager.shared.availableModels.first(where: { $0.name.lowercased().contains(modelIdOrName.lowercased()) }) {
                 self.loadCloudModel(model: cloudModel)
             } else {
                 print("⚠️ AVISO: A IA recomendou a linha '\(modelIdOrName)', mas o catálogo da nuvem não possui este modelo.")
+                
+                // Fallback Nativo com a Mágica 4.0
+                guard let url = Bundle.main.url(forResource: modelIdOrName, withExtension: "usdc"),
+                      let modelScene = try? SCNScene(url: url, options: nil) else { return }
+                
+                self.glassesNode?.removeFromParentNode()
+                let wrapperNode = SCNNode()
+                wrapperNode.name = "customGlasses"
+                for child in modelScene.rootNode.childNodes { wrapperNode.addChildNode(child.clone()) }
+                
+                let (min, max) = wrapperNode.boundingBox
+                wrapperNode.pivot = SCNMatrix4MakeTranslation((min.x + max.x) / 2, (min.y + max.y) / 2, (min.z + max.z) / 2)
+                wrapperNode.position = SCNVector3(0, 0.02, 0)
+                
+                // Torce a malha local nativa também!
+                self.applyAutoMorphs(to: wrapperNode, keyword: modelIdOrName)
+                
+                let targetFace = self.safeFaceCache ?? self.faceNode
+                targetFace?.addChildNode(wrapperNode)
+                self.glassesNode = wrapperNode
             }
         }
 }

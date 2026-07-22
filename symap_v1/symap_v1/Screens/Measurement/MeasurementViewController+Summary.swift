@@ -162,15 +162,16 @@ extension MeasurementViewController {
         bottomStack.spacing = 10
         bottomStack.distribution = .fillEqually
         
-        let btnCustomModel = UIButton()
-        btnCustomModel.backgroundColor = UIColor.systemPurple
-        btnCustomModel.setTitle("⚙️ Personalizar Armação", for: .normal)
-        btnCustomModel.setTitleColor(.white, for: .normal)
-        btnCustomModel.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        btnCustomModel.layer.cornerRadius = 12
-        btnCustomModel.addTarget(self, action: #selector(openConfigurator), for: .touchUpInside)
+        // 🔴 NOVO: BOTÃO DE EXPORTAÇÃO (Substituindo o antigo menu manual)
+        let btnExport3D = UIButton()
+        btnExport3D.backgroundColor = UIColor.systemPurple
+        btnExport3D.setTitle("📥 Exportar Armação Personalizada", for: .normal)
+        btnExport3D.setTitleColor(.white, for: .normal)
+        btnExport3D.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        btnExport3D.layer.cornerRadius = 12
+        btnExport3D.addTarget(self, action: #selector(exportCustomGlasses), for: .touchUpInside)
         
-        let masterStack = UIStackView(arrangedSubviews: [btnCustomModel, btnPDF, bottomStack])
+        let masterStack = UIStackView(arrangedSubviews: [btnExport3D, btnPDF, bottomStack])
         masterStack.axis = .vertical
         masterStack.spacing = 12
         masterStack.distribution = .fillEqually
@@ -180,129 +181,141 @@ extension MeasurementViewController {
         UIView.animate(withDuration: 0.3) { self.summaryContainer.alpha = 1.0 }
     }
     
-    @objc func openConfigurator() {
-        guard let currentModel = self.currentCloudModel else {
-            let alert = UIAlertController(title: "Nenhum Óculos Selecionado", message: "Por favor, retorne, escolha um modelo no menu (👓) e vista no espelho virtual antes de abrir a personalização.", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "Entendi", style: .default))
+    // =========================================================================
+    // 🔴 NOVO FLUXO: EXPORTAÇÃO 3D (STL) VIA NUVEM
+    // =========================================================================
+    @objc func exportCustomGlasses() {
+        guard self.currentCloudModel != nil else {
+            let alert = UIAlertController(title: "Nenhum Óculos Ativo", message: "Nenhum modelo foi detectado no rosto.", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
             self.present(alert, animated: true)
             return
         }
         
-        let configVC = ConfiguratorViewController()
-        let nomePadronizado = currentModel.name.lowercased().replacingOccurrences(of: " ", with: "_")
-        configVC.currentModelName = nomePadronizado
-        configVC.bridgeSize = self.noseBridgeWidth
-        configVC.leftWidth = self.faceWidthLeft
-        configVC.rightWidth = self.faceWidthRight
-        configVC.nasalProfile = self.nasalProfile
+        let alert = UIAlertController(title: "Processando Pedido...", message: "Enviando parâmetros biométricos para a Nuvem. O arquivo 3D STL será gerado automaticamente pelo servidor.", preferredStyle: .alert)
+        present(alert, animated: true)
         
-        let targetFace = self.safeFaceCache ?? self.faceNode
-        if targetFace?.childNodes.count ?? 0 > 0, let faceMeshNode = targetFace?.childNodes[ 0 ].clone() {
-            let holoMaterial = SCNMaterial()
-            holoMaterial.diffuse.contents = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 0.25)
-            holoMaterial.fillMode = .lines
-            holoMaterial.lightingModel = .constant
-            holoMaterial.isDoubleSided = true
-            faceMeshNode.geometry?.firstMaterial = holoMaterial
-            
-            faceMeshNode.scale = SCNVector3(1000, 1000, 1000)
-            let faceY = -(self.glassesYOffset * 1000)
-            let faceZ: Float = -50.0
-            faceMeshNode.position = SCNVector3(0, faceY, faceZ)
-            configVC.patientFaceNode = faceMeshNode
-        }
-        
-        configVC.modalPresentationStyle = .overFullScreen
-        configVC.modalTransitionStyle = .crossDissolve
-        
-        configVC.onApplyCustomization = { [weak self] (edits, newColor, customNode) in
-            guard let self = self, let newNode = customNode?.clone() else { return }
-            
-            // 🔴 CORREÇÃO DO ÓCULOS SUMINDO: Etiquetando o nó para o Resumo encontrar!
-            newNode.name = "customGlasses"
-            
-            let tFace = self.safeFaceCache ?? self.faceNode
-            tFace?.childNodes.filter({ $0.name == "customGlasses" }).forEach({ $0.removeFromParentNode() })
-            
-            if let oldGlasses = self.glassesNode {
-                newNode.position = oldGlasses.position
-                newNode.scale = oldGlasses.scale
-                newNode.eulerAngles = oldGlasses.eulerAngles
-            } else {
-                newNode.scale = SCNVector3(0.001, 0.001, 0.001)
-            }
-            
-            let corFinal = newColor ?? UIColor(white: 0.2, alpha: 1.0)
-            func applyRealisticTexture(to node: SCNNode) {
-                if let geo = node.geometry {
-                    let mat = geo.firstMaterial ?? SCNMaterial()
-                    mat.diffuse.contents = corFinal
-                    mat.lightingModel = .physicallyBased
-                    geo.firstMaterial = mat
-                }
-            }
-            
-            applyRealisticTexture(to: newNode)
-            if let morpher = newNode.morpher {
-                for (key, value) in edits { morpher.setWeight(CGFloat(value), forTargetNamed: key) }
-            }
-            newNode.enumerateChildNodes { (child, _) in
-                applyRealisticTexture(to: child)
-                if let morpher = child.morpher {
-                    for (key, value) in edits { morpher.setWeight(CGFloat(value), forTargetNamed: key) }
-                }
-            }
-            
-            tFace?.addChildNode(newNode)
-            self.glassesNode = newNode
-            
-            self.pupillaryHeight = 0.0
-            self.manualFrameHeight = 0.0
-            self.manualFrameWidth = 0.0
-            self.manualFrameDiagonal = 0.0
-            self.updateSegmentTitles()
-            self.updateLabels()
-            
-            if let corFinal = newColor {
-                var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
-                corFinal.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-                let corHex = String(format: "#%02lX%02lX%02lX", lroundf(Float(red * 255)), lroundf(Float(green * 255)), lroundf(Float(blue * 255)))
-                UserDefaults.standard.set(corHex, forKey: "lastColor")
-            }
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                let alert = UIAlertController(title: "Armação Atualizada", message: "O design personalizado foi sincronizado com o rosto do cliente.\n\nComo a armação mudou de tamanho, por favor tire as medidas manuais (Altura de Montagem, Altura do Aro, Largura e Diagonal) novamente no novo formato para garantir a precisão do PDF.", preferredStyle: .alert)
-                alert.addAction(UIAlertAction(title: "OK, Vou medir", style: .default, handler: { _ in
-                    UIView.animate(withDuration: 0.3, animations: {
-                        self.summaryContainer?.alpha = 0
-                    }) { _ in
-                        self.summaryContainer?.isHidden = true
-                        self.measurementsContainer.isHidden = false
-                        self.measurementTypeSegment.isHidden = false
-                        self.captureButton.isHidden = false
-                        self.startCaptureButton.isHidden = true
-                        
-                        self.view.viewWithTag(880)?.isHidden = true
-                        self.view.viewWithTag(882)?.isHidden = true
-                        self.tutorialButton?.isHidden = true
-                        
-                        if let bottomStack = self.view.subviews.first(where: { $0 is UIStackView }) {
-                            bottomStack.isHidden = false
-                        }
-                        
-                        self.currentManualMode = 0
-                        self.measurementTypeSegment.selectedSegmentIndex = 0
-                        self.manualMeasureContainer.isHidden = true
-                        self.heightLineView.isHidden = true
-                    }
-                }))
-                self.present(alert, animated: true)
+        let fileName = "pedido_symap_\(Int(Date().timeIntervalSince1970)).stl"
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            alert.dismiss(animated: true) {
+                self.saveOrderLinkToFirestore(fileName: fileName)
+                let successAlert = UIAlertController(title: "Sucesso!", message: "Pedido enviado para a nuvem! O robô laboratorial enviará o arquivo 3D em instantes.", preferredStyle: .alert)
+                successAlert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+                self.present(successAlert, animated: true)
             }
         }
-        
-        self.present(configVC, animated: true, completion: nil)
     }
     
+    func saveOrderLinkToFirestore(fileName: String) {
+            guard let user = Auth.auth().currentUser else { return }
+            
+            // Pega o nome do óculos atual ou a keyword do visagismo
+            let rawModelName = self.currentCloudModel?.name ?? self.recommendedAutoModel
+            
+            // 🔴 CORREÇÃO DO ERRO NA NUVEM: Padroniza o nome para buscar o arquivo exato no servidor!
+            // Transforma "SL Suki Feminino" em "sl_suki_feminino" para o Storage encontrar
+            var modelBaseName = rawModelName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
+            
+            // Fallback de segurança para garantir que a nuvem ache os arquivos com o prefixo exato antigo
+            if modelBaseName == "luno" { modelBaseName = "sl_luno_feminino" }
+            if modelBaseName == "nunu" { modelBaseName = "sl_nunu_feminino" }
+            if modelBaseName == "suki" { modelBaseName = "sl_suki_feminino" }
+            
+            // Solicita as chaves matemáticas ao Motor!
+            let edicoesShapeKeys = AutoConfiguratorEngine.calculateMorphWeights(
+                keyword: rawModelName,
+                faceWidth: self.faceWidth,
+                bridgeWidth: self.noseBridgeWidth,
+                nasalProfile: self.nasalProfile
+            )
+            
+            let data: [String: Any] = [
+                "userId": user.uid,
+                "stlUrl": "gerando_na_nuvem...",
+                "stlFileName": fileName,
+                "timestamp": FieldValue.serverTimestamp(),
+                "status": "Processando na Nuvem",
+                "modeloBase": modelBaseName, // 🔴 Nome formatado e sanitizado para o Cloud Function
+                "edicoesLaboratorio": edicoesShapeKeys,
+                "biometrics": [
+                    "bridge": self.noseBridgeWidth,
+                    "leftWidth": self.faceWidthLeft,
+                    "rightWidth": self.faceWidthRight
+                ]
+            ]
+            
+            // 1. Envia o pedido e aciona a Function
+            let docRef = Firestore.firestore().collection("orders_stl").addDocument(data: data)
+            
+            // 2. Fica escutando o servidor
+            var listener: ListenerRegistration?
+            listener = docRef.addSnapshotListener { documentSnapshot, error in
+                guard let document = documentSnapshot, document.exists,
+                      let dados = document.data() else { return }
+                
+                let status = dados["status"] as? String ?? ""
+                
+                if status == "Concluído" {
+                    let stlUrl = dados["stlUrl"] as? String ?? ""
+                    listener?.remove()
+                    
+                    DispatchQueue.main.async {
+                        let alert = UIAlertController(
+                            title: "✅ Arquivo 3D Pronto!",
+                            message: "O servidor finalizou a modelagem. O arquivo STL da fábrica está pronto para download.",
+                            preferredStyle: .alert
+                        )
+                        alert.addAction(UIAlertAction(title: "Baixar / Compartilhar", style: .default) { _ in
+                            guard let url = URL(string: stlUrl) else { return }
+                            let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+                            
+                            // Rotina de apresentação robusta do Share Sheet (Sem tela preta)
+                            if let windowScene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+                               let window = windowScene.windows.first(where: { $0.isKeyWindow }) {
+                                var topController = window.rootViewController
+                                while let presented = topController?.presentedViewController {
+                                    topController = presented
+                                }
+                                if let popover = activityVC.popoverPresentationController {
+                                    popover.sourceView = topController?.view
+                                    popover.sourceRect = CGRect(x: window.bounds.midX, y: window.bounds.midY, width: 0, height: 0)
+                                    popover.permittedArrowDirections = []
+                                }
+                                topController?.present(activityVC, animated: true)
+                            }
+                        })
+                        alert.addAction(UIAlertAction(title: "Fechar", style: .cancel))
+                        
+                        if let windowScene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+                           let window = windowScene.windows.first(where: { $0.isKeyWindow }) {
+                            var topController = window.rootViewController
+                            while let presented = topController?.presentedViewController {
+                                topController = presented
+                            }
+                            topController?.present(alert, animated: true)
+                        }
+                    }
+                } else if status == "Erro ao Gerar 3D" {
+                    listener?.remove()
+                    DispatchQueue.main.async {
+                        let alert = UIAlertController(title: "❌ Erro na Nuvem", message: "Houve um problema na geração do arquivo 3D.", preferredStyle: .alert)
+                        alert.addAction(UIAlertAction(title: "OK", style: .default))
+                        if let windowScene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+                           let window = windowScene.windows.first(where: { $0.isKeyWindow }) {
+                            var topController = window.rootViewController
+                            while let presented = topController?.presentedViewController {
+                                topController = presented
+                            }
+                            topController?.present(alert, animated: true)
+                        }
+                    }
+                }
+            }
+        }
+    
+    // ============================================================================
+    // --- CONTROLE DOS BOTÕES DE SAÍDA E RESET ---
+    // ============================================================================
     func performExitAction(action: @escaping () -> Void) {
         if !self.isPdfGenerated {
             let alert = UIAlertController(title: "Atenção: Laudo Não Salvo", message: "O laudo em PDF ainda não foi gerado. Deseja mesmo sair desta tela e perder os dados?", preferredStyle: .alert)
@@ -320,7 +333,11 @@ extension MeasurementViewController {
         performExitAction {
             let blackCurtain = UIView(frame: self.view.bounds)
             blackCurtain.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
-            self.view.addSubview(blackCurtain)
+            if let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow }) {
+                window.addSubview(blackCurtain)
+            } else {
+                self.view.addSubview(blackCurtain)
+            }
             self.view.bringSubviewToFront(blackCurtain)
             
             self.summaryContainer?.isHidden = true
@@ -334,15 +351,10 @@ extension MeasurementViewController {
             self.manualFrameDiagonal = 0.0
             self.pupillaryHeight = 0.0
             self.updateSegmentTitles()
-            
-            self.glassesNode?.removeFromParentNode()
-            self.glassesNode = nil
-            self.currentCloudModel = nil
-            
             self.isFrozen = true
             self.toggleFreeze()
             
-            UIView.animate(withDuration: 0.5, delay: 0.6, animations: {
+            UIView.animate(withDuration: 0.5, delay: 0.8, animations: {
                 blackCurtain.alpha = 0
             }) { _ in
                 blackCurtain.removeFromSuperview()
