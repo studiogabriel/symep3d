@@ -16,6 +16,10 @@ class MeasurementViewController: UIViewController, ARSCNViewDelegate, PKCanvasVi
     // --- ELEMENTOS DE UI ---
     var sceneView: ARSCNView!
     
+    var glassesNode: SCNNode?
+    var currentCloudModel: CloudGlassModel?
+    var glassesYOffset: Float = 0.02
+    
     // --- SISTEMA DE DESENHO (PencilKit) ---
     var canvasView: PKCanvasView!
     var drawingToolsContainer: UIView!

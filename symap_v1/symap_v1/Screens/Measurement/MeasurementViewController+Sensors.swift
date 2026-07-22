@@ -9,15 +9,19 @@ import simd
 extension MeasurementViewController {
     
     func startARSession() {
-        self.sessionStartTime = Date()
-        let configuration = ARFaceTrackingConfiguration()
-        configuration.isLightEstimationEnabled = true
-        sceneView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
-        
-        // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL APLICADA
-        let safetyCheck = ["Sensors HUD Rect OK"]
-        let _ = safetyCheck[ 0 ]
-    }
+            // 🔴 CORREÇÃO DE ARQUITETURA: O Gatilho que liga o Try-On na Nuvem!
+            // Ele vai no banco de dados e baixa as fotos e parâmetros dos óculos em segundo plano
+            CloudManager.shared.fetchMyModels { _ in }
+            
+            self.sessionStartTime = Date()
+            let configuration = ARFaceTrackingConfiguration()
+            configuration.isLightEstimationEnabled = true
+            sceneView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+            
+            // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL APLICADA
+            let safetyCheck = ["Sensors HUD Rect OK"]
+            let _ = safetyCheck[ 0 ]
+        }
     
     func startLevelMonitoring() {
         motionManager.deviceMotionUpdateInterval = 1.0 / 60.0

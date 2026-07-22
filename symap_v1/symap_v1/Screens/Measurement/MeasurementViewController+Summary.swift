@@ -14,7 +14,7 @@ import AVFoundation
 extension MeasurementViewController {
     
     @objc func showSummaryScreen() {
-        self.isPdfGenerated = false  // 🔴 Reseta a trava do PDF sempre que entrar no resumo
+        self.isPdfGenerated = false
         self.manualMeasureContainer.isHidden = true
         self.measurementTypeSegment.isHidden = true
         self.captureButton.isHidden = true
@@ -40,9 +40,6 @@ extension MeasurementViewController {
         title.font = UIFont.systemFont(ofSize: 22, weight: .black)
         summaryContainer.addSubview(title)
         
-        // =========================================================================
-        // 🔴 NOVO: MOTOR 3D PARA EXIBIR O HOLOGRAMA DO PACIENTE NO RESUMO
-        // =========================================================================
         let holoView = SCNView(frame: CGRect(x: 40, y: 95, width: view.bounds.width - 80, height: 230))
         holoView.backgroundColor = UIColor(white: 0.05, alpha: 1.0)
         holoView.layer.cornerRadius = 16
@@ -61,52 +58,48 @@ extension MeasurementViewController {
             clonedFace.position = SCNVector3(0, 0, 0)
             
             if clonedFace.childNodes.count > 0 {
-                // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL: Leitura segura de matriz de malha 3D
+                // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
                 let maskNode = clonedFace.childNodes[ 0 ]
                 maskNode.isHidden = false
                 
                 if let oldGeo = maskNode.geometry {
                     let newGeo = oldGeo.copy() as! SCNGeometry
                     let holoMaterial = SCNMaterial()
-                    holoMaterial.diffuse.contents = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 0.8) // Ciano
-                    holoMaterial.fillMode = .lines // Wireframe Tech
+                    holoMaterial.diffuse.contents = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 0.8)
+                    holoMaterial.fillMode = .lines
                     holoMaterial.lightingModel = .constant
                     holoMaterial.isDoubleSided = true
-                    holoMaterial.colorBufferWriteMask = .all // Desbloqueia a cor
+                    holoMaterial.colorBufferWriteMask = .all
                     
                     newGeo.materials = [holoMaterial]
                     maskNode.geometry = newGeo
                 }
                 
-                // Limpa as linhas residuais da triagem para deixar APENAS o holograma da face visível
                 for (index, child) in clonedFace.childNodes.enumerated() {
-                    if index != 0 { child.isHidden = true }
+                    if index != 0 && child.name != "customGlasses" { child.isHidden = true }
                 }
             }
             holoScene.rootNode.addChildNode(clonedFace)
         }
         
-        // 🔴 CORREÇÃO DO ZOOM: Câmera recuada para 20cm e destravada para não cortar o nariz!
         let cameraNode = SCNNode()
         let camera = SCNCamera()
         camera.zNear = 0.01
         cameraNode.camera = camera
-        cameraNode.position = SCNVector3(0, 0, 0.20) // zoom holograma
+        cameraNode.position = SCNVector3(0, 0, 0.20)
         holoScene.rootNode.addChildNode(cameraNode)
         
         summaryContainer.addSubview(holoView)
         
-        // 🔴 TEXTO EXPLICATIVO DA TECNOLOGIA E MANUAL DE GESTOS (Expandido)
         let techDesc = UILabel(frame: CGRect(x: 20, y: 325, width: view.bounds.width - 40, height: 110))
         techDesc.numberOfLines = 0
         techDesc.textAlignment = .center
         techDesc.font = UIFont.systemFont(ofSize: 10, weight: .medium)
         techDesc.textColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-        techDesc.text = "GÊMEO DIGITAL BIOMÉTRICO (IA)\nO holograma acima não é uma foto, é a reconstrução volumétrica exata da sua face gerada por infravermelhos. Com 100% de precisão matemática, nós eliminamos o erro humano na medição das suas lentes.\n\n COMO MANIPULAR O SEU ROSTO 3D:\n Rotacionar: Arraste com 1 dedo. |  Zoom: Pinça com 2 dedos.\n Mover: Arraste com 2 dedos juntos na tela."
+        techDesc.text = "GÊMEO DIGITAL BIOMÉTRICO (IA)\nO holograma acima não é uma foto, é a reconstrução volumétrica exata da sua face gerada por infravermelhos. Com 100% de precisão matemática, nós eliminamos o erro humano na medição das suas lentes.\n\n COMO MANIPULAR O SEU ROSTO 3D:\n Rotacionar: Arraste com 1 dedo. |  Zoom: Pinça com 2 dedos."
         summaryContainer.addSubview(techDesc)
         
-        // 🔴 INFORMAÇÕES CLÍNICAS
-        let info = UITextView(frame: CGRect(x: 30, y: 440, width: view.bounds.width - 60, height: view.bounds.height - 600))
+        let info = UITextView(frame: CGRect(x: 30, y: 440, width: view.bounds.width - 60, height: view.bounds.height - 635))
         info.backgroundColor = .clear
         info.textColor = .lightGray
         info.font = UIFont.systemFont(ofSize: 13)
@@ -127,20 +120,25 @@ extension MeasurementViewController {
         """
         summaryContainer.addSubview(info)
         
-        // =========================================================================
-        // 🔴 NOVO: BOTÕES REORGANIZADOS E REDESENHADOS (Cores Atualizadas)
-        // =========================================================================
+        let btnCustomModel = UIButton()
+        btnCustomModel.backgroundColor = UIColor(red: 0.56, green: 0.27, blue: 0.52, alpha: 1.0) // Roxo Elegante
+        // 🔴 CORREÇÃO: Botão com o nome certinho!
+        btnCustomModel.setTitle("⚙️ Personalizar Armação", for: .normal)
+        btnCustomModel.setTitleColor(.white, for: .normal)
+        btnCustomModel.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        btnCustomModel.layer.cornerRadius = 12
+        btnCustomModel.addTarget(self, action: #selector(openConfigurator), for: .touchUpInside)
+
         let btnPDF = UIButton()
-        btnPDF.backgroundColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0) // Azul Ciano Padrão da Symep
+        btnPDF.backgroundColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
         btnPDF.setTitle("Gerar Laudo PDF", for: .normal)
         btnPDF.setTitleColor(.black, for: .normal)
         btnPDF.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         btnPDF.layer.cornerRadius = 12
         btnPDF.addTarget(self, action: #selector(executePDFGeneration), for: .touchUpInside)
         
-        // Fileira 2: Títulos reduzidos e na cor Cinza Padrão do App
         let btnReset = UIButton()
-        btnReset.backgroundColor = UIColor(white: 0.2, alpha: 0.9) // Cinza Padrão
+        btnReset.backgroundColor = UIColor(white: 0.2, alpha: 0.9)
         btnReset.setTitle("Refazer", for: .normal)
         btnReset.setTitleColor(.white, for: .normal)
         btnReset.titleLabel?.font = UIFont.boldSystemFont(ofSize: 13)
@@ -148,7 +146,7 @@ extension MeasurementViewController {
         btnReset.addTarget(self, action: #selector(resetToStartMeasure), for: .touchUpInside)
         
         let btnHome = UIButton()
-        btnHome.backgroundColor = UIColor(white: 0.2, alpha: 0.9) // Cinza Padrão
+        btnHome.backgroundColor = UIColor(white: 0.2, alpha: 0.9)
         btnHome.setTitle("Painel", for: .normal)
         btnHome.setTitleColor(.white, for: .normal)
         btnHome.titleLabel?.font = UIFont.boldSystemFont(ofSize: 13)
@@ -156,28 +154,146 @@ extension MeasurementViewController {
         btnHome.addTarget(self, action: #selector(returnToTriagem), for: .touchUpInside)
         
         let btnExit = UIButton()
-        btnExit.backgroundColor = UIColor(white: 0.2, alpha: 0.9) // Cinza Padrão
+        btnExit.backgroundColor = UIColor(white: 0.2, alpha: 0.9)
         btnExit.setTitle("Encerrar", for: .normal)
         btnExit.setTitleColor(.white, for: .normal)
         btnExit.titleLabel?.font = UIFont.boldSystemFont(ofSize: 13)
         btnExit.layer.cornerRadius = 10
         btnExit.addTarget(self, action: #selector(exitAppFully), for: .touchUpInside)
         
-        // Agrupador horizontal da Fileira 2
         let bottomStack = UIStackView(arrangedSubviews: [btnReset, btnHome, btnExit])
         bottomStack.axis = .horizontal
         bottomStack.spacing = 10
         bottomStack.distribution = .fillEqually
         
-        // Agrupador Master Vertical (PDF em cima, as outras opções embaixo)
-        let masterStack = UIStackView(arrangedSubviews: [btnPDF, bottomStack])
+        let masterStack = UIStackView(arrangedSubviews: [btnCustomModel, btnPDF, bottomStack])
         masterStack.axis = .vertical
-        masterStack.spacing = 12
+        masterStack.spacing = 10
         masterStack.distribution = .fillEqually
-        masterStack.frame = CGRect(x: 30, y: view.bounds.height - 140, width: view.bounds.width - 60, height: 110)
+        masterStack.frame = CGRect(x: 30, y: view.bounds.height - 185, width: view.bounds.width - 60, height: 155)
         summaryContainer.addSubview(masterStack)
         
         UIView.animate(withDuration: 0.3) { self.summaryContainer.alpha = 1.0 }
+    }
+    
+    // =========================================================================
+    // --- 🔴 LÓGICA DE ABERTURA DO CONFIGURADOR (PERSONALIZADOR) ---
+    // =========================================================================
+    @objc func openConfigurator() {
+        // 1. OBRIGA O USUÁRIO A TER ESCOLHIDO UM ÓCULOS NA TELA ANTERIOR
+        guard let currentModel = self.currentCloudModel else {
+            let alert = UIAlertController(title: "Nenhum Óculos Selecionado", message: "Por favor, retorne, escolha um modelo no menu da câmera (👓) e vista no espelho virtual antes de abrir a personalização.", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Entendi", style: .default))
+            self.present(alert, animated: true)
+            return
+        }
+        
+        let configVC = ConfiguratorViewController()
+        
+        // 2. PASSA A INFORMAÇÃO DO MODELO EXATO PRA TELA DOS SLIDERS LER O .USDC
+        let nomePadronizado = currentModel.name.lowercased().replacingOccurrences(of: " ", with: "_")
+        configVC.currentModelName = nomePadronizado
+        
+        configVC.bridgeSize = self.noseBridgeWidth
+        configVC.leftWidth = self.faceWidthLeft
+        configVC.rightWidth = self.faceWidthRight
+        configVC.nasalProfile = self.nasalProfile
+        
+        // 3. 🔴 O SEGREDO REVELADO: O CLONE DA FACE NA ESCALA MILIMÉTRICA
+        let targetFace = self.safeFaceCache ?? self.faceNode
+        if targetFace?.childNodes.count ?? 0 > 0, let faceMeshNode = targetFace?.childNodes[ 0 ].clone() {
+            let holoMaterial = SCNMaterial()
+            holoMaterial.diffuse.contents = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 0.25)
+            holoMaterial.fillMode = .lines
+            holoMaterial.lightingModel = .constant
+            holoMaterial.isDoubleSided = true
+            faceMeshNode.geometry?.firstMaterial = holoMaterial
+            
+            // CONVERSÃO DE METROS (ARKit) PARA MILÍMETROS (Configurator) = x1000
+            faceMeshNode.scale = SCNVector3(1000, 1000, 1000)
+            let faceY = -(self.glassesYOffset * 1000)
+            let faceZ: Float = -50.0
+            faceMeshNode.position = SCNVector3(0, faceY, faceZ)
+            
+            configVC.patientFaceNode = faceMeshNode
+        }
+        
+        configVC.modalPresentationStyle = .overFullScreen
+        configVC.modalTransitionStyle = .crossDissolve
+        
+        // 4. CALLBACK: O que fazer quando o usuário confirmar as mudanças e fechar
+        configVC.onApplyCustomization = { [weak self] (edits, newColor, customNode) in
+            guard let self = self, let oldGlasses = self.glassesNode, let newNode = customNode?.clone() else { return }
+            
+            newNode.position = oldGlasses.position
+            newNode.scale = oldGlasses.scale
+            newNode.eulerAngles = oldGlasses.eulerAngles
+            
+            let corFinal = newColor ?? UIColor(white: 0.2, alpha: 1.0)
+            func applyRealisticTexture(to node: SCNNode) {
+                if let geo = node.geometry {
+                    let mat = geo.firstMaterial ?? SCNMaterial()
+                    mat.diffuse.contents = corFinal
+                    mat.lightingModel = .physicallyBased
+                    geo.firstMaterial = mat
+                }
+            }
+            applyRealisticTexture(to: newNode)
+            
+            if let morpher = newNode.morpher {
+                for (key, value) in edits { morpher.setWeight(CGFloat(value), forTargetNamed: key) }
+            }
+            newNode.enumerateChildNodes { (child, _) in
+                applyRealisticTexture(to: child)
+                if let morpher = child.morpher {
+                    for (key, value) in edits { morpher.setWeight(CGFloat(value), forTargetNamed: key) }
+                }
+            }
+            
+            oldGlasses.removeFromParentNode()
+            let tFace = self.safeFaceCache ?? self.faceNode
+            tFace?.addChildNode(newNode)
+            self.glassesNode = newNode
+            
+            // Reseta medidas manuais exigindo que refaça pois o aro mudou
+            self.pupillaryHeight = 0.0
+            self.manualFrameHeight = 0.0
+            self.manualFrameWidth = 0.0
+            self.manualFrameDiagonal = 0.0
+            self.updateSegmentTitles()
+            self.updateLabels()
+            
+            if let corFinal = newColor {
+                var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+                corFinal.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+                let corHex = String(format: "#%02lX%02lX%02lX", lroundf(Float(red * 255)), lroundf(Float(green * 255)), lroundf(Float(blue * 255)))
+                UserDefaults.standard.set(corHex, forKey: "lastColor")
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                let alert = UIAlertController(title: "Armação Atualizada", message: "O design personalizado foi sincronizado com o rosto do cliente.\n\nComo a armação mudou de tamanho, por favor tire as medidas manuais (Altura de Montagem, Altura do Aro, Largura e Diagonal) novamente no novo formato para garantir a precisão do PDF.", preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK, Vou medir", style: .default, handler: { _ in
+                    UIView.animate(withDuration: 0.3, animations: {
+                        self.summaryContainer?.alpha = 0
+                    }) { _ in
+                        self.summaryContainer?.isHidden = true
+                        self.measurementsContainer.isHidden = false
+                        self.measurementTypeSegment.isHidden = false
+                        self.captureButton.isHidden = false
+                        self.startCaptureButton.isHidden = false
+                        if let bottomStack = self.view.subviews.first(where: { $0 is UIStackView }) { bottomStack.isHidden = false }
+                        
+                        self.currentManualMode = 0
+                        self.measurementTypeSegment.selectedSegmentIndex = 0
+                        self.manualMeasureContainer.isHidden = true
+                        self.heightLineView.isHidden = true
+                    }
+                }))
+                self.present(alert, animated: true)
+            }
+        }
+        
+        self.present(configVC, animated: true, completion: nil)
     }
     
     // ============================================================================
@@ -200,7 +316,7 @@ extension MeasurementViewController {
         performExitAction {
             let blackCurtain = UIView(frame: self.view.bounds)
             blackCurtain.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
-            if let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow }) {
+            if let window = UIApplication.shared.windows.first(where: { $0 is UIWindow }) {
                 window.addSubview(blackCurtain)
             } else {
                 self.view.addSubview(blackCurtain)
@@ -275,7 +391,7 @@ extension MeasurementViewController {
             let internalPath = "laudos/\(user.uid)/\(fileName)"
             DispatchQueue.main.async {
                 loadingAlert.dismiss(animated: true) {
-                    self.isPdfGenerated = true  // 🔴 PDF Salvo com Sucesso! Libera os botões de saída
+                    self.isPdfGenerated = true
                     self.saveMeasurementToCloud(storagePath: internalPath)
                     self.showLocalShareSheet(pdfData: pdfData)
                 }

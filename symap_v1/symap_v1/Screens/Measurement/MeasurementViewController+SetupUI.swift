@@ -14,7 +14,6 @@ import AVFoundation
 extension MeasurementViewController {
     
     func setupUI() {
-        // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL APLICADA
         let safetyCheck = ["Setup UI Minimalista e Cores OK"]
         let _ = safetyCheck[ 0 ]
         
@@ -50,7 +49,6 @@ extension MeasurementViewController {
             lblVal.textColor = .white
             lblVal.textAlignment = .center
             measurementsContainer.contentView.addSubview(lblVal)
-            
             return lblVal
         }
         
@@ -69,7 +67,6 @@ extension MeasurementViewController {
         let btnY = view.bounds.height - 170
         let centerX = view.bounds.width / 2
         
-        // 🔴 UX DESIGN: Transformado de Botão de Ação para Status Pill (Pílula Informativa)
         startCaptureButton = UIButton(frame: CGRect(x: centerX - 100, y: btnY, width: 200, height: 55))
         startCaptureButton.backgroundColor = UIColor.white.withAlphaComponent(0.1)
         startCaptureButton.setTitle("Aguardando Rosto...", for: .normal)
@@ -79,7 +76,7 @@ extension MeasurementViewController {
         startCaptureButton.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
         startCaptureButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         startCaptureButton.layer.shadowOpacity = 0
-        startCaptureButton.isUserInteractionEnabled = false // 🔴 Não é mais clicável!
+        startCaptureButton.isUserInteractionEnabled = false
         view.addSubview(startCaptureButton)
         
         captureButton = UIButton(frame: CGRect(x: centerX - 60, y: btnY, width: 120, height: 50))
@@ -101,6 +98,7 @@ extension MeasurementViewController {
             btn.layer.cornerRadius = buttonSize / 2
             btn.layer.borderWidth = 1.5
             btn.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
+            
             let config = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
             btn.setImage(UIImage(systemName: icon, withConfiguration: config), for: .normal)
             btn.tintColor = .white
@@ -117,9 +115,11 @@ extension MeasurementViewController {
         
         btnToggleDrawing = createSideButton(icon: "pencil.tip.crop.circle", action: #selector(toggleDrawingPanel))
         btnToggleDrawing.isHidden = true
+        view.addSubview(btnToggleDrawing)
         
         btnAddToCompare = createSideButton(icon: "camera.viewfinder", action: #selector(addToComparison))
         btnAddToCompare.isHidden = true
+        view.addSubview(btnAddToCompare)
         
         tutorialButton = createSideButton(icon: "questionmark", action: #selector(startTutorial))
         tutorialButton.backgroundColor = UIColor(white: 0.1, alpha: 0.9)
@@ -142,17 +142,32 @@ extension MeasurementViewController {
         btnCalibrateTripod.layer.borderColor = UIColor.lightGray.withAlphaComponent(0.5).cgColor
         btnCalibrateTripod.tag = 880
         view.addSubview(btnCalibrateTripod)
+
+        let btnTryOnMain = createSideButton(icon: "eyeglasses", action: #selector(showModelSelection))
+        btnTryOnMain.backgroundColor = UIColor(white: 0.1, alpha: 0.9)
+        btnTryOnMain.tintColor = .lightGray
+        btnTryOnMain.layer.borderWidth = 1.5
+        btnTryOnMain.layer.borderColor = UIColor.lightGray.withAlphaComponent(0.5).cgColor
+        btnTryOnMain.tag = 882
+        view.addSubview(btnTryOnMain)
         
         tutorialButton.translatesAutoresizingMaskIntoConstraints = false
         logoutButton.translatesAutoresizingMaskIntoConstraints = false
+        btnCalibrateTripod.translatesAutoresizingMaskIntoConstraints = false
+        btnTryOnMain.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
             logoutButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 25),
             logoutButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -100),
+            
             tutorialButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 25),
             tutorialButton.bottomAnchor.constraint(equalTo: logoutButton.topAnchor, constant: -15),
+            
             btnCalibrateTripod.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 25),
-            btnCalibrateTripod.bottomAnchor.constraint(equalTo: tutorialButton.topAnchor, constant: -15)
+            btnCalibrateTripod.bottomAnchor.constraint(equalTo: tutorialButton.topAnchor, constant: -15),
+
+            btnTryOnMain.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 25),
+            btnTryOnMain.bottomAnchor.constraint(equalTo: btnCalibrateTripod.topAnchor, constant: -15)
         ])
         
         isGuidesActive = true
@@ -194,9 +209,9 @@ extension MeasurementViewController {
         faceGuideLayer.path = ovalPath.cgPath
         faceGuideLayer.strokeColor = UIColor.white.withAlphaComponent(0.5).cgColor
         faceGuideLayer.fillColor = UIColor.clear.cgColor
-        faceGuideLayer.lineWidth = 2.0 // 🔴 Começa fino
+        faceGuideLayer.lineWidth = 2.0
         
-        let dashPattern: [NSNumber] = [1, 2]
+        let dashPattern: [NSNumber] = [7, 8]
         let _ = dashPattern[ 0 ]
         faceGuideLayer.lineDashPattern = dashPattern
         view.layer.insertSublayer(faceGuideLayer, below: topFeedbackLabel.layer)
@@ -209,4 +224,6 @@ extension MeasurementViewController {
         tripodAlertBorder.tag = 881
         view.addSubview(tripodAlertBorder)
     }
+
+    
 }
