@@ -53,12 +53,14 @@ extension MeasurementViewController {
         let holoScene = SCNScene()
         holoView.scene = holoScene
         
-        if let clonedFace = self.safeFaceCache {
+        // 🔴 ERRO 2 CORRIGIDO: Fazemos um "clone() profundo" para proteger a matriz original!
+        if let baseFace = self.safeFaceCache {
+            let clonedFace = baseFace.clone()
             clonedFace.transform = SCNMatrix4Identity
             clonedFace.position = SCNVector3(0, 0, 0)
             
             if clonedFace.childNodes.count > 0 {
-                // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+                // Nossa blindagem estrutural matriz
                 let maskNode = clonedFace.childNodes[ 0 ]
                 maskNode.isHidden = false
                 
@@ -75,6 +77,7 @@ extension MeasurementViewController {
                     maskNode.geometry = newGeo
                 }
                 
+                // Oculta linhas indesejadas (sensores), deixa só o óculos customizado
                 for (index, child) in clonedFace.childNodes.enumerated() {
                     if index != 0 && child.name != "customGlasses" { child.isHidden = true }
                 }
@@ -96,10 +99,10 @@ extension MeasurementViewController {
         techDesc.textAlignment = .center
         techDesc.font = UIFont.systemFont(ofSize: 10, weight: .medium)
         techDesc.textColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-        techDesc.text = "GÊMEO DIGITAL BIOMÉTRICO (IA)\nO holograma acima não é uma foto, é a reconstrução volumétrica exata da sua face gerada por infravermelhos. Com 100% de precisão matemática, nós eliminamos o erro humano na medição das suas lentes.\n\n COMO MANIPULAR O SEU ROSTO 3D:\n Rotacionar: Arraste com 1 dedo. |  Zoom: Pinça com 2 dedos."
+        techDesc.text = "GÊMEO DIGITAL BIOMÉTRICO (IA)\nO holograma acima não é uma foto, é a reconstrução volumétrica exata da sua face gerada por infravermelhos. Com 100% de precisão matemática, nós eliminamos o erro humano na medição das suas lentes.\n\n COMO MANIPULAR O SEU ROSTO 3D:\n Rotacionar: Arraste com 1 dedo. |  Zoom: Pinça com 2 dedos.\n Mover: Arraste com 2 dedos juntos na tela."
         summaryContainer.addSubview(techDesc)
         
-        let info = UITextView(frame: CGRect(x: 30, y: 440, width: view.bounds.width - 60, height: view.bounds.height - 635))
+        let info = UITextView(frame: CGRect(x: 30, y: 440, width: view.bounds.width - 60, height: view.bounds.height - 600))
         info.backgroundColor = .clear
         info.textColor = .lightGray
         info.font = UIFont.systemFont(ofSize: 13)
@@ -120,15 +123,6 @@ extension MeasurementViewController {
         """
         summaryContainer.addSubview(info)
         
-        let btnCustomModel = UIButton()
-        btnCustomModel.backgroundColor = UIColor(red: 0.56, green: 0.27, blue: 0.52, alpha: 1.0) // Roxo Elegante
-        // 🔴 CORREÇÃO: Botão com o nome certinho!
-        btnCustomModel.setTitle("⚙️ Personalizar Armação", for: .normal)
-        btnCustomModel.setTitleColor(.white, for: .normal)
-        btnCustomModel.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        btnCustomModel.layer.cornerRadius = 12
-        btnCustomModel.addTarget(self, action: #selector(openConfigurator), for: .touchUpInside)
-
         let btnPDF = UIButton()
         btnPDF.backgroundColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
         btnPDF.setTitle("Gerar Laudo PDF", for: .normal)
@@ -166,40 +160,40 @@ extension MeasurementViewController {
         bottomStack.spacing = 10
         bottomStack.distribution = .fillEqually
         
+        let btnCustomModel = UIButton()
+        btnCustomModel.backgroundColor = UIColor.systemPurple
+        btnCustomModel.setTitle("⚙️ Personalizar Armação", for: .normal)
+        btnCustomModel.setTitleColor(.white, for: .normal)
+        btnCustomModel.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        btnCustomModel.layer.cornerRadius = 12
+        btnCustomModel.addTarget(self, action: #selector(openConfigurator), for: .touchUpInside)
+        
         let masterStack = UIStackView(arrangedSubviews: [btnCustomModel, btnPDF, bottomStack])
         masterStack.axis = .vertical
-        masterStack.spacing = 10
+        masterStack.spacing = 12
         masterStack.distribution = .fillEqually
-        masterStack.frame = CGRect(x: 30, y: view.bounds.height - 185, width: view.bounds.width - 60, height: 155)
+        masterStack.frame = CGRect(x: 30, y: view.bounds.height - 190, width: view.bounds.width - 60, height: 160)
         summaryContainer.addSubview(masterStack)
         
         UIView.animate(withDuration: 0.3) { self.summaryContainer.alpha = 1.0 }
     }
     
-    // =========================================================================
-    // --- 🔴 LÓGICA DE ABERTURA DO CONFIGURADOR (PERSONALIZADOR) ---
-    // =========================================================================
     @objc func openConfigurator() {
-        // 1. OBRIGA O USUÁRIO A TER ESCOLHIDO UM ÓCULOS NA TELA ANTERIOR
         guard let currentModel = self.currentCloudModel else {
-            let alert = UIAlertController(title: "Nenhum Óculos Selecionado", message: "Por favor, retorne, escolha um modelo no menu da câmera (👓) e vista no espelho virtual antes de abrir a personalização.", preferredStyle: .alert)
+            let alert = UIAlertController(title: "Nenhum Óculos Selecionado", message: "Por favor, retorne, escolha um modelo no menu (👓) e vista no espelho virtual antes de abrir a personalização.", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "Entendi", style: .default))
             self.present(alert, animated: true)
             return
         }
         
         let configVC = ConfiguratorViewController()
-        
-        // 2. PASSA A INFORMAÇÃO DO MODELO EXATO PRA TELA DOS SLIDERS LER O .USDC
         let nomePadronizado = currentModel.name.lowercased().replacingOccurrences(of: " ", with: "_")
         configVC.currentModelName = nomePadronizado
-        
         configVC.bridgeSize = self.noseBridgeWidth
         configVC.leftWidth = self.faceWidthLeft
         configVC.rightWidth = self.faceWidthRight
         configVC.nasalProfile = self.nasalProfile
         
-        // 3. 🔴 O SEGREDO REVELADO: O CLONE DA FACE NA ESCALA MILIMÉTRICA
         let targetFace = self.safeFaceCache ?? self.faceNode
         if targetFace?.childNodes.count ?? 0 > 0, let faceMeshNode = targetFace?.childNodes[ 0 ].clone() {
             let holoMaterial = SCNMaterial()
@@ -209,25 +203,30 @@ extension MeasurementViewController {
             holoMaterial.isDoubleSided = true
             faceMeshNode.geometry?.firstMaterial = holoMaterial
             
-            // CONVERSÃO DE METROS (ARKit) PARA MILÍMETROS (Configurator) = x1000
             faceMeshNode.scale = SCNVector3(1000, 1000, 1000)
             let faceY = -(self.glassesYOffset * 1000)
             let faceZ: Float = -50.0
             faceMeshNode.position = SCNVector3(0, faceY, faceZ)
-            
             configVC.patientFaceNode = faceMeshNode
         }
         
         configVC.modalPresentationStyle = .overFullScreen
         configVC.modalTransitionStyle = .crossDissolve
         
-        // 4. CALLBACK: O que fazer quando o usuário confirmar as mudanças e fechar
         configVC.onApplyCustomization = { [weak self] (edits, newColor, customNode) in
-            guard let self = self, let oldGlasses = self.glassesNode, let newNode = customNode?.clone() else { return }
+            guard let self = self, let newNode = customNode?.clone() else { return }
             
-            newNode.position = oldGlasses.position
-            newNode.scale = oldGlasses.scale
-            newNode.eulerAngles = oldGlasses.eulerAngles
+            let tFace = self.safeFaceCache ?? self.faceNode
+            // 🔴 ERRO 2 CORRIGIDO: Limpa todos os óculos anteriores antes de colocar o novo parametrizado
+            tFace?.childNodes.filter({ $0.name == "customGlasses" }).forEach({ $0.removeFromParentNode() })
+            
+            if let oldGlasses = self.glassesNode {
+                newNode.position = oldGlasses.position
+                newNode.scale = oldGlasses.scale
+                newNode.eulerAngles = oldGlasses.eulerAngles
+            } else {
+                newNode.scale = SCNVector3(0.001, 0.001, 0.001)
+            }
             
             let corFinal = newColor ?? UIColor(white: 0.2, alpha: 1.0)
             func applyRealisticTexture(to node: SCNNode) {
@@ -238,8 +237,8 @@ extension MeasurementViewController {
                     geo.firstMaterial = mat
                 }
             }
-            applyRealisticTexture(to: newNode)
             
+            applyRealisticTexture(to: newNode)
             if let morpher = newNode.morpher {
                 for (key, value) in edits { morpher.setWeight(CGFloat(value), forTargetNamed: key) }
             }
@@ -250,12 +249,9 @@ extension MeasurementViewController {
                 }
             }
             
-            oldGlasses.removeFromParentNode()
-            let tFace = self.safeFaceCache ?? self.faceNode
             tFace?.addChildNode(newNode)
             self.glassesNode = newNode
             
-            // Reseta medidas manuais exigindo que refaça pois o aro mudou
             self.pupillaryHeight = 0.0
             self.manualFrameHeight = 0.0
             self.manualFrameWidth = 0.0
@@ -279,9 +275,18 @@ extension MeasurementViewController {
                         self.summaryContainer?.isHidden = true
                         self.measurementsContainer.isHidden = false
                         self.measurementTypeSegment.isHidden = false
+                        
+                        // 🔴 ERRO 1 CORRIGIDO: Exibe apenas o botão AZUL (Avançar). Esconde os demais!
                         self.captureButton.isHidden = false
-                        self.startCaptureButton.isHidden = false
-                        if let bottomStack = self.view.subviews.first(where: { $0 is UIStackView }) { bottomStack.isHidden = false }
+                        self.startCaptureButton.isHidden = true // Este é o vermelho (Refazer)!
+                        
+                        self.view.viewWithTag(880)?.isHidden = true // Esconde botão Tripé
+                        self.view.viewWithTag(882)?.isHidden = true // Esconde botão Provador Virtual
+                        self.tutorialButton?.isHidden = true      // Esconde Tutorial
+                        
+                        if let bottomStack = self.view.subviews.first(where: { $0 is UIStackView }) {
+                            bottomStack.isHidden = false
+                        }
                         
                         self.currentManualMode = 0
                         self.measurementTypeSegment.selectedSegmentIndex = 0
@@ -296,9 +301,6 @@ extension MeasurementViewController {
         self.present(configVC, animated: true, completion: nil)
     }
     
-    // ============================================================================
-    // --- CONTROLE DOS BOTÕES DE SAÍDA E RESET ---
-    // ============================================================================
     func performExitAction(action: @escaping () -> Void) {
         if !self.isPdfGenerated {
             let alert = UIAlertController(title: "Atenção: Laudo Não Salvo", message: "O laudo em PDF ainda não foi gerado. Deseja mesmo sair desta tela e perder os dados?", preferredStyle: .alert)
@@ -334,6 +336,7 @@ extension MeasurementViewController {
             self.manualFrameDiagonal = 0.0
             self.pupillaryHeight = 0.0
             self.updateSegmentTitles()
+            
             self.isFrozen = true
             self.toggleFreeze()
             

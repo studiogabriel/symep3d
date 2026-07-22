@@ -14,12 +14,12 @@ import AVFoundation
 extension MeasurementViewController {
     
     // =========================================================================
-    // LIGAÇÃO DE TELA (UI) COM O SERVIÇO DE LICENÇA (FIREBASE EXTRAÍDO)
+    // LIGAÇÃO DE TELA (UI) COM O SERVIÇO DE LICENÇA
     // =========================================================================
     func verifyLicenseAndLoadModels() {
         guard Auth.auth().currentUser != nil else { self.dismiss(animated: true, completion: nil); return }
-        self.measurementsLabel.text = "Verificando..."
         
+        self.measurementsLabel.text = "Verificando..."
         let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? "unknown"
         
         LicenseService().verifyDevice(deviceId: deviceId) { [weak self] authorized, message, saveMeasurements in
@@ -52,7 +52,6 @@ extension MeasurementViewController {
         if isFrozen {
             self.topFeedbackLabel?.isHidden = true
             self.faceGuideLayer?.isHidden = true
-            
             sceneView.session.pause()
             motionManager.stopDeviceMotionUpdates()
             isCaptureSessionActive = false
@@ -70,14 +69,18 @@ extension MeasurementViewController {
             
             startCaptureButton.setTitle("← Voltar Etapa (Refazer)", for: .normal)
             startCaptureButton.backgroundColor = .systemRed
-            
             measurementsContainer.isHidden = false
             captureButton.isHidden = false
             measurementTypeSegment.isHidden = false
-            
             if let bottomStack = view.subviews.first(where: { $0 is UIStackView }) {
                 bottomStack.isHidden = false
             }
+            
+            // 🔴 ERRO 1.1 CORRIGIDO: Esconde Tripé, Provador Virtual e Tutorial durante as medidas!
+            self.view.viewWithTag(880)?.isHidden = true
+            self.view.viewWithTag(882)?.isHidden = true
+            self.tutorialButton?.isHidden = true
+            
         } else {
             self.topFeedbackLabel?.isHidden = false
             self.topFeedbackLabel?.text = "POSICIONE O ROSTO NA MARCAÇÃO"
@@ -93,14 +96,15 @@ extension MeasurementViewController {
             
             savedFrontalSnapshot = nil
             freezeOverlayImageView?.isHidden = true
-            
             if let origBg = self.originalBackgroundCache as? Any {
                 self.sceneView.scene.background.contents = origBg
             }
             if let origCam = self.originalCameraNodeCache {
                 self.sceneView.pointOfView = origCam
             }
-            self.sceneView.isPlaying = false
+            
+            // 🔴 ERRO 3 CORRIGIDO: Reativa a renderização (Evita a Tela Preta no iOS!)
+            self.sceneView.isPlaying = true
             
             self.safeFaceCache?.removeFromParentNode()
             self.safeFaceCache = nil
@@ -109,6 +113,7 @@ extension MeasurementViewController {
             self.safeSnapshotCache = nil
             self.originalBackgroundCache = nil
             self.originalCameraNodeCache = nil
+            
             self.faceNode?.removeFromParentNode()
             self.faceNode = nil
             self.techMaskNode = nil
@@ -116,8 +121,8 @@ extension MeasurementViewController {
             let config = ARFaceTrackingConfiguration()
             config.isLightEstimationEnabled = true
             sceneView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
-            startLevelMonitoring()
             
+            startLevelMonitoring()
             levelContainerView.isHidden = false
             levelLabel.isHidden = false
             headLevelContainerView.isHidden = false
@@ -143,10 +148,14 @@ extension MeasurementViewController {
             startCaptureButton.isHidden = false
             startCaptureButton.setTitle("Iniciar Captura", for: .normal)
             startCaptureButton.backgroundColor = UIColor(red: 0.0, green: 0.8, blue: 0.4, alpha: 1.0)
-            
             isGuidesActive = true
             techMaskNode?.isHidden = false
             btnToggleGuides.backgroundColor = UIColor.systemBlue
+            
+            // 🔴 Restaura os botões essenciais da tela viva
+            self.view.viewWithTag(880)?.isHidden = false
+            self.view.viewWithTag(882)?.isHidden = false
+            self.tutorialButton?.isHidden = false
         }
     }
     
@@ -168,14 +177,11 @@ extension MeasurementViewController {
     func f(_ value: Float) -> String {
         return String(format: "%.1f", value)
     }
-    // =========================================================================
-        // --- CONTROLE DE SESSÃO (LOGOUT) ---
-        // =========================================================================
-        @objc func logoutTapped() {
-            try? Auth.auth().signOut()
-            // Redireciona para o Login limpando a memória da sessão atual
-            let loginVC = LoginViewController()
-            loginVC.modalPresentationStyle = .fullScreen
-            self.view.window?.rootViewController = loginVC
-        }
+    
+    @objc func logoutTapped() {
+        try? Auth.auth().signOut()
+        let loginVC = LoginViewController()
+        loginVC.modalPresentationStyle = .fullScreen
+        self.view.window?.rootViewController = loginVC
+    }
 }

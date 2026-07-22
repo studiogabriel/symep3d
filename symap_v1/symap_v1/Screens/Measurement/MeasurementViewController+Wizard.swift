@@ -213,71 +213,79 @@ extension MeasurementViewController {
     }
 
     // --- LÓGICA DO FLUXO DO WIZARD ---
-    func startApprovalStep() {
-        sceneView.session.pause()
-        motionManager.stopDeviceMotionUpdates()
-
-        let snap = sceneView.snapshot()
-        self.safeFaceCache = self.faceNode?.clone()
-        self.safeSnapshotCache = snap
-        self.savedFrontalSnapshot = snap
-
-        capturedImageView.image = snap
-
-        levelContainerView.isHidden = true; levelLabel.isHidden = true
-        headLevelContainerView.isHidden = true; headLevelLabel.isHidden = true
-        phonePitchContainerView.isHidden = true; phonePitchLabel.isHidden = true
-        headPitchContainerView.isHidden = true; headPitchLabel.isHidden = true
-        distanceBarContainer?.isHidden = true
-        topFeedbackLabel?.isHidden = true
-        faceGuideLayer?.isHidden = true
-        startCaptureButton.isHidden = true
-        self.tutorialButton.isHidden = true
-        self.view.viewWithTag(777)?.isHidden = true
-        self.view.viewWithTag(778)?.isHidden = true
-        self.logoutButton.transform = .identity
-
-        approvalContainer.isHidden = false
-        approvalContainer.alpha = 0
-        UIView.animate(withDuration: 0.3) { self.approvalContainer.alpha = 1.0 }
-    }
-
-    @objc func rejectAndReset() {
-        UIView.animate(withDuration: 0.3, animations: { self.approvalContainer.alpha = 0 }) { _ in
-            self.approvalContainer.isHidden = true
-            let config = ARFaceTrackingConfiguration()
-            config.isLightEstimationEnabled = true
-            self.sceneView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
-            self.startLevelMonitoring()
-
-            self.levelContainerView.isHidden = false; self.levelLabel.isHidden = false
-            self.headLevelContainerView.isHidden = false; self.headLevelLabel.isHidden = false
-            self.phonePitchContainerView.isHidden = false; self.phonePitchLabel.isHidden = false
-            self.headPitchContainerView.isHidden = false; self.headPitchLabel.isHidden = false
-
-            self.topFeedbackLabel?.isHidden = false; self.faceGuideLayer?.isHidden = false
+        func startApprovalStep() {
+            sceneView.session.pause()
+            motionManager.stopDeviceMotionUpdates()
+            
+            let snap = sceneView.snapshot()
+            self.safeFaceCache = self.faceNode?.clone()
+            self.safeSnapshotCache = snap
+            self.savedFrontalSnapshot = snap
+            capturedImageView.image = snap
+            
+            levelContainerView.isHidden = true ; levelLabel.isHidden = true
+            headLevelContainerView.isHidden = true ; headLevelLabel.isHidden = true
+            phonePitchContainerView.isHidden = true ; phonePitchLabel.isHidden = true
+            headPitchContainerView.isHidden = true ; headPitchLabel.isHidden = true
+            distanceBarContainer?.isHidden = true
+            topFeedbackLabel?.isHidden = true
+            faceGuideLayer?.isHidden = true
+            startCaptureButton.isHidden = true
+            
+            // 🔴 CORREÇÃO: Esconde TODOS os controles laterais e botões fantasmas!
+            self.tutorialButton.isHidden = true
+            self.view.viewWithTag(880)?.isHidden = true // Tripé
+            self.view.viewWithTag(882)?.isHidden = true // Try-On (Óculos)
             self.view.viewWithTag(777)?.isHidden = true
             self.view.viewWithTag(778)?.isHidden = true
-            self.startCaptureButton.isHidden = false
-            self.tutorialButton.isHidden = false
             self.logoutButton.transform = .identity
-
-            self.startCaptureButton.setTitle("Iniciar Captura", for: .normal)
-            self.startCaptureButton.backgroundColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-            self.startCaptureButton.setTitleColor(.black, for: .normal)
-            self.startCaptureButton.layer.shadowOpacity = 0
-
-            self.manualFrameWidth = 0.0
-            self.manualFrameHeight = 0.0
-            self.manualFrameDiagonal = 0.0
-            self.pupillaryHeight = 0.0
-            self.currentManualMode = 0
-            if let segment = self.measurementTypeSegment {
-                segment.selectedSegmentIndex = 0
-                self.updateSegmentTitles()
+            
+            approvalContainer.isHidden = false
+            approvalContainer.alpha = 0
+            UIView.animate(withDuration: 0.3) { self.approvalContainer.alpha = 1.0 }
+        }
+        
+        @objc func rejectAndReset() {
+            UIView.animate(withDuration: 0.3, animations: { self.approvalContainer.alpha = 0 }) { _ in
+                self.approvalContainer.isHidden = true
+                
+                let config = ARFaceTrackingConfiguration()
+                config.isLightEstimationEnabled = true
+                self.sceneView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
+                self.startLevelMonitoring()
+                
+                self.levelContainerView.isHidden = false ; self.levelLabel.isHidden = false
+                self.headLevelContainerView.isHidden = false ; self.headLevelLabel.isHidden = false
+                self.phonePitchContainerView.isHidden = false ; self.phonePitchLabel.isHidden = false
+                self.headPitchContainerView.isHidden = false ; self.headPitchLabel.isHidden = false
+                
+                self.topFeedbackLabel?.isHidden = false ; self.faceGuideLayer?.isHidden = false
+                
+                // 🔴 CORREÇÃO: Devolve os botões essenciais da tela Viva!
+                self.view.viewWithTag(777)?.isHidden = true
+                self.view.viewWithTag(778)?.isHidden = true
+                self.view.viewWithTag(880)?.isHidden = false // Devolve Tripé
+                self.view.viewWithTag(882)?.isHidden = false // Devolve Try-On
+                self.tutorialButton.isHidden = false
+                self.logoutButton.transform = .identity
+                
+                self.startCaptureButton.isHidden = false
+                self.startCaptureButton.setTitle("Iniciar Captura", for: .normal)
+                self.startCaptureButton.backgroundColor = UIColor(red: 0.0, green: 0.8, blue: 0.4, alpha: 1.0)
+                self.startCaptureButton.setTitleColor(.black, for: .normal)
+                self.startCaptureButton.layer.shadowOpacity = 0
+                
+                self.manualFrameWidth = 0.0
+                self.manualFrameHeight = 0.0
+                self.manualFrameDiagonal = 0.0
+                self.pupillaryHeight = 0.0
+                self.currentManualMode = 0
+                if let segment = self.measurementTypeSegment {
+                    segment.selectedSegmentIndex = 0
+                    self.updateSegmentTitles()
+                }
             }
         }
-    }
 
     @objc func hideWizardKeyboard() {
         self.view.endEditing(true)

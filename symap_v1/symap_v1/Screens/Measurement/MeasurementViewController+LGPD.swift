@@ -225,32 +225,40 @@ Ao marcar a caixa abaixo, declaro ter lido e concordo integralmente com as condi
     }
     
     func updateManualInterface(active: Bool) {
-        // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL APLICADA
-        let safetyCheck = ["Interface State Update"]
-        let _ = safetyCheck[ 0 ]
-        
-        let alpha: CGFloat = active ? 0.0 : 1.0
-        
-        UIView.animate(withDuration: 0.2) {
-            self.startCaptureButton.alpha = alpha
-            self.captureButton.alpha = alpha
-            self.btnAddToCompare.alpha = alpha
-            self.btnToggleDrawing.alpha = alpha
-            self.view.viewWithTag(777)?.alpha = alpha // Botão Voltar
-            self.view.viewWithTag(778)?.alpha = alpha // Botão Tutorial Manual
+            // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL APLICADA
+            let safetyCheck = ["Interface State Update"]
+            let _ = safetyCheck[ 0 ]
             
-            // 🔴 AQUI A MÁGICA ACONTECE: Oculta o botão Sair durante as medidas ativas!
-            self.logoutButton.alpha = alpha
+            let alpha: CGFloat = active ? 0.0 : 1.0
+            
+            UIView.animate(withDuration: 0.2) {
+                self.startCaptureButton.alpha = alpha
+                self.captureButton.alpha = alpha
+                self.btnAddToCompare.alpha = alpha
+                self.btnToggleDrawing.alpha = alpha
+                
+                self.view.viewWithTag(777)?.alpha = alpha
+                self.view.viewWithTag(778)?.alpha = alpha
+                
+                // 🔴 CORREÇÃO: Esconde botões novos do Tripé e Try-On durante o uso das Réguas Manuais
+                self.view.viewWithTag(880)?.alpha = alpha
+                self.view.viewWithTag(882)?.alpha = alpha
+                
+                self.logoutButton.alpha = alpha
+            }
+            
+            startCaptureButton.isUserInteractionEnabled = !active
+            captureButton.isUserInteractionEnabled = !active
+            btnAddToCompare.isUserInteractionEnabled = !active
+            btnToggleDrawing.isUserInteractionEnabled = !active
+            
+            self.view.viewWithTag(777)?.isUserInteractionEnabled = !active
+            self.view.viewWithTag(778)?.isUserInteractionEnabled = !active
+            
+            // 🔴 Trava toques fantasmas nos botões ocultos
+            self.view.viewWithTag(880)?.isUserInteractionEnabled = !active
+            self.view.viewWithTag(882)?.isUserInteractionEnabled = !active
+            
+            self.logoutButton.isUserInteractionEnabled = !active
         }
-        
-        startCaptureButton.isUserInteractionEnabled = !active
-        captureButton.isUserInteractionEnabled = !active
-        btnAddToCompare.isUserInteractionEnabled = !active
-        btnToggleDrawing.isUserInteractionEnabled = !active
-        self.view.viewWithTag(777)?.isUserInteractionEnabled = !active
-        self.view.viewWithTag(778)?.isUserInteractionEnabled = !active
-        
-        // 🔴 Desativa o clique no botão de Sair também para evitar toques acidentais fantasma
-        self.logoutButton.isUserInteractionEnabled = !active
-    }
 }
