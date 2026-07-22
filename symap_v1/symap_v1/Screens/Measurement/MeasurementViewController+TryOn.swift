@@ -70,48 +70,64 @@ extension MeasurementViewController {
     }
 
     func loadCloudModel(model: CloudGlassModel) {
-        // Mostra feedback visual enquanto baixa o modelo 3D
-        self.measurementsLabel.text = "Baixando Armação..."
-        self.measurementsContainer.isHidden = false
-        
-        CloudManager.shared.downloadModelFile(url: model.fileUrl) { [weak self] u in
-            guard let s = self, let url = u else { return }
-
-            DispatchQueue.main.async {
-                s.measurementsContainer.isHidden = true
-                s.measurementsLabel.text = ""
+            self.measurementsLabel.text = "Baixando Armação..."
+            self.measurementsContainer.isHidden = false
+            
+            CloudManager.shared.downloadModelFile(url: model.fileUrl) { [weak self] u in
+                guard let s = self, let url = u else { return }
                 
-                s.glassesNode?.removeFromParentNode()
-                s.glassesNode = nil
-                s.currentCloudModel = model
-                s.glassesYOffset = model.position.y
-
-                let asset = MDLAsset(url: url)
-                if asset.count > 0 {
-                    let obj = asset.object(at: 0)
-                    let node = SCNNode(mdlObject: obj)
-
+                DispatchQueue.main.async {
+                    s.measurementsContainer.isHidden = true
+                    s.measurementsLabel.text = ""
+                    
+                    s.glassesNode?.removeFromParentNode()
+                    s.glassesNode = nil
+                    s.currentCloudModel = model
+                    s.glassesYOffset = model.position.y
+                    
+                    // 🔴 DECODIFICADOR ROBUSTO PARA ARQUIVOS DA NUVEM (.STL / .GLB)
+                    let wrapperNode = SCNNode()
+                    wrapperNode.name = "customGlasses"
+                    
+                    if let scene = try? SCNScene(url: url, options: nil) {
+                        for child in scene.rootNode.childNodes { wrapperNode.addChildNode(child.clone()) }
+                    } else {
+                        let asset = MDLAsset(url: url)
+                        if asset.count > 0 {
+                            let obj = asset.object(at: 0)
+                            let nodeObj = SCNNode(mdlObject: obj)
+                            wrapperNode.addChildNode(nodeObj)
+                        }
+                    }
+                    
+                    // 🔴 GARANTIA DE RENDERIZAÇÃO: Força o material em todas as submalhas
                     let mat = SCNMaterial()
                     mat.diffuse.contents = UIColor(white: 0.2, alpha: 1.0)
                     mat.lightingModel = .physicallyBased
-                    node.geometry?.firstMaterial = mat
-
-                    let (min, max) = node.boundingBox
+                    mat.isDoubleSided = true
+                    
+                    wrapperNode.enumerateChildNodes { (child, _) in
+                        child.geometry?.firstMaterial = mat
+                    }
+                    
+                    // Centralização Absoluta
+                    let (min, max) = wrapperNode.boundingBox
                     let c = SCNVector3((min.x+max.x)/2, (min.y+max.y)/2, (min.z+max.z)/2)
-                    node.pivot = SCNMatrix4MakeTranslation(c.x, c.y, c.z)
-
-                    node.scale = SCNVector3(model.scale, model.scale, model.scale)
-                    node.position = SCNVector3(model.position.x, s.glassesYOffset, model.position.z)
-                    node.eulerAngles = model.rotation
-
-                    // 🔴 MÁGICA: Tagging do óculos para ele ser limpo/identificado nas outras telas
-                    node.name = "customGlasses"
-
+                    wrapperNode.pivot = SCNMatrix4MakeTranslation(c.x, c.y, c.z)
+                    
+                    // Aplica parâmetros de Nuvem
+                    wrapperNode.scale = SCNVector3(model.scale, model.scale, model.scale)
+                    wrapperNode.position = SCNVector3(model.position.x, s.glassesYOffset, model.position.z)
+                    wrapperNode.eulerAngles = model.rotation
+                    
+                    s.glassesNode = wrapperNode
+                    
+                    // Conecta instantaneamente se o rosto for encontrado
                     let targetFace = s.safeFaceCache ?? s.faceNode
-                    targetFace?.addChildNode(node)
-                    s.glassesNode = node
+                    if let face = targetFace {
+                        face.addChildNode(wrapperNode)
+                    }
                 }
             }
         }
-    }
 }

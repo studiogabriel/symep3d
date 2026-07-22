@@ -20,6 +20,9 @@ class MeasurementViewController: UIViewController, ARSCNViewDelegate, PKCanvasVi
     var currentCloudModel: CloudGlassModel?
     var glassesYOffset: Float = 0.02
     
+    var isVisagismCompleted: Bool = false
+    var recommendedAutoModel: String = ""
+    
     // --- SISTEMA DE DESENHO (PencilKit) ---
     var canvasView: PKCanvasView!
     var drawingToolsContainer: UIView!

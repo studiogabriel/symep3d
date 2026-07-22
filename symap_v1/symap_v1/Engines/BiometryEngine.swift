@@ -131,55 +131,58 @@ enum BiometryEngine {
         return (dnpEsq, dnpDir, dnpTotal, verticalDiff, dnpPertoEsq, dnpPertoDir, dnpPertoTotal)
     }
     
-    // MARK: - Visagismo
-    private static func fmt(_ value: Float) -> String { return String(format: "%.1f", value) }
-    
-    static func analyzeVisagisme(width: Float, height: Float, bridge: Float, jaw: Float, dnpTotal: Float) -> (faceShape: String, frameSuggestion: String) {
-        let ratio = height / width
-        let dnpRatio = dnpTotal / width
-        var shape = ""
-        var advice = ""
-        var avoid = ""
+    //  MARK: - Visagismo
+        private static func fmt(_ value: Float) -> String { return String(format: "%.1f", value) }
         
-        if ratio > 1.45 {
-            shape = "Longo / Retangular"
-            advice = "Rostos alongados precisam de armações que 'quebrem' a extensão do rosto. O ideal são óculos com grande altura vertical (Oversized, Aviador clássico ou Wayfarer alto) para equilibrar as proporções."
-            avoid = "Evite armações muito estreitas (baixas) ou retangulares finas, pois elas criarão a ilusão de que o rosto é ainda mais longo."
-        } else if ratio > 1.30 {
-            shape = "Oval / Equilibrado"
-            advice = "Considerado o formato mais versátil. As proporções matemáticas do rosto são muito equilibradas, permitindo usar quase qualquer estilo. Armações levemente mais largas que a parte mais larga do seu rosto terão um encaixe perfeito."
-            avoid = "Evite apenas armações extremamente pequenas ou desproporcionais que possam apagar as suas feições naturais."
-        } else if ratio < 1.15 {
-            shape = "Redondo / Curto"
-            advice = "Rostos mais curtos ou circulares precisam de contraste. Beneficiam-se fortemente de armações com linhas retas e ângulos marcados (quadradas, retangulares e hexagonais) para afinar e alongar visualmente o rosto."
-            avoid = "Evite armações redondas ou ovais pequenas, pois elas acentuam a simetria circular do rosto."
-        } else {
-            shape = "Coração / Diamante"
-            advice = "O rosto possui um maxilar mais fino ou ângulos fortes. Armações ovais, redondas ou estilo 'gatinho' (cat-eye) são ideais para suavizar as linhas inferiores. Modelos sem aro na parte de baixo (Nylor) também vestem incrivelmente bem."
-            avoid = "Evite armações pesadas demais ou com ângulos muito retos e grossos na parte inferior."
+    static func analyzeVisagisme(width: Float, height: Float, bridge: Float, jaw: Float, dnpTotal: Float) -> (faceShape: String, frameSuggestion: String, recommendedModel: String) {
+            let ratio = height / width
+            let dnpRatio = dnpTotal / width
+            
+            var shape = ""
+            var advice = ""
+            var recommendedModel = ""
+            
+            // 1. FORMATO DO ROSTO E KEYWORDS ESCALÁVEIS
+            if ratio > 1.35 {
+                shape = "Longo / Retangular"
+                advice = "1. FORMATO DO ROSTO\nEquilibre com armações redondas ou ovais. Bordas curvas suavizam maxilares marcados e a linha da testa. Linhas retas ajudam a afinar e alongar o rosto."
+                recommendedModel = "luno" // Keyword mágica: Acha qualquer óculos da linha Luno!
+            } else if ratio < 1.15 {
+                shape = "Redondo / Curto"
+                advice = "1. FORMATO DO ROSTO\nOpte por armações quadradas ou retangulares. Linhas retas e angulares ajudam a afinar e alongar o rosto. Evite modelos muito redondos."
+                recommendedModel = "nunu" // Keyword mágica: Acha qualquer óculos da linha Nunu!
+            } else if jaw < (width * 0.85) {
+                shape = "Coração / Triangular"
+                advice = "1. FORMATO DO ROSTO\nEscolha modelos gatinho ou armações mais largas na parte inferior. Evite modelos pesados ou grossos no topo para não sobrecarregar a testa."
+                recommendedModel = "suki" // Keyword mágica: Acha qualquer óculos da linha Suki!
+            } else {
+                shape = "Oval"
+                advice = "1. FORMATO DO ROSTO\nÉ o formato mais versátil, combinando com quase todos os estilos. Dica de ouro: evite apenas peças que sejam significativamente mais largas que a parte mais larga do seu rosto."
+                recommendedModel = "suki" // Keyword mágica: Versátil
+            }
+            
+            // 2. PROPORÇÃO E DETALHES FACIAIS
+            var eyesAdvice = ""
+            if dnpRatio < 0.43 {
+                eyesAdvice = "Olhos Próximos: Para evitar sobrecarregar o centro do rosto, prefira pontes metálicas ou armações com detalhes e cores mais destacadas nas extremidades externas. Evite pontes escuras ou grossas."
+            } else {
+                eyesAdvice = "Proporção Padrão: O distanciamento dos seus olhos está em perfeita harmonia anatômica."
+            }
+            
+            var noseAdvice = ""
+            if bridge < 15.0 {
+                noseAdvice = "Tamanho do Nariz: Pontes altas e claras ou detalhes finos ajudam a não destacar tanto o nariz."
+            } else {
+                noseAdvice = "Sobrancelhas: A parte superior da armação deve acompanhar o desenho natural da sua sobrancelha. Evite modelos que cortem o meio da sobrancelha ou que a escondam por completo."
+            }
+            
+            // 3. CORES E TOM DE PELE (Fixo)
+            let colorsAdvice = "3. CORES E TOM DE PELE\n• Pele Quente (fundos amarelados/dourados): Harmoniza perfeitamente com tons terrosos, dourado, tartaruga (havana), coral e verde-oliva.\n• Pele Fria (fundos rosados/azulados): Cores como prata, rosa-antigo, azul-claro, cinza e tons pastéis combinam muito bem.\n• Contraste: Armações transparentes sem pigmento podem sumir em peles claras. Armações escuras (como o preto clássico) transmitem mais autoridade e elegância."
+            
+            let finalSuggestion = "\(advice)\n\n2. PROPORÇÃO E DETALHES FACIAIS\n\(eyesAdvice)\n\(noseAdvice)\n\n\(colorsAdvice)"
+            
+            return (shape, finalSuggestion, recommendedModel)
         }
-        
-        var bridgeAdvice = ""
-        if bridge < 15.0 {
-            bridgeAdvice = "\n\n👃 PONTE (\(fmt(bridge))mm): Estreita. Sugerimos armações em acetato com ponte 'fechadura' (keyhole) para dar a ilusão de um nariz mais largo, ou metais com plaquetas para garantir aderência."
-        } else if bridge > 19.0 {
-            bridgeAdvice = "\n\n👃 PONTE (\(fmt(bridge))mm): Larga. O ideal são armações de metal com plaquetas ajustáveis ou acetatos com ponte rebaixada e espessa para vestir confortavelmente sem marcar a pele."
-        } else {
-            bridgeAdvice = "\n\n👃 PONTE (\(fmt(bridge))mm): Padrão. O distanciamento nasal é ideal. A vasta maioria das armações com apoio anatômico terá um encaixe excelente e confortável."
-        }
-        
-        var eyesAdvice = ""
-        if dnpRatio < 0.43 {
-            eyesAdvice = "\n\n👁️ OLHOS: Próximos. Dica óptica de Ouro: Escolha armações com a ponte (centro) em cores claras ou transparentes, e detalhes chamativos nas bordas externas (hastes) para 'afastar' visualmente os olhos."
-        } else if dnpRatio > 0.49 {
-            eyesAdvice = "\n\n👁️ OLHOS: Afastados. Dica óptica de Ouro: Armações com pontes escuras, grossas ou bem marcadas no centro ajudam a 'aproximar' visualmente a distância entre os olhos, trazendo harmonia."
-        }
-        
-        let faceShape = shape
-        let frameSuggestion = advice + " " + avoid + bridgeAdvice + eyesAdvice
-        
-        return (faceShape, frameSuggestion)
-    }
     
     // MARK: - Geometria facial
     static func faceGeometry(vertices: [simd_float3], eyeLevelY: Float, eyeDepthZ: Float, comfortFactor: Float = CalibrationFactors.faceWidthComfort) -> FaceGeometryResult {

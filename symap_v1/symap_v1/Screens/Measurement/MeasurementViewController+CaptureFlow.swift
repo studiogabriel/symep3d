@@ -164,31 +164,35 @@ extension MeasurementViewController {
     }
     
     func finishCountdownAndCapture(aborted: Bool) {
-        stabilityStartTime = nil
-        resetCountdown()
-        
-        if aborted {
-            DispatchQueue.main.async {
-                if self.isPhoneLevel && self.isPhonePitchLevel {
-                    self.topFeedbackLabel?.text = "Você moveu. Tente novamente"
-                    self.topFeedbackLabel?.textColor = .lightGray
+            stabilityStartTime = nil
+            resetCountdown()
+            
+            if aborted {
+                DispatchQueue.main.async {
+                    if self.isPhoneLevel && self.isPhonePitchLevel {
+                        self.topFeedbackLabel?.text = "Você moveu. Tente novamente"
+                        self.topFeedbackLabel?.textColor = .lightGray
+                    }
                 }
-            }
-        } else {
-            DispatchQueue.main.async {
-                let flash = UIView(frame: self.view.bounds)
-                flash.backgroundColor = .white
-                flash.alpha = 0.0
-                self.view.addSubview(flash)
-                
-                UIView.animate(withDuration: 0.1, animations: { flash.alpha = 0.7 }) { _ in
-                    UIView.animate(withDuration: 0.2) { flash.alpha = 0.0 } completion: { _ in flash.removeFromSuperview() }
+            } else {
+                DispatchQueue.main.async {
+                    let flash = UIView(frame: self.view.bounds)
+                    flash.backgroundColor = .white
+                    flash.alpha = 0.0
+                    self.view.addSubview(flash)
+                    UIView.animate(withDuration: 0.1, animations: { flash.alpha = 0.7 }) { _ in
+                        UIView.animate(withDuration: 0.2) { flash.alpha = 0.0 } completion: { _ in flash.removeFromSuperview() }
+                    }
+                    
+                    // 🔴 A MÁGICA DA NOVA FASE: Roteia para Visagismo ou para a Foto Médica!
+                    if !self.isVisagismCompleted {
+                        self.startVisagismSummary()
+                    } else {
+                        self.startApprovalStep()
+                    }
                 }
-                
-                self.startApprovalStep()
             }
         }
-    }
     
     func resetCountdown() {
         guard countdownTimer != nil else { return }

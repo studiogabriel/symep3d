@@ -150,6 +150,7 @@ extension MeasurementViewController {
         btnTryOnMain.layer.borderColor = UIColor.lightGray.withAlphaComponent(0.5).cgColor
         btnTryOnMain.tag = 882
         view.addSubview(btnTryOnMain)
+        btnTryOnMain.isHidden = true
         
         tutorialButton.translatesAutoresizingMaskIntoConstraints = false
         logoutButton.translatesAutoresizingMaskIntoConstraints = false

@@ -21,18 +21,24 @@ extension MeasurementViewController {
     }
     
     func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
-        guard anchor is ARFaceAnchor else { return nil }
-        faceNode = SCNNode()
-        let faceGeometry = ARSCNFaceGeometry(device: sceneView.device!)
-        let maskNode = SCNNode(geometry: faceGeometry)
-        maskNode.geometry?.firstMaterial?.colorBufferWriteMask = []
-        faceNode?.addChildNode(maskNode)
-        
-        if let fn = faceNode {
-            setupTechMask(on: fn)
+            guard anchor is ARFaceAnchor else { return nil }
+            faceNode = SCNNode()
+            
+            let faceGeometry = ARSCNFaceGeometry(device: sceneView.device!)
+            let maskNode = SCNNode(geometry: faceGeometry)
+            maskNode.geometry?.firstMaterial?.colorBufferWriteMask = []
+            faceNode?.addChildNode(maskNode)
+            
+            if let fn = faceNode {
+                setupTechMask(on: fn)
+                
+                // 🔴 A MÁGICA: Se a IA (Visagismo) já baixou um óculos, mas a âncora do rosto tinha se perdido, ela cola o óculos instantaneamente agora!
+                if let gn = self.glassesNode, gn.parent == nil {
+                    fn.addChildNode(gn)
+                }
+            }
+            return faceNode
         }
-        return faceNode
-    }
     
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
         if renderer === self.visionMappingView {
@@ -157,8 +163,9 @@ extension MeasurementViewController {
         let maxNX = fg.maxNX
         
         let visagisme = BiometryEngine.analyzeVisagisme(width: self.faceWidth, height: faceHeight, bridge: self.noseBridgeWidth, jaw: self.jawWidth, dnpTotal: self.dnpTotal)
-        self.faceShape = visagisme.faceShape
-        self.frameSuggestion = visagisme.frameSuggestion
+                self.faceShape = visagisme.faceShape
+                self.frameSuggestion = visagisme.frameSuggestion
+                self.recommendedAutoModel = visagisme.recommendedModel
         
         let currentBridgeY = bridgeHeightY
         let currentTempleY = eyeLevelY + 0.025
