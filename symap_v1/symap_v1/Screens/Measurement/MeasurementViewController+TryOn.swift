@@ -60,60 +60,66 @@ extension MeasurementViewController {
     }
     
     func loadCloudModel(model: CloudGlassModel) {
-        self.measurementsLabel.text = "Baixando Armação..."
-        self.measurementsContainer.isHidden = false
-        
-        CloudManager.shared.downloadModelFile(url: model.fileUrl) { [weak self] u in
-            guard let s = self, let url = u else { return }
+            self.measurementsLabel.text = "Baixando Armação..."
+            self.measurementsContainer.isHidden = false
             
-            DispatchQueue.main.async {
-                s.measurementsContainer.isHidden = true
-                s.measurementsLabel.text = ""
-                s.glassesNode?.removeFromParentNode()
-                s.glassesNode = nil
-                s.currentCloudModel = model
-                s.glassesYOffset = model.position.y
+            CloudManager.shared.downloadModelFile(url: model.fileUrl) { [weak self] u in
+                guard let s = self, let url = u else { return }
                 
-                let wrapperNode = SCNNode()
-                wrapperNode.name = "customGlasses"
-                
-                if let scene = try? SCNScene(url: url, options: nil) {
-                    for child in scene.rootNode.childNodes { wrapperNode.addChildNode(child.clone()) }
-                } else {
-                    let asset = MDLAsset(url: url)
-                    if asset.count > 0 {
-                        let obj = asset.object(at: 0)
-                        let nodeObj = SCNNode(mdlObject: obj)
-                        wrapperNode.addChildNode(nodeObj)
+                DispatchQueue.main.async {
+                    s.measurementsContainer.isHidden = true
+                    s.measurementsLabel.text = ""
+                    s.glassesNode?.removeFromParentNode()
+                    s.glassesNode = nil
+                    s.currentCloudModel = model
+                    
+                    // 🔴 CORREÇÃO DE ENCAIXE: Força a altura perfeita (Y) ignorando a nuvem
+                    s.glassesYOffset = 0.032
+                    
+                    let wrapperNode = SCNNode()
+                    wrapperNode.name = "customGlasses"
+                    
+                    if let scene = try? SCNScene(url: url, options: nil) {
+                        for child in scene.rootNode.childNodes { wrapperNode.addChildNode(child.clone()) }
+                    } else {
+                        let asset = MDLAsset(url: url)
+                        if asset.count > 0 {
+                            let obj = asset.object(at: 0)
+                            let nodeObj = SCNNode(mdlObject: obj)
+                            wrapperNode.addChildNode(nodeObj)
+                        }
                     }
+                    
+                    let mat = SCNMaterial()
+                    mat.diffuse.contents = UIColor(white: 0.2, alpha: 1.0)
+                    mat.lightingModel = .physicallyBased
+                    mat.isDoubleSided = true
+                    
+                    wrapperNode.enumerateChildNodes { (child, _) in
+                        child.geometry?.firstMaterial = mat
+                    }
+                    
+                    let (min, max) = wrapperNode.boundingBox
+                    let c = SCNVector3((min.x+max.x)/2, (min.y+max.y)/2, (min.z+max.z)/2)
+                    wrapperNode.pivot = SCNMatrix4MakeTranslation(c.x, c.y, c.z)
+                    wrapperNode.scale = SCNVector3(model.scale, model.scale, model.scale)
+                    
+                    // 🔴 O SEGREDO DO ENCAIXE ESPACIAL 3D
+                    // Y: 0.032 (Sobe o óculos para a linha das sobrancelhas)
+                    // Z: 0.035 (Recua o óculos 2.5cm para trás, colando ele no rosto)
+                    wrapperNode.position = SCNVector3(model.position.x, 0.028, 0.050)
+                    wrapperNode.eulerAngles = model.rotation
+                    
+                    // Mantém a distorção matemática de medidas!
+                    s.applyAutoMorphs(to: wrapperNode, keyword: model.name)
+                    
+                    s.glassesNode = wrapperNode
+                    
+                    let targetFace = s.safeFaceCache ?? s.faceNode
+                    if let face = targetFace { face.addChildNode(wrapperNode) }
                 }
-                
-                let mat = SCNMaterial()
-                mat.diffuse.contents = UIColor(white: 0.2, alpha: 1.0)
-                mat.lightingModel = .physicallyBased
-                mat.isDoubleSided = true
-                
-                wrapperNode.enumerateChildNodes { (child, _) in
-                    child.geometry?.firstMaterial = mat
-                }
-                
-                let (min, max) = wrapperNode.boundingBox
-                let c = SCNVector3((min.x+max.x)/2, (min.y+max.y)/2, (min.z+max.z)/2)
-                wrapperNode.pivot = SCNMatrix4MakeTranslation(c.x, c.y, c.z)
-                wrapperNode.scale = SCNVector3(model.scale, model.scale, model.scale)
-                wrapperNode.position = SCNVector3(model.position.x, s.glassesYOffset, model.position.z)
-                wrapperNode.eulerAngles = model.rotation
-                
-                // 🔴 A MÁGICA 4.0: Aplica os parâmetros ergonômicos e visagistas automaticamente!
-                s.applyAutoMorphs(to: wrapperNode, keyword: model.name)
-                
-                s.glassesNode = wrapperNode
-                
-                let targetFace = s.safeFaceCache ?? s.faceNode
-                if let face = targetFace { face.addChildNode(wrapperNode) }
             }
         }
-    }
     
     // Helper universal para torcer a malha (Funciona para Nuvem ou Nativo)
     func applyAutoMorphs(to node: SCNNode, keyword: String) {

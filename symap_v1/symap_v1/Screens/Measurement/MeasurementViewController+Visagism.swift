@@ -349,34 +349,36 @@ extension MeasurementViewController {
     }
     
     func applyRecommendedModel(modelIdOrName: String) {
-        if let cloudModel = CloudManager.shared.availableModels.first(where: { $0.name.lowercased().contains(modelIdOrName.lowercased()) }) {
-            self.loadCloudModel(model: cloudModel)
-        } else {
-            print("⚠️ AVISO: A IA recomendou a linha '\(modelIdOrName)', mas o catálogo da nuvem não possui este modelo.")
-            
-            var modelBaseName = modelIdOrName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
-            if modelBaseName == "luno" { modelBaseName = "sl_luno_feminino" }
-            if modelBaseName == "nunu" { modelBaseName = "sl_nunu_feminino" }
-            if modelBaseName == "suki" { modelBaseName = "sl_suki_feminino" }
-            
-            guard let url = Bundle.main.url(forResource: modelBaseName, withExtension: "usdc"),
-                  let modelScene = try? SCNScene(url: url, options: nil) else { return }
-            
-            self.glassesNode?.removeFromParentNode()
-            let wrapperNode = SCNNode()
-            wrapperNode.name = "customGlasses"
-            for child in modelScene.rootNode.childNodes { wrapperNode.addChildNode(child.clone()) }
-            
-            let (min, max) = wrapperNode.boundingBox
-            wrapperNode.pivot = SCNMatrix4MakeTranslation((min.x + max.x) / 2, (min.y + max.y) / 2, (min.z + max.z) / 2)
-            wrapperNode.position = SCNVector3(0, 0.02, 0)
-            
-            // Torce a malha local nativa também!
-            self.applyAutoMorphs(to: wrapperNode, keyword: modelIdOrName)
-            
-            let targetFace = self.safeFaceCache ?? self.faceNode
-            targetFace?.addChildNode(wrapperNode)
-            self.glassesNode = wrapperNode
+            if let cloudModel = CloudManager.shared.availableModels.first(where: { $0.name.lowercased().contains(modelIdOrName.lowercased()) }) {
+                self.loadCloudModel(model: cloudModel)
+            } else {
+                print("⚠️ AVISO: A IA recomendou a linha '\(modelIdOrName)', mas o catálogo da nuvem não possui este modelo.")
+                
+                var modelBaseName = modelIdOrName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
+                if modelBaseName == "luno" { modelBaseName = "sl_luno_feminino" }
+                if modelBaseName == "nunu" { modelBaseName = "sl_nunu_feminino" }
+                if modelBaseName == "suki" { modelBaseName = "sl_suki_feminino" }
+                
+                guard let url = Bundle.main.url(forResource: modelBaseName, withExtension: "usdc"),
+                      let modelScene = try? SCNScene(url: url, options: nil) else { return }
+                
+                self.glassesNode?.removeFromParentNode()
+                let wrapperNode = SCNNode()
+                wrapperNode.name = "customGlasses"
+                for child in modelScene.rootNode.childNodes { wrapperNode.addChildNode(child.clone()) }
+                
+                let (min, max) = wrapperNode.boundingBox
+                wrapperNode.pivot = SCNMatrix4MakeTranslation((min.x + max.x) / 2, (min.y + max.y) / 2, (min.z + max.z) / 2)
+                
+                // 🔴 A SUA CALIBRAÇÃO PERFEITA APLICADA AO NATIVO
+                wrapperNode.position = SCNVector3(0, 0.028, 0.050)
+                
+                // Torce a malha local nativa também!
+                self.applyAutoMorphs(to: wrapperNode, keyword: modelIdOrName)
+                
+                let targetFace = self.safeFaceCache ?? self.faceNode
+                targetFace?.addChildNode(wrapperNode)
+                self.glassesNode = wrapperNode
+            }
         }
-    }
 }
