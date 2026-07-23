@@ -16,7 +16,7 @@ extension MeasurementViewController {
         let _ = safetyCheck[ 0 ]
         
         // =======================================================
-        // 🔴 1. EXPERIÊNCIA UX: TELA FAKE DE "ANALISANDO BIOMETRIA"
+        // 1. EXPERIÊNCIA UX: TELA FAKE DE "ANALISANDO BIOMETRIA"
         // =======================================================
         let loadingContainer = UIView(frame: view.bounds)
         loadingContainer.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
@@ -59,7 +59,6 @@ extension MeasurementViewController {
         
         UIView.animate(withDuration: 0.3) { loadingContainer.alpha = 1.0 }
         
-        // 🔴 MÁGICA: Animação de processamento (Teatro UX)
         UIView.animate(withDuration: 1.0, delay: 0, options: .curveEaseInOut, animations: {
             progressBarFill.frame.size.width = progressBarBg.bounds.width * 0.4
         }) { _ in
@@ -67,7 +66,6 @@ extension MeasurementViewController {
             UIView.animate(withDuration: 1.5, delay: 0.2, options: .curveEaseInOut, animations: {
                 progressBarFill.frame.size.width = progressBarBg.bounds.width
             }) { _ in
-                // Fim do teatro: Remove o loading e exibe a verdadeira tela de Visagismo!
                 UIView.animate(withDuration: 0.3, animations: { loadingContainer.alpha = 0.0 }) { _ in
                     loadingContainer.removeFromSuperview()
                     self.showVisagismResults()
@@ -77,7 +75,7 @@ extension MeasurementViewController {
     }
     
     // =======================================================
-    // 🔴 2. A TELA DE VISAGISMO OFICIAL E PERSONALIZADA
+    // 2. A TELA DE VISAGISMO OFICIAL E PERSONALIZADA
     // =======================================================
     func showVisagismResults() {
         let visagismContainer = UIView(frame: view.bounds)
@@ -93,7 +91,6 @@ extension MeasurementViewController {
         title.font = UIFont.systemFont(ofSize: 22, weight: .black)
         visagismContainer.addSubview(title)
         
-        // Holograma
         let holoView = SCNView(frame: CGRect(x: 40, y: 100, width: view.bounds.width - 80, height: 230))
         holoView.backgroundColor = UIColor(white: 0.05, alpha: 1.0)
         holoView.layer.cornerRadius = 16
@@ -109,7 +106,7 @@ extension MeasurementViewController {
             clonedFace.transform = SCNMatrix4Identity
             clonedFace.position = SCNVector3(0, 0, 0)
             if clonedFace.childNodes.count > 0 {
-                // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL (Índice Blindado)
+                // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL (Índice Seguro)
                 let maskClone = clonedFace.childNodes[ 0 ].clone()
                 maskClone.isHidden = false
                 if let oldGeo = maskClone.geometry {
@@ -126,6 +123,7 @@ extension MeasurementViewController {
             }
         }
         
+        // RESTAURADO: Câmera original perfeita para o Rosto Holográfico
         let cameraNode = SCNNode()
         let camera = SCNCamera()
         camera.zNear = 0.01
@@ -134,14 +132,12 @@ extension MeasurementViewController {
         holoScene.rootNode.addChildNode(cameraNode)
         visagismContainer.addSubview(holoView)
         
-        // 🔴 TEXTO PESSOAL E DINÂMICO
         let info = UITextView(frame: CGRect(x: 30, y: 350, width: view.bounds.width - 60, height: view.bounds.height - 480))
         info.backgroundColor = .clear
         info.textColor = .lightGray
         info.font = UIFont.systemFont(ofSize: 13, weight: .regular)
         info.isEditable = false
         
-        // Injetando as variáveis do paciente lidas pela câmera
         let patientFirstName = self.patientName.components(separatedBy: " ").first ?? "Paciente"
         let patientStats = """
         IDENTIFICAÇÃO BIOMÉTRICA DE \(patientFirstName.uppercased()):
@@ -152,7 +148,11 @@ extension MeasurementViewController {
         
         """
         
-        let fullText = patientStats + self.frameSuggestion
+        let nomeDoModelo = self.recommendedAutoModel.capitalized
+        let recommendationText = "\n\nBaseado na linha Studio Lebô indicamos o modelo \(nomeDoModelo)."
+        
+        let fullText = patientStats + self.frameSuggestion + recommendationText
+        
         let style = NSMutableParagraphStyle()
         style.paragraphSpacing = 10
         style.alignment = .justified
@@ -163,10 +163,15 @@ extension MeasurementViewController {
             .paragraphStyle: style
         ])
         
-        // Pinta a caixa de identificação do paciente com a nossa cor Ciano
         let statRange = (fullText as NSString).range(of: patientStats)
         attrText.addAttribute(.foregroundColor, value: UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0), range: statRange)
         attrText.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: 13), range: statRange)
+        
+        let modelRange = (fullText as NSString).range(of: nomeDoModelo, options: .backwards)
+        if modelRange.location != NSNotFound {
+            attrText.addAttribute(.foregroundColor, value: UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0), range: modelRange)
+            attrText.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: 14), range: modelRange)
+        }
         
         info.attributedText = attrText
         visagismContainer.addSubview(info)
@@ -184,108 +189,194 @@ extension MeasurementViewController {
     }
     
     @objc func finishVisagismAndStartMeasurement() {
-            guard let visagismView = self.view.viewWithTag(8888) else { return }
-            self.isVisagismCompleted = true
+        guard let visagismView = self.view.viewWithTag(8888) else { return }
+        self.isVisagismCompleted = true
+        
+        UIView.animate(withDuration: 0.3, animations: { visagismView.alpha = 0.0 }) { _ in
+            visagismView.removeFromSuperview()
+            self.safeFaceCache?.removeFromParentNode()
+            self.safeFaceCache = nil
             
-            UIView.animate(withDuration: 0.3, animations: { visagismView.alpha = 0.0 }) { _ in
-                visagismView.removeFromSuperview()
-                self.safeFaceCache?.removeFromParentNode()
-                self.safeFaceCache = nil
-                
-                // =======================================================
-                // 🔴 3. EXPERIÊNCIA UX: FAKE LOADING DA MODELAGEM 3D
-                // =======================================================
-                let adaptContainer = UIView(frame: self.view.bounds)
-                adaptContainer.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
-                adaptContainer.alpha = 0.0
-                self.view.addSubview(adaptContainer)
-                
-                let title = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 - 60, width: self.view.bounds.width - 40, height: 30))
-                title.text = "PARAMETRIZANDO ARMAÇÃO 3D..."
-                title.textAlignment = .center
-                title.textColor = UIColor.systemPurple
-                title.font = UIFont.systemFont(ofSize: 18, weight: .black)
-                adaptContainer.addSubview(title)
-                
-                let barBg = UIView(frame: CGRect(x: 50, y: self.view.bounds.height / 2, width: self.view.bounds.width - 100, height: 6))
-                barBg.backgroundColor = UIColor.white.withAlphaComponent(0.1)
-                barBg.layer.cornerRadius = 3
-                adaptContainer.addSubview(barBg)
-                
-                let barFill = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 6))
-                barFill.backgroundColor = UIColor.systemPurple
-                barFill.layer.cornerRadius = 3
-                barBg.addSubview(barFill)
-                
-                let stepLabel = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 + 30, width: self.view.bounds.width - 40, height: 20))
-                stepLabel.text = "Ajustando largura temporal com +2.0mm de folga..."
-                stepLabel.textAlignment = .center
-                stepLabel.textColor = .lightGray
-                stepLabel.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
-                adaptContainer.addSubview(stepLabel)
-                
-                UIView.animate(withDuration: 0.3) { adaptContainer.alpha = 1.0 }
-                
-                UIView.animate(withDuration: 1.0, delay: 0, options: .curveEaseInOut, animations: {
-                    barFill.frame.size.width = barBg.bounds.width * 0.5
+            // =======================================================
+            // 3. EXPERIÊNCIA UX: FAKE LOADING DA MODELAGEM 3D
+            // =======================================================
+            let adaptContainer = UIView(frame: self.view.bounds)
+            adaptContainer.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
+            adaptContainer.alpha = 0.0
+            self.view.addSubview(adaptContainer)
+            
+            let title = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 - 60, width: self.view.bounds.width - 40, height: 30))
+            title.text = "PARAMETRIZANDO ARMAÇÃO 3D..."
+            title.textAlignment = .center
+            title.textColor = UIColor.systemPurple
+            title.font = UIFont.systemFont(ofSize: 18, weight: .black)
+            adaptContainer.addSubview(title)
+            
+            let barBg = UIView(frame: CGRect(x: 50, y: self.view.bounds.height / 2, width: self.view.bounds.width - 100, height: 6))
+            barBg.backgroundColor = UIColor.white.withAlphaComponent(0.1)
+            barBg.layer.cornerRadius = 3
+            adaptContainer.addSubview(barBg)
+            
+            let barFill = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 6))
+            barFill.backgroundColor = UIColor.systemPurple
+            barFill.layer.cornerRadius = 3
+            barBg.addSubview(barFill)
+            
+            let stepLabel = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 + 30, width: self.view.bounds.width - 40, height: 20))
+            stepLabel.text = "Ajustando largura temporal com +2.0mm de folga..."
+            stepLabel.textAlignment = .center
+            stepLabel.textColor = .lightGray
+            stepLabel.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
+            adaptContainer.addSubview(stepLabel)
+            
+            UIView.animate(withDuration: 0.3) { adaptContainer.alpha = 1.0 }
+            
+            UIView.animate(withDuration: 1.0, delay: 0, options: .curveEaseInOut, animations: {
+                barFill.frame.size.width = barBg.bounds.width * 0.5
+            }) { _ in
+                stepLabel.text = "Ajustando ergonomia da ponte nasal..."
+                UIView.animate(withDuration: 1.0, delay: 0.2, options: .curveEaseInOut, animations: {
+                    barFill.frame.size.width = barBg.bounds.width
                 }) { _ in
-                    stepLabel.text = "Ajustando ergonomia da ponte nasal..."
-                    UIView.animate(withDuration: 1.5, delay: 0.2, options: .curveEaseInOut, animations: {
-                        barFill.frame.size.width = barBg.bounds.width
-                    }) { _ in
+                    
+                    UIView.animate(withDuration: 0.3, animations: { adaptContainer.alpha = 0.0 }) { _ in
+                        adaptContainer.removeFromSuperview()
                         
-                        UIView.animate(withDuration: 0.3, animations: { adaptContainer.alpha = 0.0 }) { _ in
-                            adaptContainer.removeFromSuperview()
-                            
-                            // Fim do Teatro: Acende a Câmera e Oculta o Loading
-                            let config = ARFaceTrackingConfiguration()
-                            config.isLightEstimationEnabled = true
-                            self.sceneView.session.run(config)
-                            
-                            self.startLevelMonitoring()
-                            self.topFeedbackLabel?.isHidden = false
-                            self.faceGuideLayer?.isHidden = false
-                            self.levelContainerView.isHidden = false
-                            self.phonePitchContainerView.isHidden = false
-                            self.startCaptureButton.isHidden = false
-                            self.startCaptureButton.setTitle("Iniciar Captura (Medição)", for: .normal)
-                            
-                            self.view.viewWithTag(882)?.isHidden = false
-                            self.view.viewWithTag(880)?.isHidden = false
-                            
-                            // 🔴 Aplica o modelo já distorcido pelas regras matemáticas
-                            self.applyRecommendedModel(modelIdOrName: self.recommendedAutoModel)
-                        }
+                        // 🔴 CHAMA O NOVO POPUP DE RESULTADOS DEPOIS DO LOADING
+                        self.showModificationsPopup()
                     }
                 }
             }
         }
+    }
+    
+    // =======================================================
+    // 🔴 4. O NOVO POPUP MINIMALISTA (APENAS RELATÓRIO TÉCNICO)
+    // =======================================================
+    func showModificationsPopup() {
+        let popupOverlay = UIView(frame: self.view.bounds)
+        popupOverlay.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        popupOverlay.alpha = 0.0
+        self.view.addSubview(popupOverlay)
         
-        func applyRecommendedModel(modelIdOrName: String) {
-            if let cloudModel = CloudManager.shared.availableModels.first(where: { $0.name.lowercased().contains(modelIdOrName.lowercased()) }) {
-                self.loadCloudModel(model: cloudModel)
-            } else {
-                print("⚠️ AVISO: A IA recomendou a linha '\(modelIdOrName)', mas o catálogo da nuvem não possui este modelo.")
-                
-                // Fallback Nativo com a Mágica 4.0
-                guard let url = Bundle.main.url(forResource: modelIdOrName, withExtension: "usdc"),
-                      let modelScene = try? SCNScene(url: url, options: nil) else { return }
-                
-                self.glassesNode?.removeFromParentNode()
-                let wrapperNode = SCNNode()
-                wrapperNode.name = "customGlasses"
-                for child in modelScene.rootNode.childNodes { wrapperNode.addChildNode(child.clone()) }
-                
-                let (min, max) = wrapperNode.boundingBox
-                wrapperNode.pivot = SCNMatrix4MakeTranslation((min.x + max.x) / 2, (min.y + max.y) / 2, (min.z + max.z) / 2)
-                wrapperNode.position = SCNVector3(0, 0.02, 0)
-                
-                // Torce a malha local nativa também!
-                self.applyAutoMorphs(to: wrapperNode, keyword: modelIdOrName)
-                
-                let targetFace = self.safeFaceCache ?? self.faceNode
-                targetFace?.addChildNode(wrapperNode)
-                self.glassesNode = wrapperNode
+        // Diminuímos drasticamente a altura da caixa, pois o 3D foi removido
+        let boxW: CGFloat = 340
+        let boxH: CGFloat = 280
+        let box = UIView(frame: CGRect(x: (self.view.bounds.width - boxW)/2, y: (self.view.bounds.height - boxH)/2, width: boxW, height: boxH))
+        box.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.12, alpha: 1.0)
+        box.layer.cornerRadius = 24
+        box.layer.borderWidth = 2
+        box.layer.borderColor = UIColor.systemPurple.withAlphaComponent(0.6).cgColor
+        popupOverlay.addSubview(box)
+        
+        let title = UILabel(frame: CGRect(x: 20, y: 25, width: boxW - 40, height: 25))
+        title.text = "AJUSTES DA ARMAÇÃO"
+        title.textColor = .systemPurple
+        title.font = UIFont.systemFont(ofSize: 18, weight: .black)
+        title.textAlignment = .center
+        box.addSubview(title)
+        
+        // 🔴 MÁGICA DOS DADOS: Calcula as proporções para exibir no relatório
+        let keyword = self.recommendedAutoModel
+        var modText = ""
+        
+        if let key = AutoConfiguratorEngine.specs.keys.first(where: { keyword.lowercased().contains($0) }),
+           let spec = AutoConfiguratorEngine.specs[key] {
+            
+            let diffWidth = (self.faceWidth + 2.0) - spec.baseWidth
+            let diffBridge = (self.noseBridgeWidth + 0.75) - spec.baseBridge
+            
+            if abs(diffWidth) > 0.1 {
+                let sign = diffWidth > 0 ? "+" : ""
+                modText += "• Largura Temporal: \(sign)\(String(format: "%.1f", diffWidth)) mm\n"
+            }
+            if abs(diffBridge) > 0.1 {
+                let sign = diffBridge > 0 ? "+" : ""
+                modText += "• Ponte Nasal: \(sign)\(String(format: "%.1f", diffBridge)) mm\n"
+            }
+            if self.nasalProfile == "Plano" {
+                modText += "• Apoio Nasal: Expandido (Perfil Plano)\n"
             }
         }
+        
+        if modText.isEmpty { modText = "• Proporções originais perfeitas para sua face.\n" }
+        
+        // Texto descritivo exato das modificações reposicionado
+        let infoLabel = UILabel(frame: CGRect(x: 20, y: 75, width: boxW - 40, height: 100))
+        infoLabel.numberOfLines = 0
+        infoLabel.text = "Modificações Anatômicas Aplicadas no Modelo (\(keyword.capitalized)):\n\n" + modText
+        infoLabel.textColor = .lightGray
+        infoLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        box.addSubview(infoLabel)
+        
+        let btnOk = UIButton(frame: CGRect(x: 30, y: boxH - 75, width: boxW - 60, height: 50))
+        btnOk.backgroundColor = .systemPurple
+        btnOk.setTitle("OK, Iniciar Medições", for: .normal)
+        btnOk.setTitleColor(.white, for: .normal)
+        btnOk.layer.cornerRadius = 14
+        btnOk.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        btnOk.addTarget(self, action: #selector(dismissModificationsPopup(_:)), for: .touchUpInside)
+        box.addSubview(btnOk)
+        
+        UIView.animate(withDuration: 0.3) { popupOverlay.alpha = 1.0 }
+    }
+    
+    @objc func dismissModificationsPopup(_ sender: UIButton) {
+        guard let popup = sender.superview?.superview else { return }
+        
+        UIView.animate(withDuration: 0.3, animations: { popup.alpha = 0.0 }) { _ in
+            popup.removeFromSuperview()
+            
+            // Fim de Toda a Jornada Inicial: Acende a Câmera Viva
+            let config = ARFaceTrackingConfiguration()
+            config.isLightEstimationEnabled = true
+            self.sceneView.session.run(config)
+            
+            self.startLevelMonitoring()
+            self.topFeedbackLabel?.isHidden = false
+            self.faceGuideLayer?.isHidden = false
+            self.levelContainerView.isHidden = false
+            self.phonePitchContainerView.isHidden = false
+            self.startCaptureButton.isHidden = false
+            self.startCaptureButton.setTitle("Iniciar Captura (Medição)", for: .normal)
+            
+            self.view.viewWithTag(882)?.isHidden = false
+            self.view.viewWithTag(880)?.isHidden = false
+            
+            // Aplica o modelo com os parâmetros finais na face em tempo real
+            self.applyRecommendedModel(modelIdOrName: self.recommendedAutoModel)
+        }
+    }
+    
+    func applyRecommendedModel(modelIdOrName: String) {
+        if let cloudModel = CloudManager.shared.availableModels.first(where: { $0.name.lowercased().contains(modelIdOrName.lowercased()) }) {
+            self.loadCloudModel(model: cloudModel)
+        } else {
+            print("⚠️ AVISO: A IA recomendou a linha '\(modelIdOrName)', mas o catálogo da nuvem não possui este modelo.")
+            
+            var modelBaseName = modelIdOrName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
+            if modelBaseName == "luno" { modelBaseName = "sl_luno_feminino" }
+            if modelBaseName == "nunu" { modelBaseName = "sl_nunu_feminino" }
+            if modelBaseName == "suki" { modelBaseName = "sl_suki_feminino" }
+            
+            guard let url = Bundle.main.url(forResource: modelBaseName, withExtension: "usdc"),
+                  let modelScene = try? SCNScene(url: url, options: nil) else { return }
+            
+            self.glassesNode?.removeFromParentNode()
+            let wrapperNode = SCNNode()
+            wrapperNode.name = "customGlasses"
+            for child in modelScene.rootNode.childNodes { wrapperNode.addChildNode(child.clone()) }
+            
+            let (min, max) = wrapperNode.boundingBox
+            wrapperNode.pivot = SCNMatrix4MakeTranslation((min.x + max.x) / 2, (min.y + max.y) / 2, (min.z + max.z) / 2)
+            wrapperNode.position = SCNVector3(0, 0.02, 0)
+            
+            // Torce a malha local nativa também!
+            self.applyAutoMorphs(to: wrapperNode, keyword: modelIdOrName)
+            
+            let targetFace = self.safeFaceCache ?? self.faceNode
+            targetFace?.addChildNode(wrapperNode)
+            self.glassesNode = wrapperNode
+        }
+    }
 }
