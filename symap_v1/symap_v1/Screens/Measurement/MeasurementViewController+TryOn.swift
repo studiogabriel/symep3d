@@ -40,6 +40,7 @@ extension MeasurementViewController {
         let alert = UIAlertController(title: titleStr, message: "Selecione o modelo", preferredStyle: .actionSheet)
         
         let filteredModels = CloudManager.shared.availableModels.filter { $0.name.localizedCaseInsensitiveContains(filter) }
+        
         for m in filteredModels {
             let cleanName = m.name.replacingOccurrences(of: filter, with: "", options: .caseInsensitive).trimmingCharacters(in: .whitespacesAndNewlines)
             let finalName = cleanName.isEmpty ? m.name : cleanName
@@ -47,7 +48,9 @@ extension MeasurementViewController {
                 self.loadCloudModel(model: m)
             }))
         }
+        
         alert.addAction(UIAlertAction(title: "Voltar", style: .cancel, handler: { _ in self.showModelSelection() }))
+        
         if let p = alert.popoverPresentationController, let menuBtn = self.view.viewWithTag(882) as? UIButton {
             p.sourceView = menuBtn
             p.sourceRect = menuBtn.bounds
@@ -59,84 +62,234 @@ extension MeasurementViewController {
         present(alert, animated: true)
     }
     
-    func loadCloudModel(model: CloudGlassModel) {
-            self.measurementsLabel.text = "Baixando Armação..."
-            self.measurementsContainer.isHidden = false
+    func loadCloudModel(model: CloudGlassModel, showFakeLoading: Bool = true) {
+        self.view.isUserInteractionEnabled = false
+        
+        var adaptContainer: UIView?
+        var barBg: UIView?
+        var barFill: UIView?
+        var stepLabel: UILabel?
+        
+        if showFakeLoading {
+            let container = UIView(frame: self.view.bounds)
+            container.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
+            container.alpha = 0.0
+            self.view.addSubview(container)
+            adaptContainer = container
             
-            CloudManager.shared.downloadModelFile(url: model.fileUrl) { [weak self] u in
-                guard let s = self, let url = u else { return }
-                
+            let title = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 - 60, width: self.view.bounds.width - 40, height: 30))
+            title.text = "PERSONALIZANDO MODELO..."
+            title.textAlignment = .center
+            title.textColor = .systemPurple
+            title.font = UIFont.systemFont(ofSize: 18, weight: .black)
+            container.addSubview(title)
+            
+            let bg = UIView(frame: CGRect(x: 50, y: self.view.bounds.height / 2, width: self.view.bounds.width - 100, height: 6))
+            bg.backgroundColor = UIColor.white.withAlphaComponent(0.1)
+            bg.layer.cornerRadius = 3
+            container.addSubview(bg)
+            barBg = bg
+            
+            let fill = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 6))
+            fill.backgroundColor = .systemPurple
+            fill.layer.cornerRadius = 3
+            bg.addSubview(fill)
+            barFill = fill
+            
+            let lbl = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 + 30, width: self.view.bounds.width - 40, height: 20))
+            lbl.text = "Baixando malha 3D da nuvem..."
+            lbl.textAlignment = .center
+            lbl.textColor = .lightGray
+            lbl.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
+            container.addSubview(lbl)
+            stepLabel = lbl
+            
+            UIView.animate(withDuration: 0.3) { container.alpha = 1.0 }
+        }
+        
+        CloudManager.shared.downloadModelFile(url: model.fileUrl) { [weak self] u in
+            guard let s = self, let url = u else {
                 DispatchQueue.main.async {
-                    s.measurementsContainer.isHidden = true
-                    s.measurementsLabel.text = ""
-                    s.glassesNode?.removeFromParentNode()
-                    s.glassesNode = nil
-                    s.currentCloudModel = model
-                    
-                    // 🔴 CORREÇÃO DE ENCAIXE: Força a altura perfeita (Y) ignorando a nuvem
-                    s.glassesYOffset = 0.032
-                    
-                    let wrapperNode = SCNNode()
-                    wrapperNode.name = "customGlasses"
-                    
-                    if let scene = try? SCNScene(url: url, options: nil) {
-                        for child in scene.rootNode.childNodes { wrapperNode.addChildNode(child.clone()) }
-                    } else {
-                        let asset = MDLAsset(url: url)
-                        if asset.count > 0 {
-                            let obj = asset.object(at: 0)
-                            let nodeObj = SCNNode(mdlObject: obj)
-                            wrapperNode.addChildNode(nodeObj)
+                    adaptContainer?.removeFromSuperview()
+                    self?.view.isUserInteractionEnabled = true
+                }
+                return
+            }
+            
+            DispatchQueue.main.async {
+                s.glassesNode?.removeFromParentNode()
+                s.glassesNode = nil
+                s.currentCloudModel = model
+                s.glassesYOffset = 0.028
+                
+                let wrapperNode = SCNNode()
+                wrapperNode.name = "customGlasses"
+                
+                if let scene = try? SCNScene(url: url, options: nil) {
+                    for child in scene.rootNode.childNodes { wrapperNode.addChildNode(child.clone()) }
+                } else {
+                    let asset = MDLAsset(url: url)
+                    if asset.count > 0 {
+                        let obj = asset.object(at: 0)
+                        let nodeObj = SCNNode(mdlObject: obj)
+                        wrapperNode.addChildNode(nodeObj)
+                    }
+                }
+                
+                let mat = SCNMaterial()
+                mat.diffuse.contents = UIColor(white: 0.2, alpha: 1.0)
+                mat.lightingModel = .physicallyBased
+                mat.isDoubleSided = true
+                
+                wrapperNode.enumerateChildNodes { (child, _) in
+                    child.geometry?.firstMaterial = mat
+                }
+                
+                let (min, max) = wrapperNode.boundingBox
+                let c = SCNVector3((min.x+max.x)/2, (min.y+max.y)/2, (min.z+max.z)/2)
+                wrapperNode.pivot = SCNMatrix4MakeTranslation(c.x, c.y, c.z)
+                wrapperNode.scale = SCNVector3(model.scale, model.scale, model.scale)
+                wrapperNode.position = SCNVector3(model.position.x, 0.028, 0.050)
+                wrapperNode.eulerAngles = model.rotation
+                
+                s.applyAutoMorphs(to: wrapperNode, keyword: model.name)
+                s.glassesNode = wrapperNode
+                
+                // =======================================================
+                // 3. ENCERRAMENTO COM POPUP DE ALTERAÇÕES
+                // =======================================================
+                if showFakeLoading, let bg = barBg, let fill = barFill, let lbl = stepLabel, let container = adaptContainer {
+                    UIView.animate(withDuration: 1.0, delay: 0, options: .curveEaseInOut, animations: {
+                        fill.frame.size.width = bg.bounds.width * 0.5
+                    }) { _ in
+                        lbl.text = "Injetando biometria na armação (\(model.name))..."
+                        
+                        UIView.animate(withDuration: 1.0, delay: 0.2, options: .curveEaseInOut, animations: {
+                            fill.frame.size.width = bg.bounds.width
+                        }) { _ in
+                            UIView.animate(withDuration: 0.3, animations: { container.alpha = 0.0 }) { _ in
+                                container.removeFromSuperview()
+                                s.view.isUserInteractionEnabled = true
+                                
+                                // 🔴 MÁGICA UX: Em vez de vestir direto, exibe o relatório de ajustes!
+                                s.showTryOnModificationsPopup(modelName: model.name, node: wrapperNode)
+                            }
                         }
                     }
-                    
-                    let mat = SCNMaterial()
-                    mat.diffuse.contents = UIColor(white: 0.2, alpha: 1.0)
-                    mat.lightingModel = .physicallyBased
-                    mat.isDoubleSided = true
-                    
-                    wrapperNode.enumerateChildNodes { (child, _) in
-                        child.geometry?.firstMaterial = mat
-                    }
-                    
-                    let (min, max) = wrapperNode.boundingBox
-                    let c = SCNVector3((min.x+max.x)/2, (min.y+max.y)/2, (min.z+max.z)/2)
-                    wrapperNode.pivot = SCNMatrix4MakeTranslation(c.x, c.y, c.z)
-                    wrapperNode.scale = SCNVector3(model.scale, model.scale, model.scale)
-                    
-                    // 🔴 O SEGREDO DO ENCAIXE ESPACIAL 3D
-                    // Y: 0.032 (Sobe o óculos para a linha das sobrancelhas)
-                    // Z: 0.035 (Recua o óculos 2.5cm para trás, colando ele no rosto)
-                    wrapperNode.position = SCNVector3(model.position.x, 0.028, 0.050)
-                    wrapperNode.eulerAngles = model.rotation
-                    
-                    // Mantém a distorção matemática de medidas!
-                    s.applyAutoMorphs(to: wrapperNode, keyword: model.name)
-                    
-                    s.glassesNode = wrapperNode
-                    
+                } else {
+                    // 🔴 SE VEIO DO VISAGISMO: Pula a animação e joga direto no rosto!
+                    s.view.isUserInteractionEnabled = true
                     let targetFace = s.safeFaceCache ?? s.faceNode
                     if let face = targetFace { face.addChildNode(wrapperNode) }
                 }
             }
         }
+    }
+    
+    // =======================================================
+    // 🔴 NOVO: POPUP DE RELATÓRIO EXCLUSIVO DO TRY-ON
+    // =======================================================
+    func showTryOnModificationsPopup(modelName: String, node: SCNNode) {
+        let popupOverlay = UIView(frame: self.view.bounds)
+        popupOverlay.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        popupOverlay.alpha = 0.0
+        self.view.addSubview(popupOverlay)
+        
+        let boxW: CGFloat = 340
+        let boxH: CGFloat = 300 // Altura confortável para os dados
+        let box = UIView(frame: CGRect(x: (self.view.bounds.width - boxW)/2, y: (self.view.bounds.height - boxH)/2, width: boxW, height: boxH))
+        box.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.12, alpha: 1.0)
+        box.layer.cornerRadius = 24
+        box.layer.borderWidth = 2
+        box.layer.borderColor = UIColor.systemPurple.withAlphaComponent(0.6).cgColor
+        popupOverlay.addSubview(box)
+        
+        let title = UILabel(frame: CGRect(x: 20, y: 25, width: boxW - 40, height: 25))
+        title.text = "AJUSTES APLICADOS"
+        title.textColor = .systemPurple
+        title.font = UIFont.systemFont(ofSize: 18, weight: .black)
+        title.textAlignment = .center
+        box.addSubview(title)
+        
+        var modText = ""
+        
+        if let key = AutoConfiguratorEngine.specs.keys.first(where: { modelName.lowercased().contains($0) }),
+           let spec = AutoConfiguratorEngine.specs[key] {
+            
+            let diffWidth = (self.faceWidth + 2.0) - spec.baseWidth
+            let diffBridge = (self.noseBridgeWidth + 0.75) - spec.baseBridge
+            
+            if abs(diffWidth) > 0.1 {
+                let sign = diffWidth > 0 ? "+" : ""
+                modText += "• Largura Temporal: \(sign)\(String(format: "%.1f", diffWidth)) mm\n"
+            }
+            if abs(diffBridge) > 0.1 {
+                let sign = diffBridge > 0 ? "+" : ""
+                modText += "• Ponte Nasal: \(sign)\(String(format: "%.1f", diffBridge)) mm\n"
+            }
+            if self.nasalProfile == "Plano" {
+                modText += "• Apoio Nasal: Expandido (Perfil Plano)\n"
+            }
+            
+            if self.faceShape.contains("Longo") {
+                modText += "• Design Vertical: Aumentado (Equilibra a altura do rosto)\n"
+            } else if self.faceShape.contains("Redondo") {
+                modText += "• Design Vertical: Reduzido (Afina as proporções faciais)\n"
+            }
+            
+            if self.noseBridgeWidth < 15.0 {
+                modText += "• Estrutura da Ponte: Modo Ferradura (Maior volume e aderência)\n"
+            }
+        }
+        
+        if modText.isEmpty { modText = "• Proporções originais perfeitas para sua face.\n" }
+        
+        let infoLabel = UILabel(frame: CGRect(x: 20, y: 70, width: boxW - 40, height: 130))
+        infoLabel.numberOfLines = 0
+        infoLabel.text = "O modelo (\(modelName)) foi recriado milimetricamente para você:\n\n" + modText
+        infoLabel.textColor = .lightGray
+        infoLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        box.addSubview(infoLabel)
+        
+        let btnOk = UIButton(frame: CGRect(x: 30, y: boxH - 75, width: boxW - 60, height: 50))
+        btnOk.backgroundColor = .systemPurple
+        btnOk.setTitle("Vestir Armação", for: .normal)
+        btnOk.setTitleColor(.white, for: .normal)
+        btnOk.layer.cornerRadius = 14
+        btnOk.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        
+        // Ação moderna e enxuta para fechar e vestir o óculos
+        btnOk.addAction(UIAction(handler: { [weak self, weak popupOverlay] _ in
+            UIView.animate(withDuration: 0.3, animations: { popupOverlay?.alpha = 0.0 }) { _ in
+                popupOverlay?.removeFromSuperview()
+                
+                // Mágica: Coloca o óculos no rosto somente após o usuário ler as modificações!
+                let targetFace = self?.safeFaceCache ?? self?.faceNode
+                if let face = targetFace { face.addChildNode(node) }
+            }
+        }), for: .touchUpInside)
+        
+        box.addSubview(btnOk)
+        
+        UIView.animate(withDuration: 0.3) { popupOverlay.alpha = 1.0 }
+    }
     
     // Helper universal para torcer a malha (Funciona para Nuvem ou Nativo)
-        func applyAutoMorphs(to node: SCNNode, keyword: String) {
-            let weights = AutoConfiguratorEngine.calculateMorphWeights(
-                keyword: keyword,
-                faceWidth: self.faceWidth,
-                bridgeWidth: self.noseBridgeWidth,
-                nasalProfile: self.nasalProfile,
-                faceShape: self.faceShape // 🔴 Passando a nova inteligência de formato do rosto
-            )
-            
-            node.enumerateChildNodes { (child, _) in
-                if let morpher = child.morpher {
-                    for (key, value) in weights {
-                        morpher.setWeight(CGFloat(value), forTargetNamed: key)
-                    }
+    func applyAutoMorphs(to node: SCNNode, keyword: String) {
+        let weights = AutoConfiguratorEngine.calculateMorphWeights(
+            keyword: keyword,
+            faceWidth: self.faceWidth,
+            bridgeWidth: self.noseBridgeWidth,
+            nasalProfile: self.nasalProfile,
+            faceShape: self.faceShape
+        )
+        
+        node.enumerateChildNodes { (child, _) in
+            if let morpher = child.morpher {
+                for (key, value) in weights {
+                    morpher.setWeight(CGFloat(value), forTargetNamed: key)
                 }
             }
         }
+    }
 }

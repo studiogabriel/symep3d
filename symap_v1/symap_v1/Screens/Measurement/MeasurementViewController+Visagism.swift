@@ -361,7 +361,10 @@ extension MeasurementViewController {
     
     func applyRecommendedModel(modelIdOrName: String) {
             if let cloudModel = CloudManager.shared.availableModels.first(where: { $0.name.lowercased().contains(modelIdOrName.lowercased()) }) {
-                self.loadCloudModel(model: cloudModel)
+                
+                // 🔴 CORREÇÃO DE UX: Passamos o 'showFakeLoading: false' para não duplicar telas!
+                self.loadCloudModel(model: cloudModel, showFakeLoading: false)
+                
             } else {
                 print("⚠️ AVISO: A IA recomendou a linha '\(modelIdOrName)', mas o catálogo da nuvem não possui este modelo.")
                 
@@ -381,8 +384,6 @@ extension MeasurementViewController {
                 
                 let (min, max) = wrapperNode.boundingBox
                 wrapperNode.pivot = SCNMatrix4MakeTranslation((min.x + max.x) / 2, (min.y + max.y) / 2, (min.z + max.z) / 2)
-                
-                // 🔴 A SUA CALIBRAÇÃO PERFEITA APLICADA AO NATIVO
                 wrapperNode.position = SCNVector3(0, 0.028, 0.050)
                 
                 // Torce a malha local nativa também!
