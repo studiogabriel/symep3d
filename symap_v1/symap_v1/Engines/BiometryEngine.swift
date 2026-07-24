@@ -137,49 +137,55 @@ enum BiometryEngine {
     static func analyzeVisagisme(width: Float, height: Float, bridge: Float, jaw: Float, dnpTotal: Float) -> (faceShape: String, frameSuggestion: String, recommendedModel: String) {
             let ratio = height / width
             let dnpRatio = dnpTotal / width
-            
             var shape = ""
-            var advice = ""
             var recommendedModel = ""
             
-            // 1. FORMATO DO ROSTO E KEYWORDS ESCALÁVEIS
+            // 1. CÁLCULO MATEMÁTICO DO FORMATO DO ROSTO
             if ratio > 1.35 {
                 shape = "Longo / Retangular"
-                advice = "1. FORMATO DO ROSTO\nEquilibre com armações redondas ou ovais. Bordas curvas suavizam maxilares marcados e a linha da testa. Linhas retas ajudam a afinar e alongar o rosto."
-                recommendedModel = "luno" // Keyword mágica: Acha qualquer óculos da linha Luno!
             } else if ratio < 1.15 {
                 shape = "Redondo / Curto"
-                advice = "1. FORMATO DO ROSTO\nOpte por armações quadradas ou retangulares. Linhas retas e angulares ajudam a afinar e alongar o rosto. Evite modelos muito redondos."
-                recommendedModel = "nunu" // Keyword mágica: Acha qualquer óculos da linha Nunu!
             } else if jaw < (width * 0.85) {
                 shape = "Coração / Triangular"
-                advice = "1. FORMATO DO ROSTO\nEscolha modelos gatinho ou armações mais largas na parte inferior. Evite modelos pesados ou grossos no topo para não sobrecarregar a testa."
-                recommendedModel = "suki" // Keyword mágica: Acha qualquer óculos da linha Suki!
             } else {
                 shape = "Oval"
-                advice = "1. FORMATO DO ROSTO\nÉ o formato mais versátil, combinando com quase todos os estilos. Dica de ouro: evite apenas peças que sejam significativamente mais largas que a parte mais larga do seu rosto."
-                recommendedModel = "suki" // Keyword mágica: Versátil
             }
             
-            // 2. PROPORÇÃO E DETALHES FACIAIS
+            // 🔴 2. A MÁGICA: A IA agora consulta o seu novo Catálogo de História e Marketing!
+            let recommendedProfile = FrameCatalogEngine.recommendFrame(faceShape: shape)
+            recommendedModel = recommendedProfile.id
+            
+            // 3. PROPORÇÃO E DETALHES FACIAIS
             var eyesAdvice = ""
             if dnpRatio < 0.43 {
-                eyesAdvice = "Olhos Próximos: Para evitar sobrecarregar o centro do rosto, prefira pontes metálicas ou armações com detalhes e cores mais destacadas nas extremidades externas. Evite pontes escuras ou grossas."
+                eyesAdvice = "Olhos Próximos: Evite sobrecarregar o centro do rosto. A IA priorizou pontes confortáveis e detalhes nas extremidades da armação."
             } else {
-                eyesAdvice = "Proporção Padrão: O distanciamento dos seus olhos está em perfeita harmonia anatômica."
+                eyesAdvice = "Proporção Ocular: O distanciamento dos seus olhos está em perfeita harmonia anatômica."
             }
             
             var noseAdvice = ""
             if bridge < 15.0 {
-                noseAdvice = "Tamanho do Nariz: Pontes altas e claras ou detalhes finos ajudam a não destacar tanto o nariz."
+                noseAdvice = "Tamanho do Nariz: Pontes altas ajudam a não destacar tanto o osso nasal."
             } else {
-                noseAdvice = "Sobrancelhas: A parte superior da armação deve acompanhar o desenho natural da sua sobrancelha. Evite modelos que cortem o meio da sobrancelha ou que a escondam por completo."
+                noseAdvice = "Sobrancelhas: A parte superior da armação (\(recommendedProfile.shape)) foi selecionada para acompanhar o desenho natural do seu supercílio."
             }
             
-            // 3. CORES E TOM DE PELE (Fixo)
-            let colorsAdvice = "3. CORES E TOM DE PELE\n• Pele Quente (fundos amarelados/dourados): Harmoniza perfeitamente com tons terrosos, dourado, tartaruga (havana), coral e verde-oliva.\n• Pele Fria (fundos rosados/azulados): Cores como prata, rosa-antigo, azul-claro, cinza e tons pastéis combinam muito bem.\n• Contraste: Armações transparentes sem pigmento podem sumir em peles claras. Armações escuras (como o preto clássico) transmitem mais autoridade e elegância."
+            let colorsAdvice = "CORES E TOM DE PELE\n• Pele Quente (fundos amarelados): Harmoniza com tons terrosos, dourado e tartaruga.\n• Pele Fria (fundos rosados): Rosa-antigo, azul, cinza e tons pastéis combinam muito bem."
             
-            let finalSuggestion = "\(advice)\n\n2. PROPORÇÃO E DETALHES FACIAIS\n\(eyesAdvice)\n\(noseAdvice)\n\n\(colorsAdvice)"
+            // 🔴 4. MONTAGEM FINAL DO LAUDO (Juntando a Matemática com a sua Poesia)
+            let finalSuggestion = """
+            1. RESULTADO DO VISAGISMO 3D
+            Seu rosto possui o formato predominantemente \(shape.uppercased()).
+            
+            📖 CONCEITO DO MODELO INDICADO (\(recommendedProfile.name.uppercased())):
+            \(recommendedProfile.storytelling)
+            
+            2. ANÁLISE DE PROPORÇÕES (IA)
+            • \(eyesAdvice)
+            • \(noseAdvice)
+            
+            3. \(colorsAdvice)
+            """
             
             return (shape, finalSuggestion, recommendedModel)
         }
