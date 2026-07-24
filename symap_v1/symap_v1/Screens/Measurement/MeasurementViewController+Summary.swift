@@ -220,14 +220,16 @@ extension MeasurementViewController {
             if modelBaseName == "luno" { modelBaseName = "sl_luno_feminino" }
             if modelBaseName == "nunu" { modelBaseName = "sl_nunu_feminino" }
             if modelBaseName == "suki" { modelBaseName = "sl_suki_feminino" }
+            if modelBaseName == "timbau" { modelBaseName = "sl_timbau_masculino" }
             
-            // Solicita as chaves matemáticas ao Motor!
-            let edicoesShapeKeys = AutoConfiguratorEngine.calculateMorphWeights(
-                keyword: rawModelName,
-                faceWidth: self.faceWidth,
-                bridgeWidth: self.noseBridgeWidth,
-                nasalProfile: self.nasalProfile
-            )
+        // Solicita as chaves matemáticas ao Motor!
+                let edicoesShapeKeys = AutoConfiguratorEngine.calculateMorphWeights(
+                    keyword: rawModelName,
+                    faceWidth: self.faceWidth,
+                    bridgeWidth: self.noseBridgeWidth,
+                    nasalProfile: self.nasalProfile,
+                    faceShape: self.faceShape // 🔴 Motor agora sabe o formato do rosto!
+                )
             
             let data: [String: Any] = [
                 "userId": user.uid,

@@ -122,20 +122,21 @@ extension MeasurementViewController {
         }
     
     // Helper universal para torcer a malha (Funciona para Nuvem ou Nativo)
-    func applyAutoMorphs(to node: SCNNode, keyword: String) {
-        let weights = AutoConfiguratorEngine.calculateMorphWeights(
-            keyword: keyword,
-            faceWidth: self.faceWidth,
-            bridgeWidth: self.noseBridgeWidth,
-            nasalProfile: self.nasalProfile
-        )
-        
-        node.enumerateChildNodes { (child, _) in
-            if let morpher = child.morpher {
-                for (key, value) in weights {
-                    morpher.setWeight(CGFloat(value), forTargetNamed: key)
+        func applyAutoMorphs(to node: SCNNode, keyword: String) {
+            let weights = AutoConfiguratorEngine.calculateMorphWeights(
+                keyword: keyword,
+                faceWidth: self.faceWidth,
+                bridgeWidth: self.noseBridgeWidth,
+                nasalProfile: self.nasalProfile,
+                faceShape: self.faceShape // 🔴 Passando a nova inteligência de formato do rosto
+            )
+            
+            node.enumerateChildNodes { (child, _) in
+                if let morpher = child.morpher {
+                    for (key, value) in weights {
+                        morpher.setWeight(CGFloat(value), forTargetNamed: key)
+                    }
                 }
             }
         }
-    }
 }

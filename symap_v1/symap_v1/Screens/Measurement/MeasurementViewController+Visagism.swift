@@ -281,23 +281,34 @@ extension MeasurementViewController {
         var modText = ""
         
         if let key = AutoConfiguratorEngine.specs.keys.first(where: { keyword.lowercased().contains($0) }),
-           let spec = AutoConfiguratorEngine.specs[key] {
-            
-            let diffWidth = (self.faceWidth + 2.0) - spec.baseWidth
-            let diffBridge = (self.noseBridgeWidth + 0.75) - spec.baseBridge
-            
-            if abs(diffWidth) > 0.1 {
-                let sign = diffWidth > 0 ? "+" : ""
-                modText += "• Largura Temporal: \(sign)\(String(format: "%.1f", diffWidth)) mm\n"
-            }
-            if abs(diffBridge) > 0.1 {
-                let sign = diffBridge > 0 ? "+" : ""
-                modText += "• Ponte Nasal: \(sign)\(String(format: "%.1f", diffBridge)) mm\n"
-            }
-            if self.nasalProfile == "Plano" {
-                modText += "• Apoio Nasal: Expandido (Perfil Plano)\n"
-            }
-        }
+                   let spec = AutoConfiguratorEngine.specs[key] {
+                    
+                    let diffWidth = (self.faceWidth + 2.0) - spec.baseWidth
+                    let diffBridge = (self.noseBridgeWidth + 0.75) - spec.baseBridge
+                    
+                    if abs(diffWidth) > 0.1 {
+                        let sign = diffWidth > 0 ? "+" : ""
+                        modText += "• Largura Temporal: \(sign)\(String(format: "%.1f", diffWidth)) mm\n"
+                    }
+                    if abs(diffBridge) > 0.1 {
+                        let sign = diffBridge > 0 ? "+" : ""
+                        modText += "• Ponte Nasal: \(sign)\(String(format: "%.1f", diffBridge)) mm\n"
+                    }
+                    if self.nasalProfile == "Plano" {
+                        modText += "• Apoio Nasal: Expandido (Perfil Plano)\n"
+                    }
+                    
+                    // 🔴 Textos baseados nas novas chaves de Inteligência Estética
+                    if self.faceShape.contains("Longo") {
+                        modText += "• Design Vertical: Aumentado (Equilibra a altura do rosto)\n"
+                    } else if self.faceShape.contains("Redondo") {
+                        modText += "• Design Vertical: Reduzido (Afina as proporções faciais)\n"
+                    }
+                    
+                    if self.noseBridgeWidth < 15.0 {
+                        modText += "• Estrutura da Ponte: Modo Ferradura (Maior volume e aderência)\n"
+                    }
+                }
         
         if modText.isEmpty { modText = "• Proporções originais perfeitas para sua face.\n" }
         
@@ -358,6 +369,7 @@ extension MeasurementViewController {
                 if modelBaseName == "luno" { modelBaseName = "sl_luno_feminino" }
                 if modelBaseName == "nunu" { modelBaseName = "sl_nunu_feminino" }
                 if modelBaseName == "suki" { modelBaseName = "sl_suki_feminino" }
+                if modelBaseName == "timbau" { modelBaseName = "sl_timbau_masculino" }
                 
                 guard let url = Bundle.main.url(forResource: modelBaseName, withExtension: "usdc"),
                       let modelScene = try? SCNScene(url: url, options: nil) else { return }
