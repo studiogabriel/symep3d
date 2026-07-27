@@ -63,128 +63,178 @@ extension MeasurementViewController {
     }
     
     func loadCloudModel(model: CloudGlassModel, showFakeLoading: Bool = true) {
-        self.view.isUserInteractionEnabled = false
-        
-        var adaptContainer: UIView?
-        var barBg: UIView?
-        var barFill: UIView?
-        var stepLabel: UILabel?
-        
-        if showFakeLoading {
-            let container = UIView(frame: self.view.bounds)
-            container.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
-            container.alpha = 0.0
-            self.view.addSubview(container)
-            adaptContainer = container
+            self.view.isUserInteractionEnabled = false
+            var adaptContainer: UIView?
+            var barBg: UIView?
+            var barFill: UIView?
+            var stepLabel: UILabel?
             
-            let title = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 - 60, width: self.view.bounds.width - 40, height: 30))
-            title.text = "PERSONALIZANDO MODELO..."
-            title.textAlignment = .center
-            title.textColor = .systemPurple
-            title.font = UIFont.systemFont(ofSize: 18, weight: .black)
-            container.addSubview(title)
-            
-            let bg = UIView(frame: CGRect(x: 50, y: self.view.bounds.height / 2, width: self.view.bounds.width - 100, height: 6))
-            bg.backgroundColor = UIColor.white.withAlphaComponent(0.1)
-            bg.layer.cornerRadius = 3
-            container.addSubview(bg)
-            barBg = bg
-            
-            let fill = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 6))
-            fill.backgroundColor = .systemPurple
-            fill.layer.cornerRadius = 3
-            bg.addSubview(fill)
-            barFill = fill
-            
-            let lbl = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 + 30, width: self.view.bounds.width - 40, height: 20))
-            lbl.text = "Baixando malha 3D da nuvem..."
-            lbl.textAlignment = .center
-            lbl.textColor = .lightGray
-            lbl.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
-            container.addSubview(lbl)
-            stepLabel = lbl
-            
-            UIView.animate(withDuration: 0.3) { container.alpha = 1.0 }
-        }
-        
-        CloudManager.shared.downloadModelFile(url: model.fileUrl) { [weak self] u in
-            guard let s = self, let url = u else {
-                DispatchQueue.main.async {
-                    adaptContainer?.removeFromSuperview()
-                    self?.view.isUserInteractionEnabled = true
-                }
-                return
+            if showFakeLoading {
+                let container = UIView(frame: self.view.bounds)
+                container.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
+                container.alpha = 0.0
+                self.view.addSubview(container)
+                adaptContainer = container
+                
+                let title = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 - 60, width: self.view.bounds.width - 40, height: 30))
+                title.text = "PERSONALIZANDO MODELO..."
+                title.textAlignment = .center
+                title.textColor = .systemPurple
+                title.font = UIFont.systemFont(ofSize: 18, weight: .black)
+                container.addSubview(title)
+                
+                let bg = UIView(frame: CGRect(x: 50, y: self.view.bounds.height / 2, width: self.view.bounds.width - 100, height: 6))
+                bg.backgroundColor = UIColor.white.withAlphaComponent(0.1)
+                bg.layer.cornerRadius = 3
+                container.addSubview(bg)
+                barBg = bg
+                
+                let fill = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 6))
+                fill.backgroundColor = .systemPurple
+                fill.layer.cornerRadius = 3
+                bg.addSubview(fill)
+                barFill = fill
+                
+                let lbl = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 + 30, width: self.view.bounds.width - 40, height: 20))
+                lbl.text = "Injetando biometria na armação (\(model.name))..."
+                lbl.textAlignment = .center
+                lbl.textColor = .lightGray
+                lbl.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
+                container.addSubview(lbl)
+                stepLabel = lbl
+                
+                UIView.animate(withDuration: 0.3) { container.alpha = 1.0 }
             }
             
-            DispatchQueue.main.async {
-                s.glassesNode?.removeFromParentNode()
-                s.glassesNode = nil
-                s.currentCloudModel = model
-                s.glassesYOffset = 0.028
+            // 🔴 ARQUITETURA SENIOR: Intercepta o pedido da Nuvem e força o uso do arquivo Nativo (.usdc)
+            // Isso burla o bloqueio da Apple que apaga as Shape Keys de arquivos .glb baixados da web.
+            var safeModelName = model.name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
+            let isLargeFace = self.faceWidth >= 135.0
+            let isKidsFace = self.faceWidth < 124.0
+            
+            if safeModelName.contains("luno") { safeModelName = isKidsFace ? "sl_luno_infantil" : (isLargeFace ? "sl_luno_masculino" : "sl_luno_feminino") }
+            if safeModelName.contains("nunu") { safeModelName = isKidsFace ? "sl_nunu_infantil" : (isLargeFace ? "sl_nunu_masculino" : "sl_nunu_feminino") }
+            if safeModelName.contains("suki") { safeModelName = isKidsFace ? "sl_suki_infantil" : (isLargeFace ? "sl_suki_masculino" : "sl_suki_feminino") }
+            if safeModelName.contains("timbau") { safeModelName = isKidsFace ? "sl_timbau_infantil" : (isLargeFace ? "sl_timbau_masculino" : "sl_timbau_feminino") }
+            
+            let usdcName = safeModelName.hasPrefix("sl_") ? safeModelName : "sl_" + safeModelName
+            
+            // TENTA PUXAR DO XCODE PRIMEIRO (ONDE AS SHAPE KEYS FUNCIONAM)
+            if let url = Bundle.main.url(forResource: usdcName, withExtension: "usdc"),
+               let modelScene = try? SCNScene(url: url, options: nil) {
                 
-                let wrapperNode = SCNNode()
-                wrapperNode.name = "customGlasses"
-                
-                if let scene = try? SCNScene(url: url, options: nil) {
-                    for child in scene.rootNode.childNodes { wrapperNode.addChildNode(child.clone()) }
-                } else {
-                    let asset = MDLAsset(url: url)
-                    if asset.count > 0 {
-                        let obj = asset.object(at: 0)
-                        let nodeObj = SCNNode(mdlObject: obj)
-                        wrapperNode.addChildNode(nodeObj)
-                    }
-                }
-                
-                let mat = SCNMaterial()
-                mat.diffuse.contents = UIColor(white: 0.2, alpha: 1.0)
-                mat.lightingModel = .physicallyBased
-                mat.isDoubleSided = true
-                
-                wrapperNode.enumerateChildNodes { (child, _) in
-                    child.geometry?.firstMaterial = mat
-                }
-                
-                let (min, max) = wrapperNode.boundingBox
-                let c = SCNVector3((min.x+max.x)/2, (min.y+max.y)/2, (min.z+max.z)/2)
-                wrapperNode.pivot = SCNMatrix4MakeTranslation(c.x, c.y, c.z)
-                wrapperNode.scale = SCNVector3(model.scale, model.scale, model.scale)
-                wrapperNode.position = SCNVector3(model.position.x, 0.028, 0.050)
-                wrapperNode.eulerAngles = model.rotation
-                
-                s.applyAutoMorphs(to: wrapperNode, keyword: model.name)
-                s.glassesNode = wrapperNode
-                
-                // =======================================================
-                // 3. ENCERRAMENTO COM POPUP DE ALTERAÇÕES
-                // =======================================================
-                if showFakeLoading, let bg = barBg, let fill = barFill, let lbl = stepLabel, let container = adaptContainer {
-                    UIView.animate(withDuration: 1.0, delay: 0, options: .curveEaseInOut, animations: {
-                        fill.frame.size.width = bg.bounds.width * 0.5
-                    }) { _ in
-                        lbl.text = "Injetando biometria na armação (\(model.name))..."
-                        
-                        UIView.animate(withDuration: 1.0, delay: 0.2, options: .curveEaseInOut, animations: {
+                // 🔴 MÁGICA: Carrega IMEDIATAMENTE da memória do iPhone (sem travar a tela)
+                DispatchQueue.main.async {
+                    self.glassesNode?.removeFromParentNode()
+                    self.glassesNode = nil
+                    self.currentCloudModel = model // Salva a ID da nuvem para o Robô conseguir exportar o STL depois
+                    self.glassesYOffset = 0.028
+                    
+                    let wrapperNode = SCNNode()
+                                    wrapperNode.name = "customGlasses"
+                                    
+                                    for child in modelScene.rootNode.childNodes { wrapperNode.addChildNode(child.clone()) }
+                                    
+                                    // 🔴 MÁGICA DO MATERIAL: Pinta a malha nativa de Cinza Escuro com Profundidade (PBR)
+                                    let mat = SCNMaterial()
+                                    mat.diffuse.contents = UIColor(white: 0.2, alpha: 1.0)
+                                    mat.lightingModel = .physicallyBased
+                                    mat.isDoubleSided = true
+                                    
+                                    wrapperNode.enumerateChildNodes { (child, _) in
+                                        child.geometry?.firstMaterial = mat
+                                    }
+                                    
+                                    let (min, max) = wrapperNode.boundingBox
+                                    let c = SCNVector3((min.x+max.x)/2, (min.y+max.y)/2, (min.z+max.z)/2)
+                                    wrapperNode.pivot = SCNMatrix4MakeTranslation(c.x, c.y, c.z)
+                                    wrapperNode.scale = SCNVector3(model.scale, model.scale, model.scale)
+                                    wrapperNode.position = SCNVector3(model.position.x, 0.028, 0.050)
+                                    wrapperNode.eulerAngles = model.rotation
+                    
+                    // 🔴 APLICA AS DISTORÇÕES NA MALHA PERFEITAMENTE (Agora as Shape Keys estão ali!)
+                    self.applyAutoMorphs(to: wrapperNode, keyword: safeModelName)
+                    
+                    self.glassesNode = wrapperNode
+                    
+                    if showFakeLoading, let bg = barBg, let fill = barFill, let container = adaptContainer {
+                        UIView.animate(withDuration: 1.0, delay: 0, options: .curveEaseInOut, animations: {
                             fill.frame.size.width = bg.bounds.width
                         }) { _ in
                             UIView.animate(withDuration: 0.3, animations: { container.alpha = 0.0 }) { _ in
                                 container.removeFromSuperview()
-                                s.view.isUserInteractionEnabled = true
-                                
-                                // 🔴 MÁGICA UX: Em vez de vestir direto, exibe o relatório de ajustes!
-                                s.showTryOnModificationsPopup(modelName: model.name, node: wrapperNode)
+                                self.view.isUserInteractionEnabled = true
+                                self.showTryOnModificationsPopup(modelName: model.name, node: wrapperNode)
                             }
                         }
+                    } else {
+                        self.view.isUserInteractionEnabled = true
+                        let targetFace = self.safeFaceCache ?? self.faceNode
+                        if let face = targetFace { face.addChildNode(wrapperNode) }
                     }
-                } else {
-                    // 🔴 SE VEIO DO VISAGISMO: Pula a animação e joga direto no rosto!
-                    s.view.isUserInteractionEnabled = true
-                    let targetFace = s.safeFaceCache ?? s.faceNode
-                    if let face = targetFace { face.addChildNode(wrapperNode) }
+                }
+                
+            } else {
+                // 🔴 FALLBACK: Se a Ótica lançar uma nova armação na Nuvem que não tem .usdc nativo ainda, ele baixa o .glb (mas será rígido no espelho)
+                print("⚠️ AVISO: Arquivo \(usdcName).usdc não encontrado no app. Baixando da web (sem Shape Keys no espelho)...")
+                CloudManager.shared.downloadModelFile(url: model.fileUrl) { [weak self] u in
+                    guard let s = self, let url = u else {
+                        DispatchQueue.main.async { adaptContainer?.removeFromSuperview(); self?.view.isUserInteractionEnabled = true }
+                        return
+                    }
+                    DispatchQueue.main.async {
+                        s.glassesNode?.removeFromParentNode()
+                        s.glassesNode = nil
+                        s.currentCloudModel = model
+                        s.glassesYOffset = 0.028
+                        
+                        let wrapperNode = SCNNode()
+                        wrapperNode.name = "customGlasses"
+                        
+                        if let scene = try? SCNScene(url: url, options: nil) {
+                            for child in scene.rootNode.childNodes { wrapperNode.addChildNode(child.clone()) }
+                        } else {
+                            let asset = MDLAsset(url: url)
+                            if asset.count > 0 {
+                                let obj = asset.object(at: 0)
+                                let nodeObj = SCNNode(mdlObject: obj)
+                                wrapperNode.addChildNode(nodeObj)
+                            }
+                        }
+                        
+                        let mat = SCNMaterial()
+                        mat.diffuse.contents = UIColor(white: 0.2, alpha: 1.0)
+                        mat.lightingModel = .physicallyBased
+                        mat.isDoubleSided = true
+                        wrapperNode.enumerateChildNodes { (child, _) in child.geometry?.firstMaterial = mat }
+                        
+                        let (min, max) = wrapperNode.boundingBox
+                        let c = SCNVector3((min.x+max.x)/2, (min.y+max.y)/2, (min.z+max.z)/2)
+                        wrapperNode.pivot = SCNMatrix4MakeTranslation(c.x, c.y, c.z)
+                        wrapperNode.scale = SCNVector3(model.scale, model.scale, model.scale)
+                        wrapperNode.position = SCNVector3(model.position.x, 0.028, 0.050)
+                        wrapperNode.eulerAngles = model.rotation
+                        
+                        s.applyAutoMorphs(to: wrapperNode, keyword: model.name)
+                        s.glassesNode = wrapperNode
+                        
+                        if showFakeLoading, let bg = barBg, let fill = barFill, let container = adaptContainer {
+                            UIView.animate(withDuration: 1.0, delay: 0, options: .curveEaseInOut, animations: { fill.frame.size.width = bg.bounds.width }) { _ in
+                                UIView.animate(withDuration: 0.3, animations: { container.alpha = 0.0 }) { _ in
+                                    container.removeFromSuperview()
+                                    s.view.isUserInteractionEnabled = true
+                                    s.showTryOnModificationsPopup(modelName: model.name, node: wrapperNode)
+                                }
+                            }
+                        } else {
+                            s.view.isUserInteractionEnabled = true
+                            let targetFace = s.safeFaceCache ?? s.faceNode
+                            if let face = targetFace { face.addChildNode(wrapperNode) }
+                        }
+                    }
                 }
             }
         }
-    }
     
     // =======================================================
     // 🔴 NOVO: POPUP DE RELATÓRIO EXCLUSIVO DO TRY-ON
