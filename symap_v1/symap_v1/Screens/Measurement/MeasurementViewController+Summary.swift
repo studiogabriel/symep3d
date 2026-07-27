@@ -217,10 +217,11 @@ extension MeasurementViewController {
             var modelBaseName = rawModelName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
             
             // Fallback de segurança para garantir que a nuvem ache os arquivos com o prefixo exato antigo
-            if modelBaseName == "luno" { modelBaseName = "sl_luno_feminino" }
-            if modelBaseName == "nunu" { modelBaseName = "sl_nunu_feminino" }
-            if modelBaseName == "suki" { modelBaseName = "sl_suki_feminino" }
-            if modelBaseName == "timbau" { modelBaseName = "sl_timbau_masculino" }
+        // 🔴 Inteligência de Gênero: O robô solicita o arquivo exato baseado no cadastro do paciente
+                if modelBaseName == "luno" { modelBaseName = self.patientGender == "Masculino" ? "sl_luno_masculino" : "sl_luno_feminino" }
+                if modelBaseName == "nunu" { modelBaseName = self.patientGender == "Masculino" ? "sl_nunu_masculino" : "sl_nunu_feminino" }
+                if modelBaseName == "suki" { modelBaseName = self.patientGender == "Masculino" ? "sl_suki_masculino" : "sl_suki_feminino" }
+                if modelBaseName == "timbau" { modelBaseName = self.patientGender == "Masculino" ? "sl_timbau_masculino" : "sl_timbau_feminino" }
             
         // Solicita as chaves matemáticas ao Motor!
                 let edicoesShapeKeys = AutoConfiguratorEngine.calculateMorphWeights(

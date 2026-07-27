@@ -212,35 +212,39 @@ extension MeasurementViewController {
         box.addSubview(title)
         
         var modText = ""
-        
-        if let key = AutoConfiguratorEngine.specs.keys.first(where: { modelName.lowercased().contains($0) }),
-           let spec = AutoConfiguratorEngine.specs[key] {
-            
-            let diffWidth = (self.faceWidth + 2.0) - spec.baseWidth
-            let diffBridge = (self.noseBridgeWidth + 0.75) - spec.baseBridge
-            
-            if abs(diffWidth) > 0.1 {
-                let sign = diffWidth > 0 ? "+" : ""
-                modText += "• Largura Temporal: \(sign)\(String(format: "%.1f", diffWidth)) mm\n"
-            }
-            if abs(diffBridge) > 0.1 {
-                let sign = diffBridge > 0 ? "+" : ""
-                modText += "• Ponte Nasal: \(sign)\(String(format: "%.1f", diffBridge)) mm\n"
-            }
-            if self.nasalProfile == "Plano" {
-                modText += "• Apoio Nasal: Expandido (Perfil Plano)\n"
-            }
-            
-            if self.faceShape.contains("Longo") {
-                modText += "• Design Vertical: Aumentado (Equilibra a altura do rosto)\n"
-            } else if self.faceShape.contains("Redondo") {
-                modText += "• Design Vertical: Reduzido (Afina as proporções faciais)\n"
-            }
-            
-            if self.noseBridgeWidth < 15.0 {
-                modText += "• Estrutura da Ponte: Modo Ferradura (Maior volume e aderência)\n"
-            }
-        }
+                
+                // 🔴 CORREÇÃO: Converte espaços em underscores para o PopUp conseguir achar a chave no Motor!
+                let safeModelName = modelName.lowercased().replacingOccurrences(of: " ", with: "_")
+                
+                if let key = AutoConfiguratorEngine.specs.keys.first(where: { safeModelName.contains($0) }),
+                   let spec = AutoConfiguratorEngine.specs[key] {
+                    
+                    // 🔴 Lendo os espaçamentos dinamicamente
+                    let diffWidth = (self.faceWidth + VisagismClinicalRules.temporalClearance) - spec.baseWidth
+                    let diffBridge = (self.noseBridgeWidth + VisagismClinicalRules.bridgeClearance) - spec.baseBridge
+                    
+                    if abs(diffWidth) > 0.1 {
+                        let sign = diffWidth > 0 ? "+" : ""
+                        modText += "• Largura Temporal: \(sign)\(String(format: "%.1f", diffWidth)) mm\n"
+                    }
+                    if abs(diffBridge) > 0.1 {
+                        let sign = diffBridge > 0 ? "+" : ""
+                        modText += "• Ponte Nasal: \(sign)\(String(format: "%.1f", diffBridge)) mm\n"
+                    }
+                    if self.nasalProfile == "Plano" {
+                        modText += "• Apoio Nasal: Expandido (Perfil Plano)\n"
+                    }
+                    
+                    if self.faceShape.contains("Longo") {
+                        modText += "• Design Vertical: Aumentado (Equilibra a altura do rosto)\n"
+                    } else if self.faceShape.contains("Redondo") {
+                        modText += "• Design Vertical: Reduzido (Afina as proporções faciais)\n"
+                    }
+                    
+                    if self.noseBridgeWidth < VisagismClinicalRules.narrowNoseThreshold {
+                        modText += "• Estrutura da Ponte: Modo Ferradura (Maior volume e aderência)\n"
+                    }
+                }
         
         if modText.isEmpty { modText = "• Proporções originais perfeitas para sua face.\n" }
         

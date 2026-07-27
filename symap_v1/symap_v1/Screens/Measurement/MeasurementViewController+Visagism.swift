@@ -278,13 +278,22 @@ extension MeasurementViewController {
         
         // 🔴 MÁGICA DOS DADOS: Calcula as proporções para exibir no relatório
         let keyword = self.recommendedAutoModel
-        var modText = ""
-        
-        if let key = AutoConfiguratorEngine.specs.keys.first(where: { keyword.lowercased().contains($0) }),
+                var modText = ""
+                
+                // 🔴 INTELIGÊNCIA DE GÊNERO: O PopUp descobre o sexo do paciente para achar a matemática exata
+                var safeKeyword = keyword.lowercased().replacingOccurrences(of: " ", with: "_")
+                
+                if safeKeyword == "luno" { safeKeyword = self.patientGender == "Masculino" ? "luno_masculino" : "luno_feminino" }
+                if safeKeyword == "nunu" { safeKeyword = self.patientGender == "Masculino" ? "nunu_masculino" : "nunu_feminino" }
+                if safeKeyword == "suki" { safeKeyword = self.patientGender == "Masculino" ? "suki_masculino" : "suki_feminino" }
+                if safeKeyword == "timbau" { safeKeyword = self.patientGender == "Masculino" ? "timbau_masculino" : "timbau_feminino" }
+                
+                if let key = AutoConfiguratorEngine.specs.keys.first(where: { safeKeyword.contains($0) }),
                    let spec = AutoConfiguratorEngine.specs[key] {
                     
-                    let diffWidth = (self.faceWidth + 2.0) - spec.baseWidth
-                    let diffBridge = (self.noseBridgeWidth + 0.75) - spec.baseBridge
+                    // 🔴 Lendo os espaçamentos dinamicamente
+                    let diffWidth = (self.faceWidth + VisagismClinicalRules.temporalClearance) - spec.baseWidth
+                    let diffBridge = (self.noseBridgeWidth + VisagismClinicalRules.bridgeClearance) - spec.baseBridge
                     
                     if abs(diffWidth) > 0.1 {
                         let sign = diffWidth > 0 ? "+" : ""
@@ -298,14 +307,13 @@ extension MeasurementViewController {
                         modText += "• Apoio Nasal: Expandido (Perfil Plano)\n"
                     }
                     
-                    // 🔴 Textos baseados nas novas chaves de Inteligência Estética
                     if self.faceShape.contains("Longo") {
                         modText += "• Design Vertical: Aumentado (Equilibra a altura do rosto)\n"
                     } else if self.faceShape.contains("Redondo") {
                         modText += "• Design Vertical: Reduzido (Afina as proporções faciais)\n"
                     }
                     
-                    if self.noseBridgeWidth < 15.0 {
+                    if self.noseBridgeWidth < VisagismClinicalRules.narrowNoseThreshold {
                         modText += "• Estrutura da Ponte: Modo Ferradura (Maior volume e aderência)\n"
                     }
                 }
@@ -360,34 +368,43 @@ extension MeasurementViewController {
     }
     
     func applyRecommendedModel(modelIdOrName: String) {
-            if let cloudModel = CloudManager.shared.availableModels.first(where: { $0.name.lowercased().contains(modelIdOrName.lowercased()) }) {
-                
-                // 🔴 CORREÇÃO DE UX: Passamos o 'showFakeLoading: false' para não duplicar telas!
+            // 🔴 1. INTELIGÊNCIA DE GÊNERO GLOBAL: Traduz o modelo antes de buscar qualquer coisa!
+            var safeModelName = modelIdOrName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
+            
+            if safeModelName == "luno" { safeModelName = self.patientGender == "Masculino" ? "luno_masculino" : "luno_feminino" }
+            if safeModelName == "nunu" { safeModelName = self.patientGender == "Masculino" ? "nunu_masculino" : "nunu_feminino" }
+            if safeModelName == "suki" { safeModelName = self.patientGender == "Masculino" ? "suki_masculino" : "suki_feminino" }
+            if safeModelName == "timbau" { safeModelName = self.patientGender == "Masculino" ? "timbau_masculino" : "timbau_feminino" }
+            
+            // 🔴 2. BUSCA NA NUVEM (Usando o nome já traduzido com gênero)
+            if let cloudModel = CloudManager.shared.availableModels.first(where: {
+                let cloudNameClean = $0.name.lowercased().replacingOccurrences(of: " ", with: "_")
+                return cloudNameClean.contains(safeModelName)
+            }) {
+                // Se achou o óculos correto na nuvem, veste ele (sem tela de carregamento duplicada)
                 self.loadCloudModel(model: cloudModel, showFakeLoading: false)
                 
             } else {
-                print("⚠️ AVISO: A IA recomendou a linha '\(modelIdOrName)', mas o catálogo da nuvem não possui este modelo.")
+                // 🔴 3. FALLBACK NATIVO (Se estiver offline, busca no Xcode)
+                print("⚠️ AVISO: A IA recomendou a linha '\(safeModelName)', mas não achou na nuvem. Usando nativo.")
                 
-                var modelBaseName = modelIdOrName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
-                if modelBaseName == "luno" { modelBaseName = "sl_luno_feminino" }
-                if modelBaseName == "nunu" { modelBaseName = "sl_nunu_feminino" }
-                if modelBaseName == "suki" { modelBaseName = "sl_suki_feminino" }
-                if modelBaseName == "timbau" { modelBaseName = "sl_timbau_masculino" }
+                let usdcName = "sl_" + safeModelName
                 
-                guard let url = Bundle.main.url(forResource: modelBaseName, withExtension: "usdc"),
+                guard let url = Bundle.main.url(forResource: usdcName, withExtension: "usdc"),
                       let modelScene = try? SCNScene(url: url, options: nil) else { return }
                 
                 self.glassesNode?.removeFromParentNode()
                 let wrapperNode = SCNNode()
                 wrapperNode.name = "customGlasses"
+                
                 for child in modelScene.rootNode.childNodes { wrapperNode.addChildNode(child.clone()) }
                 
                 let (min, max) = wrapperNode.boundingBox
                 wrapperNode.pivot = SCNMatrix4MakeTranslation((min.x + max.x) / 2, (min.y + max.y) / 2, (min.z + max.z) / 2)
                 wrapperNode.position = SCNVector3(0, 0.028, 0.050)
                 
-                // Torce a malha local nativa também!
-                self.applyAutoMorphs(to: wrapperNode, keyword: modelIdOrName)
+                // 🔴 CORREÇÃO VITAL: Agora enviamos o nome com o Gênero exato para o motor torcer a malha!
+                self.applyAutoMorphs(to: wrapperNode, keyword: safeModelName)
                 
                 let targetFace = self.safeFaceCache ?? self.faceNode
                 targetFace?.addChildNode(wrapperNode)
