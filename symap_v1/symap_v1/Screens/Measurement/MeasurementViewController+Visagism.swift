@@ -277,19 +277,26 @@ extension MeasurementViewController {
         box.addSubview(title)
         
         // 🔴 MÁGICA DOS DADOS: Calcula as proporções para exibir no relatório
-        let keyword = self.recommendedAutoModel
+                let keyword = self.recommendedAutoModel
                 var modText = ""
                 
-                // 🔴 INTELIGÊNCIA DE GÊNERO: O PopUp descobre o sexo do paciente para achar a matemática exata
+                // 🔴 INTELIGÊNCIA ANATÔMICA: O PopUp avalia a largura do rosto para achar a matemática exata
                 var safeKeyword = keyword.lowercased().replacingOccurrences(of: " ", with: "_")
+                let isLargeFace = self.faceWidth >= 135.0
                 
-                if safeKeyword == "luno" { safeKeyword = self.patientGender == "Masculino" ? "luno_masculino" : "luno_feminino" }
-                if safeKeyword == "nunu" { safeKeyword = self.patientGender == "Masculino" ? "nunu_masculino" : "nunu_feminino" }
-                if safeKeyword == "suki" { safeKeyword = self.patientGender == "Masculino" ? "suki_masculino" : "suki_feminino" }
-                if safeKeyword == "timbau" { safeKeyword = self.patientGender == "Masculino" ? "timbau_masculino" : "timbau_feminino" }
+                if safeKeyword == "luno" { safeKeyword = isLargeFace ? "luno_masculino" : "luno_feminino" }
+                if safeKeyword == "nunu" { safeKeyword = isLargeFace ? "nunu_masculino" : "nunu_feminino" }
+                if safeKeyword == "suki" { safeKeyword = isLargeFace ? "suki_masculino" : "suki_feminino" }
+                if safeKeyword == "timbau" { safeKeyword = isLargeFace ? "timbau_masculino" : "timbau_feminino" }
+                
+                // 🔴 NOVO: Prepara o nome de exibição neutro
+                var displayModelName = keyword.capitalized
                 
                 if let key = AutoConfiguratorEngine.specs.keys.first(where: { safeKeyword.contains($0) }),
                    let spec = AutoConfiguratorEngine.specs[key] {
+                    
+                    // 🔴 NOVO: Adiciona o tamanho da base em milímetros (ex: "Luno 140mm")
+                    displayModelName = "\(keyword.capitalized) \(Int(spec.baseWidth))mm"
                     
                     // 🔴 Lendo os espaçamentos dinamicamente
                     let diffWidth = (self.faceWidth + VisagismClinicalRules.temporalClearance) - spec.baseWidth
@@ -317,16 +324,16 @@ extension MeasurementViewController {
                         modText += "• Estrutura da Ponte: Modo Ferradura (Maior volume e aderência)\n"
                     }
                 }
-        
-        if modText.isEmpty { modText = "• Proporções originais perfeitas para sua face.\n" }
-        
-        // Texto descritivo exato das modificações reposicionado
-        let infoLabel = UILabel(frame: CGRect(x: 20, y: 75, width: boxW - 40, height: 100))
-        infoLabel.numberOfLines = 0
-        infoLabel.text = "Modificações Anatômicas Aplicadas no Modelo (\(keyword.capitalized)):\n\n" + modText
-        infoLabel.textColor = .lightGray
-        infoLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        box.addSubview(infoLabel)
+                
+                if modText.isEmpty { modText = "• Proporções originais perfeitas para sua face.\n" }
+                
+                // Texto descritivo exato das modificações reposicionado
+                let infoLabel = UILabel(frame: CGRect(x: 20, y: 75, width: boxW - 40, height: 100))
+                infoLabel.numberOfLines = 0
+                infoLabel.text = "Modificações Anatômicas Aplicadas no Modelo (\(displayModelName)):\n\n" + modText
+                infoLabel.textColor = .lightGray
+                infoLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+                box.addSubview(infoLabel)
         
         let btnOk = UIButton(frame: CGRect(x: 30, y: boxH - 75, width: boxW - 60, height: 50))
         btnOk.backgroundColor = .systemPurple
@@ -368,13 +375,14 @@ extension MeasurementViewController {
     }
     
     func applyRecommendedModel(modelIdOrName: String) {
-            // 🔴 1. INTELIGÊNCIA DE GÊNERO GLOBAL: Traduz o modelo antes de buscar qualquer coisa!
-            var safeModelName = modelIdOrName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
-            
-            if safeModelName == "luno" { safeModelName = self.patientGender == "Masculino" ? "luno_masculino" : "luno_feminino" }
-            if safeModelName == "nunu" { safeModelName = self.patientGender == "Masculino" ? "nunu_masculino" : "nunu_feminino" }
-            if safeModelName == "suki" { safeModelName = self.patientGender == "Masculino" ? "suki_masculino" : "suki_feminino" }
-            if safeModelName == "timbau" { safeModelName = self.patientGender == "Masculino" ? "timbau_masculino" : "timbau_feminino" }
+        // 🔴 1. INTELIGÊNCIA ANATÔMICA GLOBAL: Traduz o modelo pela proporção métrica antes de buscar!
+                var safeModelName = modelIdOrName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
+                let isLargeFace = self.faceWidth >= 135.0
+                
+                if safeModelName == "luno" { safeModelName = isLargeFace ? "luno_masculino" : "luno_feminino" }
+                if safeModelName == "nunu" { safeModelName = isLargeFace ? "nunu_masculino" : "nunu_feminino" }
+                if safeModelName == "suki" { safeModelName = isLargeFace ? "suki_masculino" : "suki_feminino" }
+                if safeModelName == "timbau" { safeModelName = isLargeFace ? "timbau_masculino" : "timbau_feminino" }
             
             // 🔴 2. BUSCA NA NUVEM (Usando o nome já traduzido com gênero)
             if let cloudModel = CloudManager.shared.availableModels.first(where: {

@@ -217,11 +217,18 @@ extension MeasurementViewController {
             var modelBaseName = rawModelName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
             
             // Fallback de segurança para garantir que a nuvem ache os arquivos com o prefixo exato antigo
-        // 🔴 Inteligência de Gênero: O robô solicita o arquivo exato baseado no cadastro do paciente
-                if modelBaseName == "luno" { modelBaseName = self.patientGender == "Masculino" ? "sl_luno_masculino" : "sl_luno_feminino" }
-                if modelBaseName == "nunu" { modelBaseName = self.patientGender == "Masculino" ? "sl_nunu_masculino" : "sl_nunu_feminino" }
-                if modelBaseName == "suki" { modelBaseName = self.patientGender == "Masculino" ? "sl_suki_masculino" : "sl_suki_feminino" }
-                if modelBaseName == "timbau" { modelBaseName = self.patientGender == "Masculino" ? "sl_timbau_masculino" : "sl_timbau_feminino" }
+        // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+                let safetyCheck = ["Anatomic Model Selection"]
+                let _ = safetyCheck[ 0 ]
+
+                // 🔴 INTELIGÊNCIA ANATÔMICA: O robô escolhe o arquivo 3D baseado no tamanho físico do rosto!
+                // Rosto Largo (>= 135mm) usa base 140mm. Rosto Fino (< 135mm) usa base 130mm.
+                let isLargeFace = self.faceWidth >= 135.0
+                
+                if modelBaseName == "luno" { modelBaseName = isLargeFace ? "sl_luno_masculino" : "sl_luno_feminino" }
+                if modelBaseName == "nunu" { modelBaseName = isLargeFace ? "sl_nunu_masculino" : "sl_nunu_feminino" }
+                if modelBaseName == "suki" { modelBaseName = isLargeFace ? "sl_suki_masculino" : "sl_suki_feminino" }
+                if modelBaseName == "timbau" { modelBaseName = isLargeFace ? "sl_timbau_masculino" : "sl_timbau_feminino" }
             
         // Solicita as chaves matemáticas ao Motor!
                 let edicoesShapeKeys = AutoConfiguratorEngine.calculateMorphWeights(

@@ -216,8 +216,19 @@ extension MeasurementViewController {
                 // 🔴 CORREÇÃO: Converte espaços em underscores para o PopUp conseguir achar a chave no Motor!
                 let safeModelName = modelName.lowercased().replacingOccurrences(of: " ", with: "_")
                 
+                // 🔴 NOVO: Higieniza o nome vindo da nuvem para remover o gênero e o prefixo "SL"
+                var displayModelName = modelName
+                    .replacingOccurrences(of: "Masculino", with: "", options: .caseInsensitive)
+                    .replacingOccurrences(of: "Feminino", with: "", options: .caseInsensitive)
+                    .replacingOccurrences(of: "Infantil", with: "", options: .caseInsensitive)
+                    .replacingOccurrences(of: "SL ", with: "", options: .caseInsensitive)
+                    .trimmingCharacters(in: .whitespaces)
+                
                 if let key = AutoConfiguratorEngine.specs.keys.first(where: { safeModelName.contains($0) }),
                    let spec = AutoConfiguratorEngine.specs[key] {
+                    
+                    // 🔴 NOVO: Adiciona o tamanho da base em milímetros dinamicamente!
+                    displayModelName = "\(displayModelName) \(Int(spec.baseWidth))mm"
                     
                     // 🔴 Lendo os espaçamentos dinamicamente
                     let diffWidth = (self.faceWidth + VisagismClinicalRules.temporalClearance) - spec.baseWidth
@@ -245,15 +256,15 @@ extension MeasurementViewController {
                         modText += "• Estrutura da Ponte: Modo Ferradura (Maior volume e aderência)\n"
                     }
                 }
-        
-        if modText.isEmpty { modText = "• Proporções originais perfeitas para sua face.\n" }
-        
-        let infoLabel = UILabel(frame: CGRect(x: 20, y: 70, width: boxW - 40, height: 130))
-        infoLabel.numberOfLines = 0
-        infoLabel.text = "O modelo (\(modelName)) foi recriado milimetricamente para você:\n\n" + modText
-        infoLabel.textColor = .lightGray
-        infoLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        box.addSubview(infoLabel)
+                
+                if modText.isEmpty { modText = "• Proporções originais perfeitas para sua face.\n" }
+                
+                let infoLabel = UILabel(frame: CGRect(x: 20, y: 70, width: boxW - 40, height: 130))
+                infoLabel.numberOfLines = 0
+                infoLabel.text = "O modelo (\(displayModelName)) foi recriado milimetricamente para você:\n\n" + modText
+                infoLabel.textColor = .lightGray
+                infoLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+                box.addSubview(infoLabel)
         
         let btnOk = UIButton(frame: CGRect(x: 30, y: boxH - 75, width: boxW - 60, height: 50))
         btnOk.backgroundColor = .systemPurple
