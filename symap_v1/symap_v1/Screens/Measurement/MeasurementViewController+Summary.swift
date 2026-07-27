@@ -218,17 +218,18 @@ extension MeasurementViewController {
             
             // Fallback de segurança para garantir que a nuvem ache os arquivos com o prefixo exato antigo
         // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
-                let safetyCheck = ["Anatomic Model Selection"]
+                let safetyCheck = ["Anatomic 3-Zone Routing"]
                 let _ = safetyCheck[ 0 ]
 
-                // 🔴 INTELIGÊNCIA ANATÔMICA: O robô escolhe o arquivo 3D baseado no tamanho físico do rosto!
-                // Rosto Largo (>= 135mm) usa base 140mm. Rosto Fino (< 135mm) usa base 130mm.
+                // 🔴 INTELIGÊNCIA ANATÔMICA (3 ESCALAS): Infantil, Feminino e Masculino
+                // Menor que 124mm = Infantil | De 124mm a 134.9mm = Feminino | A partir de 135mm = Masculino
                 let isLargeFace = self.faceWidth >= 135.0
+                let isKidsFace = self.faceWidth < 124.0
                 
-                if modelBaseName == "luno" { modelBaseName = isLargeFace ? "sl_luno_masculino" : "sl_luno_feminino" }
-                if modelBaseName == "nunu" { modelBaseName = isLargeFace ? "sl_nunu_masculino" : "sl_nunu_feminino" }
-                if modelBaseName == "suki" { modelBaseName = isLargeFace ? "sl_suki_masculino" : "sl_suki_feminino" }
-                if modelBaseName == "timbau" { modelBaseName = isLargeFace ? "sl_timbau_masculino" : "sl_timbau_feminino" }
+                if modelBaseName == "luno" { modelBaseName = isKidsFace ? "sl_luno_infantil" : (isLargeFace ? "sl_luno_masculino" : "sl_luno_feminino") }
+                if modelBaseName == "nunu" { modelBaseName = isKidsFace ? "sl_nunu_infantil" : (isLargeFace ? "sl_nunu_masculino" : "sl_nunu_feminino") }
+                if modelBaseName == "suki" { modelBaseName = isKidsFace ? "sl_suki_infantil" : (isLargeFace ? "sl_suki_masculino" : "sl_suki_feminino") }
+                if modelBaseName == "timbau" { modelBaseName = isKidsFace ? "sl_timbau_infantil" : (isLargeFace ? "sl_timbau_masculino" : "sl_timbau_feminino") }
             
         // Solicita as chaves matemáticas ao Motor!
                 let edicoesShapeKeys = AutoConfiguratorEngine.calculateMorphWeights(

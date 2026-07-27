@@ -7,7 +7,7 @@ struct VisagismClinicalRules {
     // =======================================================
     // 🔴 1. FOLGAS ANATÔMICAS GERAIS (em milímetros)
     // =======================================================
-    static let temporalClearance: Float = 2.0  // +2.0mm de folga na largura total do rosto
+    static let temporalClearance: Float = 3.5  // +2.0mm de folga na largura total do rosto
     static let bridgeClearance: Float = 0.75   // +0.75mm de folga na ponte nasal
     
     // =======================================================

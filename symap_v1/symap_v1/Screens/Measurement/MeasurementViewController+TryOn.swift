@@ -230,31 +230,33 @@ extension MeasurementViewController {
                     // 🔴 NOVO: Adiciona o tamanho da base em milímetros dinamicamente!
                     displayModelName = "\(displayModelName) \(Int(spec.baseWidth))mm"
                     
-                    // 🔴 Lendo os espaçamentos dinamicamente
-                    let diffWidth = (self.faceWidth + VisagismClinicalRules.temporalClearance) - spec.baseWidth
-                    let diffBridge = (self.noseBridgeWidth + VisagismClinicalRules.bridgeClearance) - spec.baseBridge
-                    
-                    if abs(diffWidth) > 0.1 {
-                        let sign = diffWidth > 0 ? "+" : ""
-                        modText += "• Largura Temporal: \(sign)\(String(format: "%.1f", diffWidth)) mm\n"
-                    }
-                    if abs(diffBridge) > 0.1 {
-                        let sign = diffBridge > 0 ? "+" : ""
-                        modText += "• Ponte Nasal: \(sign)\(String(format: "%.1f", diffBridge)) mm\n"
-                    }
-                    if self.nasalProfile == "Plano" {
-                        modText += "• Apoio Nasal: Expandido (Perfil Plano)\n"
-                    }
-                    
-                    if self.faceShape.contains("Longo") {
-                        modText += "• Design Vertical: Aumentado (Equilibra a altura do rosto)\n"
-                    } else if self.faceShape.contains("Redondo") {
-                        modText += "• Design Vertical: Reduzido (Afina as proporções faciais)\n"
-                    }
-                    
-                    if self.noseBridgeWidth < VisagismClinicalRules.narrowNoseThreshold {
-                        modText += "• Estrutura da Ponte: Modo Ferradura (Maior volume e aderência)\n"
-                    }
+                    // 🔴 LÓGICA ESPELHADA DO MOTOR (Com Clipping e Compensação Física)
+                                    let rawDiffBridge = (self.noseBridgeWidth + VisagismClinicalRules.bridgeClearance) - spec.baseBridge
+                                    let finalDiffBridge = rawDiffBridge > 0 ? min(rawDiffBridge, spec.limits.bridgePlus) : max(rawDiffBridge, -spec.limits.bridgeMinus)
+                                    
+                                    let rawTargetWidth = self.faceWidth + VisagismClinicalRules.temporalClearance
+                                    let compensatedDiffWidth = (rawTargetWidth - spec.baseWidth) - finalDiffBridge
+                                    let finalDiffWidth = compensatedDiffWidth > 0 ? min(compensatedDiffWidth, spec.limits.larguraA) : max(compensatedDiffWidth, -spec.limits.larguraR)
+                                    
+                                    if abs(finalDiffWidth) > 0.1 {
+                                        let sign = finalDiffWidth > 0 ? "+" : ""
+                                        modText += "• Largura Temporal: \(sign)\(String(format: "%.1f", finalDiffWidth)) mm\n"
+                                    }
+                                    if abs(finalDiffBridge) > 0.1 {
+                                        let sign = finalDiffBridge > 0 ? "+" : ""
+                                        modText += "• Ponte Nasal: \(sign)\(String(format: "%.1f", finalDiffBridge)) mm\n"
+                                    }
+                                    if self.nasalProfile == "Plano" {
+                                        modText += "• Apoio Nasal: Expandido (Perfil Plano)\n"
+                                    }
+                                    if self.faceShape.contains("Longo") {
+                                        modText += "• Design Vertical: Aumentado (Equilibra a altura do rosto)\n"
+                                    } else if self.faceShape.contains("Redondo") {
+                                        modText += "• Design Vertical: Reduzido (Afina as proporções faciais)\n"
+                                    }
+                                    if self.noseBridgeWidth < VisagismClinicalRules.narrowNoseThreshold {
+                                        modText += "• Estrutura da Ponte: Modo Ferradura (Maior volume e aderência)\n"
+                                    }
                 }
                 
                 if modText.isEmpty { modText = "• Proporções originais perfeitas para sua face.\n" }
