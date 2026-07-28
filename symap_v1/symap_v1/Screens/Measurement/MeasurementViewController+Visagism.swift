@@ -251,104 +251,111 @@ extension MeasurementViewController {
     }
     
     // =======================================================
-    // 🔴 4. O NOVO POPUP MINIMALISTA (APENAS RELATÓRIO TÉCNICO)
-    // =======================================================
-    func showModificationsPopup() {
-        let popupOverlay = UIView(frame: self.view.bounds)
-        popupOverlay.backgroundColor = UIColor.black.withAlphaComponent(0.8)
-        popupOverlay.alpha = 0.0
-        self.view.addSubview(popupOverlay)
-        
-        // Diminuímos drasticamente a altura da caixa, pois o 3D foi removido
-        let boxW: CGFloat = 340
-        let boxH: CGFloat = 280
-        let box = UIView(frame: CGRect(x: (self.view.bounds.width - boxW)/2, y: (self.view.bounds.height - boxH)/2, width: boxW, height: boxH))
-        box.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.12, alpha: 1.0)
-        box.layer.cornerRadius = 24
-        box.layer.borderWidth = 2
-        box.layer.borderColor = UIColor.systemPurple.withAlphaComponent(0.6).cgColor
-        popupOverlay.addSubview(box)
-        
-        let title = UILabel(frame: CGRect(x: 20, y: 25, width: boxW - 40, height: 25))
-        title.text = "AJUSTES DA ARMAÇÃO"
-        title.textColor = .systemPurple
-        title.font = UIFont.systemFont(ofSize: 18, weight: .black)
-        title.textAlignment = .center
-        box.addSubview(title)
-        
-        // 🔴 MÁGICA DOS DADOS: Calcula as proporções para exibir no relatório
-                let keyword = self.recommendedAutoModel
-                var modText = ""
+        // 🔴 4. O NOVO POPUP MINIMALISTA (APENAS RELATÓRIO TÉCNICO)
+        // =======================================================
+        func showModificationsPopup() {
+            let popupOverlay = UIView(frame: self.view.bounds)
+            popupOverlay.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+            popupOverlay.alpha = 0.0
+            self.view.addSubview(popupOverlay)
+            
+            // 🔴 CORREÇÃO UX: Aumentamos a caixa para o texto não ser cortado (Igual ao Try-On)
+            let boxW: CGFloat = 340
+            let boxH: CGFloat = 300
+            let box = UIView(frame: CGRect(x: (self.view.bounds.width - boxW)/2, y: (self.view.bounds.height - boxH)/2, width: boxW, height: boxH))
+            box.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.12, alpha: 1.0)
+            box.layer.cornerRadius = 24
+            box.layer.borderWidth = 2
+            box.layer.borderColor = UIColor.systemPurple.withAlphaComponent(0.6).cgColor
+            popupOverlay.addSubview(box)
+            
+            let title = UILabel(frame: CGRect(x: 20, y: 25, width: boxW - 40, height: 25))
+            title.text = "AJUSTES DA ARMAÇÃO"
+            title.textColor = .systemPurple
+            title.font = UIFont.systemFont(ofSize: 18, weight: .black)
+            title.textAlignment = .center
+            box.addSubview(title)
+            
+            let keyword = self.recommendedAutoModel
+            var modText = ""
+            
+            var safeKeyword = keyword.lowercased().replacingOccurrences(of: " ", with: "_")
+            let isLargeFace = self.faceWidth >= 130.1
+            let isKidsFace = self.faceWidth < 124.0
+            
+            if safeKeyword == "luno" { safeKeyword = isKidsFace ? "luno_infantil" : (isLargeFace ? "luno_masculino" : "luno_feminino") }
+            if safeKeyword == "nunu" { safeKeyword = isKidsFace ? "nunu_infantil" : (isLargeFace ? "nunu_masculino" : "nunu_feminino") }
+            if safeKeyword == "suki" { safeKeyword = isKidsFace ? "suki_infantil" : (isLargeFace ? "suki_masculino" : "suki_feminino") }
+            if safeKeyword == "timbau" { safeKeyword = isKidsFace ? "timbau_infantil" : (isLargeFace ? "timbau_masculino" : "timbau_feminino") }
+            
+            var displayModelName = keyword.capitalized
+            
+            if let key = AutoConfiguratorEngine.specs.keys.first(where: { safeKeyword.contains($0) }),
+               let spec = AutoConfiguratorEngine.specs[key] {
                 
-        // 🔴 INTELIGÊNCIA ANATÔMICA (3 ESCALAS): Infantil, Feminino e Masculino
-                var safeKeyword = keyword.lowercased().replacingOccurrences(of: " ", with: "_")
-        let isLargeFace = self.faceWidth >= 130.1
-                let isKidsFace = self.faceWidth < 124.0
+                displayModelName = "\(keyword.capitalized) \(Int(spec.baseWidth))mm"
                 
-                if safeKeyword == "luno" { safeKeyword = isKidsFace ? "luno_infantil" : (isLargeFace ? "luno_masculino" : "luno_feminino") }
-                if safeKeyword == "nunu" { safeKeyword = isKidsFace ? "nunu_infantil" : (isLargeFace ? "nunu_masculino" : "nunu_feminino") }
-                if safeKeyword == "suki" { safeKeyword = isKidsFace ? "suki_infantil" : (isLargeFace ? "suki_masculino" : "suki_feminino") }
-                if safeKeyword == "timbau" { safeKeyword = isKidsFace ? "timbau_infantil" : (isLargeFace ? "timbau_masculino" : "timbau_feminino") }
+                let rawDiffBridge = (self.noseBridgeWidth + VisagismClinicalRules.bridgeClearance) - spec.baseBridge
+                let finalDiffBridge = rawDiffBridge > 0 ? min(rawDiffBridge, spec.limits.bridgePlus) : max(rawDiffBridge, -spec.limits.bridgeMinus)
                 
-                // 🔴 NOVO: Prepara o nome de exibição neutro
-                var displayModelName = keyword.capitalized
+                let rawTargetWidth = self.faceWidth + VisagismClinicalRules.temporalClearance
+                let compensatedDiffWidth = (rawTargetWidth - spec.baseWidth) - finalDiffBridge
+                let finalDiffWidth = compensatedDiffWidth > 0 ? min(compensatedDiffWidth, spec.limits.larguraA) : max(compensatedDiffWidth, -spec.limits.larguraR)
                 
-                if let key = AutoConfiguratorEngine.specs.keys.first(where: { safeKeyword.contains($0) }),
-                   let spec = AutoConfiguratorEngine.specs[key] {
-                    
-                    // 🔴 NOVO: Adiciona o tamanho da base em milímetros (ex: "Luno 140mm")
-                    displayModelName = "\(keyword.capitalized) \(Int(spec.baseWidth))mm"
-                    
-                    // 🔴 LÓGICA ESPELHADA DO MOTOR (Com Clipping e Compensação Física)
-                                    let rawDiffBridge = (self.noseBridgeWidth + VisagismClinicalRules.bridgeClearance) - spec.baseBridge
-                                    let finalDiffBridge = rawDiffBridge > 0 ? min(rawDiffBridge, spec.limits.bridgePlus) : max(rawDiffBridge, -spec.limits.bridgeMinus)
-                                    
-                                    let rawTargetWidth = self.faceWidth + VisagismClinicalRules.temporalClearance
-                                    let compensatedDiffWidth = (rawTargetWidth - spec.baseWidth) - finalDiffBridge
-                                    let finalDiffWidth = compensatedDiffWidth > 0 ? min(compensatedDiffWidth, spec.limits.larguraA) : max(compensatedDiffWidth, -spec.limits.larguraR)
-                                    
-                                    if abs(finalDiffWidth) > 0.1 {
-                                        let sign = finalDiffWidth > 0 ? "+" : ""
-                                        modText += "• Largura Temporal: \(sign)\(String(format: "%.1f", finalDiffWidth)) mm\n"
-                                    }
-                                    if abs(finalDiffBridge) > 0.1 {
-                                        let sign = finalDiffBridge > 0 ? "+" : ""
-                                        modText += "• Ponte Nasal: \(sign)\(String(format: "%.1f", finalDiffBridge)) mm\n"
-                                    }
-                                    if self.nasalProfile == "Plano" {
-                                        modText += "• Apoio Nasal: Expandido (Perfil Plano)\n"
-                                    }
-                                    if self.faceShape.contains("Longo") {
-                                        modText += "• Design Vertical: Aumentado (Equilibra a altura do rosto)\n"
-                                    } else if self.faceShape.contains("Redondo") {
-                                        modText += "• Design Vertical: Reduzido (Afina as proporções faciais)\n"
-                                    }
-                                    if self.noseBridgeWidth < VisagismClinicalRules.narrowNoseThreshold {
-                                        modText += "• Estrutura da Ponte: Modo Ferradura (Maior volume e aderência)\n"
-                                    }
+                if abs(finalDiffWidth) > 0.1 {
+                    let sign = finalDiffWidth > 0 ? "+" : ""
+                    modText += "• Largura Temporal: \(sign)\(String(format: "%.1f", finalDiffWidth)) mm\n"
                 }
                 
-                if modText.isEmpty { modText = "• Proporções originais perfeitas para sua face.\n" }
+                if abs(finalDiffBridge) > 0.1 {
+                    let sign = finalDiffBridge > 0 ? "+" : ""
+                    modText += "• Ponte Nasal: \(sign)\(String(format: "%.1f", finalDiffBridge)) mm\n"
+                }
                 
-                // Texto descritivo exato das modificações reposicionado
-                let infoLabel = UILabel(frame: CGRect(x: 20, y: 75, width: boxW - 40, height: 100))
-                infoLabel.numberOfLines = 0
-                infoLabel.text = "Modificações Anatômicas Aplicadas no Modelo (\(displayModelName)):\n\n" + modText
-                infoLabel.textColor = .lightGray
-                infoLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-                box.addSubview(infoLabel)
-        
-        let btnOk = UIButton(frame: CGRect(x: 30, y: boxH - 75, width: boxW - 60, height: 50))
-        btnOk.backgroundColor = .systemPurple
-        btnOk.setTitle("OK, Iniciar Medições", for: .normal)
-        btnOk.setTitleColor(.white, for: .normal)
-        btnOk.layer.cornerRadius = 14
-        btnOk.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        btnOk.addTarget(self, action: #selector(dismissModificationsPopup(_:)), for: .touchUpInside)
-        box.addSubview(btnOk)
-        
-        UIView.animate(withDuration: 0.3) { popupOverlay.alpha = 1.0 }
-    }
+                if self.nasalProfile == "Plano" {
+                    modText += "• Apoio Nasal: Expandido (Perfil Plano)\n"
+                }
+                
+                // 🔴 IDENTIDADE DA MARCA: Cálculo Exato Vertical (Terço Médio)
+                            let dynamicSafetyCheck = ["Vertical mm UI Calculation"]
+                            let _ = dynamicSafetyCheck[ 0 ]
+                            
+                            let targetHeight = self.faceHeight / 3.0
+                            let rawDiffVertical = targetHeight - spec.baseHeight
+                            let finalDiffVertical = rawDiffVertical > 0 ? min(rawDiffVertical, spec.limits.verticalA) : max(rawDiffVertical, -spec.limits.verticalR)
+                            
+                            if abs(finalDiffVertical) > 0.1 {
+                                let sign = finalDiffVertical > 0 ? "+" : ""
+                                let explanation = finalDiffVertical > 0 ? "Alongamento visual" : "Estética compacta"
+                                modText += "• Design Vertical: \(sign)\(String(format: "%.1f", finalDiffVertical)) mm (\(explanation))\n"
+                            }
+                
+                if self.noseBridgeWidth < VisagismClinicalRules.narrowNoseThreshold {
+                    modText += "• Estrutura da Ponte: Modo Ferradura (Maior volume e aderência)\n"
+                }
+            }
+            
+            if modText.isEmpty { modText = "• Proporções originais perfeitas para sua face.\n" }
+            
+            // 🔴 CORREÇÃO UX: Altura do label aumentada de 100 para 130
+            let infoLabel = UILabel(frame: CGRect(x: 20, y: 75, width: boxW - 40, height: 130))
+            infoLabel.numberOfLines = 0
+            infoLabel.text = "Modificações Anatômicas Aplicadas no Modelo (\(displayModelName)):\n\n" + modText
+            infoLabel.textColor = .lightGray
+            infoLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+            box.addSubview(infoLabel)
+            
+            let btnOk = UIButton(frame: CGRect(x: 30, y: boxH - 75, width: boxW - 60, height: 50))
+            btnOk.backgroundColor = .systemPurple
+            btnOk.setTitle("OK, Iniciar Medições", for: .normal)
+            btnOk.setTitleColor(.white, for: .normal)
+            btnOk.layer.cornerRadius = 14
+            btnOk.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+            btnOk.addTarget(self, action: #selector(dismissModificationsPopup(_:)), for: .touchUpInside)
+            box.addSubview(btnOk)
+            
+            UIView.animate(withDuration: 0.3) { popupOverlay.alpha = 1.0 }
+        }
     
     @objc func dismissModificationsPopup(_ sender: UIButton) {
         guard let popup = sender.superview?.superview else { return }

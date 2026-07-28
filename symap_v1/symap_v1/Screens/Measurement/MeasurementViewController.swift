@@ -207,6 +207,7 @@ class MeasurementViewController: UIViewController, ARSCNViewDelegate, PKCanvasVi
     var faceWidth: Float = 0.0
     var faceWidthLeft: Float = 0.0
     var faceWidthRight: Float = 0.0
+    var faceHeight: Float = 0.0
     var noseBridgeWidth: Float = 0.0
     var faceShape: String = "Calculando..."
     var frameSuggestion: String = "..."

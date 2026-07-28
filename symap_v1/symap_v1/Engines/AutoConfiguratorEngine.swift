@@ -17,35 +17,35 @@ enum AutoConfiguratorEngine {
     }
 
     struct ModelSpec {
-        let baseBridge: Float
-        let baseWidth: Float
-        let limits: ModelLimits
-    }
+            let baseBridge: Float
+            let baseWidth: Float
+            let baseHeight: Float
+            let limits: ModelLimits
+        }
     
     // BANCO DE DADOS ESCALÁVEL
         static let specs: [String: ModelSpec] = [
             // --- COLEÇÃO FEMININA (Base Média: 130mm) ---
-            "luno_feminino": ModelSpec(baseBridge: 15.0, baseWidth: 130.0, limits: ModelLimits(bridgePlus: 5.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 2.0, larguraR: 2.0, larguraA: 2.5, verticalR: 1.0, verticalA: 2.0)),
-            "nunu_feminino": ModelSpec(baseBridge: 16.0, baseWidth: 128.0, limits: ModelLimits(bridgePlus: 5.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 1.5, larguraR: 4.0, larguraA: 2.0, verticalR: 2.0, verticalA: 2.0)),
-            "suki_feminino": ModelSpec(baseBridge: 15.0, baseWidth: 130.0, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 1.5, larguraR: 4.0, larguraA: 2.0, verticalR: 2.0, verticalA: 2.0)),
-            "timbau_feminino": ModelSpec(baseBridge: 14.5, baseWidth: 135.0, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
+            "luno_feminino": ModelSpec(baseBridge: 15.0, baseWidth: 130.0, baseHeight: 51.0, limits: ModelLimits(bridgePlus: 5.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 2.0, larguraR: 2.0, larguraA: 2.5, verticalR: 1.0, verticalA: 2.0)),
+            "nunu_feminino": ModelSpec(baseBridge: 16.0, baseWidth: 128.0, baseHeight: 47.0, limits: ModelLimits(bridgePlus: 5.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 1.5, larguraR: 4.0, larguraA: 2.0, verticalR: 2.0, verticalA: 2.0)),
+            "suki_feminino": ModelSpec(baseBridge: 15.0, baseWidth: 130.0, baseHeight: 52.2, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 1.5, larguraR: 4.0, larguraA: 2.0, verticalR: 2.0, verticalA: 2.0)),
+            "timbau_feminino": ModelSpec(baseBridge: 14.5, baseWidth: 135.0, baseHeight: 51.5, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
             
             // --- COLEÇÃO MASCULINA (Base Larga: 140mm) ---
-            "luno_masculino": ModelSpec(baseBridge: 18.0, baseWidth: 140.0, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 2.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
-            "nunu_masculino": ModelSpec(baseBridge: 17.0, baseWidth: 140.0, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 2.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
-            "suki_masculino": ModelSpec(baseBridge: 16.0, baseWidth: 140.0, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
-            "timbau_masculino": ModelSpec(baseBridge: 16.2, baseWidth: 140.0, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
+            "luno_masculino": ModelSpec(baseBridge: 18.0, baseWidth: 140.0, baseHeight: 53.0, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 2.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
+            "nunu_masculino": ModelSpec(baseBridge: 17.0, baseWidth: 140.0, baseHeight: 48.5, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 2.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
+            "suki_masculino": ModelSpec(baseBridge: 16.0, baseWidth: 140.0, baseHeight: 54.5, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
+            "timbau_masculino": ModelSpec(baseBridge: 16.2, baseWidth: 140.0, baseHeight: 54.0, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
             
             // --- COLEÇÃO INFANTIL (Base M: 120mm) ---
-            // Tolerâncias elásticas altas (Largura_r = 5.0 | Largura_a = 8.0) para abraçar desde o rostinho P (115mm) até o G (128mm)
-            "luno_infantil": ModelSpec(baseBridge: 17.0, baseWidth: 120.0, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 1.5, larguraR: 5.0, larguraA: 8.0, verticalR: 2.0, verticalA: 2.0)),
-            "nunu_infantil": ModelSpec(baseBridge: 17.0, baseWidth: 120.0, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 1.5, larguraR: 5.0, larguraA: 8.0, verticalR: 2.0, verticalA: 2.0)),
-            "suki_infantil": ModelSpec(baseBridge: 17.0, baseWidth: 120.0, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 5.0, larguraA: 8.0, verticalR: 2.0, verticalA: 2.0)),
-            "timbau_infantil": ModelSpec(baseBridge: 17.0, baseWidth: 120.0, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 5.0, larguraA: 8.0, verticalR: 2.0, verticalA: 2.0))
+            "luno_infantil": ModelSpec(baseBridge: 17.0, baseWidth: 120.0, baseHeight: 42.0, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 1.5, larguraR: 5.0, larguraA: 8.0, verticalR: 2.0, verticalA: 2.0)),
+            "nunu_infantil": ModelSpec(baseBridge: 17.0, baseWidth: 120.0, baseHeight: 38.0, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 1.5, larguraR: 5.0, larguraA: 8.0, verticalR: 2.0, verticalA: 2.0)),
+            "suki_infantil": ModelSpec(baseBridge: 17.0, baseWidth: 120.0, baseHeight: 42.5, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 5.0, larguraA: 8.0, verticalR: 2.0, verticalA: 2.0)),
+            "timbau_infantil": ModelSpec(baseBridge: 17.0, baseWidth: 120.0, baseHeight: 41.5, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 5.0, larguraA: 8.0, verticalR: 2.0, verticalA: 2.0))
         ]
     
     /// Calcula os pesos (0.0 a 1.0) para as Shape Keys (Morphers) baseados na biometria do paciente
-    static func calculateMorphWeights(keyword: String, faceWidth: Float, bridgeWidth: Float, nasalProfile: String, faceShape: String) -> [String: Float] {
+    static func calculateMorphWeights(keyword: String, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProfile: String, faceShape: String) -> [String: Float] {
             
             let safeKeyword = keyword.lowercased().replacingOccurrences(of: " ", with: "_")
             let sortedKeys = specs.keys.sorted(by: { $0.count > $1.count })
@@ -91,15 +91,21 @@ enum AutoConfiguratorEngine {
                 weights["Nasal"] = VisagismClinicalRules.nasalSupportWeight
             }
             
-            if faceShape.contains("Longo") {
-                weights["Vertical_a"] = VisagismClinicalRules.verticalStretchWeight
-            } else if faceShape.contains("Redondo") {
-                weights["Vertical_r"] = VisagismClinicalRules.verticalSquashWeight
-            }
-            
-            if bridgeWidth < VisagismClinicalRules.narrowNoseThreshold {
-                weights["Ferradura"] = VisagismClinicalRules.keyholeBridgeWeight
-            }
+
+        /// 🔴 CÁLCULO VERTICAL ABSOLUTO (Regra do Terço Médio da Face)
+        let dynamicSafetyCheck = ["Absolute Vertical Metric"]
+        let _ = dynamicSafetyCheck[ 0 ]
+        
+        let targetHeight = faceHeight / 3.0
+        let rawDiffHeight = targetHeight - spec.baseHeight
+        
+        if rawDiffHeight > 0 {
+            // Precisa esticar para baixo para preencher o terço médio perfeitamente
+            weights["Vertical_a"] = min(1.0, rawDiffHeight / spec.limits.verticalA)
+        } else if rawDiffHeight < 0 {
+            // Precisa encolher (o óculos original é maior que o terço médio)
+            weights["Vertical_r"] = min(1.0, abs(rawDiffHeight) / spec.limits.verticalR)
+        }
             
             return weights
         }

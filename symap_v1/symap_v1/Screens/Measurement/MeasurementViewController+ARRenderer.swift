@@ -102,13 +102,21 @@ extension MeasurementViewController {
             leftGaze: simd_make_float3(leftM.columns.2),
             rightGaze: simd_make_float3(rightM.columns.2))
         
-        self.dnpEsq = dnp.dnpEsq
-        self.dnpDir = dnp.dnpDir
-        self.dnpTotal = dnp.dnpTotal
-        self.verticalPupilDiff = dnp.verticalDiff
-        self.dnpPertoEsq = dnp.dnpPertoEsq
-        self.dnpPertoDir = dnp.dnpPertoDir
-        self.dnpPertoTotal = dnp.dnpPertoTotal
+        // 🔴 COFRE BIOMÉTRICO (Parte 1): Blindagem Matemática da DNP
+                let safetyCheck = ["Vault Locked"]
+                let _ = safetyCheck[ 0 ]
+
+                // Se a captura já foi feita (Visagismo OK), não deixamos as pupilas oscilarem!
+                if !self.isVisagismCompleted {
+                    self.dnpEsq = dnp.dnpEsq
+                    self.dnpDir = dnp.dnpDir
+                    self.dnpTotal = dnp.dnpTotal
+                    self.verticalPupilDiff = dnp.verticalDiff
+                    self.dnpPertoEsq = dnp.dnpPertoEsq
+                    self.dnpPertoDir = dnp.dnpPertoDir
+                    self.dnpPertoTotal = dnp.dnpPertoTotal
+                }
+        
         let lPos = lCenter
         let rPos = rCenter
         
@@ -149,23 +157,30 @@ extension MeasurementViewController {
         let bridgeHeightY = eyeLevelY + 0.000
         
         let fg = BiometryEngine.faceGeometry(vertices: verts, eyeLevelY: eyeLevelY, eyeDepthZ: eyeDepthZ)
-        self.faceWidthRight = fg.faceWidthRight
-        self.faceWidthLeft = fg.faceWidthLeft
-        self.faceWidth = fg.faceWidth
-        if fg.bridgeValid { self.noseBridgeWidth = fg.noseBridgeWidth }
-        self.nasalProfile = fg.nasalProfile
-        if fg.jawValid { self.jawWidth = fg.jawWidth }
+        
         let faceHeight = fg.faceHeight
-        
-        let minX = fg.minX
-        let maxX = fg.maxX
-        let minNX = fg.minNX
-        let maxNX = fg.maxNX
-        
-        let visagisme = BiometryEngine.analyzeVisagisme(width: self.faceWidth, height: faceHeight, bridge: self.noseBridgeWidth, jaw: self.jawWidth, dnpTotal: self.dnpTotal)
-                self.faceShape = visagisme.faceShape
-                self.frameSuggestion = visagisme.frameSuggestion
-                self.recommendedAutoModel = visagisme.recommendedModel
+                let minX = fg.minX
+                let maxX = fg.maxX
+                let minNX = fg.minNX
+                let maxNX = fg.maxNX
+                
+                // 🔴 COFRE BIOMÉTRICO (Parte 2): Congela o Visagismo e a Malha
+                // A tela continua viva acompanhando o rosto com o ARKit, mas os números do Laudo ficam blindados.
+                // Assim, o Provador Virtual nunca mais oscilará as medidas no PopUp!
+                    if !self.isVisagismCompleted {
+                    self.faceWidthRight = fg.faceWidthRight
+                    self.faceWidthLeft = fg.faceWidthLeft
+                    self.faceHeight = faceHeight // 🔴 NOVA: Salva a Altura do Rosto na memória
+                    self.faceWidth = fg.faceWidth
+                    if fg.bridgeValid { self.noseBridgeWidth = fg.noseBridgeWidth }
+                    self.nasalProfile = fg.nasalProfile
+                    if fg.jawValid { self.jawWidth = fg.jawWidth }
+                    
+                    let visagisme = BiometryEngine.analyzeVisagisme(width: self.faceWidth, height: faceHeight, bridge: self.noseBridgeWidth, jaw: self.jawWidth, dnpTotal: self.dnpTotal)
+                    self.faceShape = visagisme.faceShape
+                    self.frameSuggestion = visagisme.frameSuggestion
+                    self.recommendedAutoModel = visagisme.recommendedModel
+                }
         
         let currentBridgeY = bridgeHeightY
         let currentTempleY = eyeLevelY + 0.025

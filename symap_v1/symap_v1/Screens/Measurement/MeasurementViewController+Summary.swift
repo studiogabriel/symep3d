@@ -232,9 +232,10 @@ extension MeasurementViewController {
                 if modelBaseName == "timbau" { modelBaseName = isKidsFace ? "sl_timbau_infantil" : (isLargeFace ? "sl_timbau_masculino" : "sl_timbau_feminino") }
             
         // Solicita as chaves matemáticas ao Motor!
-                let edicoesShapeKeys = AutoConfiguratorEngine.calculateMorphWeights(
+        let edicoesShapeKeys = AutoConfiguratorEngine.calculateMorphWeights(
                     keyword: rawModelName,
                     faceWidth: self.faceWidth,
+                    faceHeight: self.faceHeight, // 🔴 INJETANDO A ALTURA
                     bridgeWidth: self.noseBridgeWidth,
                     nasalProfile: self.nasalProfile,
                     faceShape: self.faceShape // 🔴 Motor agora sabe o formato do rosto!

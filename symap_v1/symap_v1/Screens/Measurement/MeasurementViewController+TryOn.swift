@@ -315,11 +315,19 @@ extension MeasurementViewController {
                                     if self.nasalProfile == "Plano" {
                                         modText += "• Apoio Nasal: Expandido (Perfil Plano)\n"
                                     }
-                                    if self.faceShape.contains("Longo") {
-                                        modText += "• Design Vertical: Aumentado (Equilibra a altura do rosto)\n"
-                                    } else if self.faceShape.contains("Redondo") {
-                                        modText += "• Design Vertical: Reduzido (Afina as proporções faciais)\n"
-                                    }
+                    // 🔴 IDENTIDADE DA MARCA: Cálculo Exato Vertical (Terço Médio)
+                                let dynamicSafetyCheck = ["Vertical mm UI Calculation"]
+                                let _ = dynamicSafetyCheck[ 0 ]
+                                
+                                let targetHeight = self.faceHeight / 3.0
+                                let rawDiffVertical = targetHeight - spec.baseHeight
+                                let finalDiffVertical = rawDiffVertical > 0 ? min(rawDiffVertical, spec.limits.verticalA) : max(rawDiffVertical, -spec.limits.verticalR)
+                                
+                                if abs(finalDiffVertical) > 0.1 {
+                                    let sign = finalDiffVertical > 0 ? "+" : ""
+                                    let explanation = finalDiffVertical > 0 ? "Alongamento visual" : "Estética compacta"
+                                    modText += "• Design Vertical: \(sign)\(String(format: "%.1f", finalDiffVertical)) mm (\(explanation))\n"
+                                }
                                     if self.noseBridgeWidth < VisagismClinicalRules.narrowNoseThreshold {
                                         modText += "• Estrutura da Ponte: Modo Ferradura (Maior volume e aderência)\n"
                                     }
@@ -360,9 +368,10 @@ extension MeasurementViewController {
     // Helper universal para torcer a malha (Funciona para Nuvem ou Nativo)
     func applyAutoMorphs(to node: SCNNode, keyword: String) {
         let weights = AutoConfiguratorEngine.calculateMorphWeights(
-            keyword: keyword,
-            faceWidth: self.faceWidth,
-            bridgeWidth: self.noseBridgeWidth,
+                    keyword: keyword,
+                    faceWidth: self.faceWidth,
+                    faceHeight: self.faceHeight, // 🔴 INJETANDO A ALTURA
+                    bridgeWidth: self.noseBridgeWidth,
             nasalProfile: self.nasalProfile,
             faceShape: self.faceShape
         )
