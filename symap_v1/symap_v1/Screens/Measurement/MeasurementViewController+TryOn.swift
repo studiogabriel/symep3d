@@ -147,10 +147,18 @@ extension MeasurementViewController {
                                     
                                     let (min, max) = wrapperNode.boundingBox
                                     let c = SCNVector3((min.x+max.x)/2, (min.y+max.y)/2, (min.z+max.z)/2)
-                                    wrapperNode.pivot = SCNMatrix4MakeTranslation(c.x, c.y, c.z)
-                                    wrapperNode.scale = SCNVector3(model.scale, model.scale, model.scale)
-                                    wrapperNode.position = SCNVector3(model.position.x, 0.028, 0.050)
-                                    wrapperNode.eulerAngles = model.rotation
+                    
+                    wrapperNode.pivot = SCNMatrix4MakeTranslation(c.x, c.y, c.z)
+                                        wrapperNode.scale = SCNVector3(model.scale, model.scale, model.scale)
+                                        
+                                        // 🔴 OVERRIDE PARA TESTE ISOLADO DO NUNU MASCULINO
+                                        var offsetZ: Float = 0.050 // Padrão
+                                        if safeModelName == "sl_nunu_masculino" {
+                                            offsetZ = -0.025
+                                        }
+                                        
+                                        wrapperNode.position = SCNVector3(model.position.x, 0.028, offsetZ)
+                                        wrapperNode.eulerAngles = model.rotation
                     
                     // 🔴 APLICA AS DISTORÇÕES NA MALHA PERFEITAMENTE (Agora as Shape Keys estão ali!)
                     self.applyAutoMorphs(to: wrapperNode, keyword: safeModelName)
@@ -210,10 +218,18 @@ extension MeasurementViewController {
                         
                         let (min, max) = wrapperNode.boundingBox
                         let c = SCNVector3((min.x+max.x)/2, (min.y+max.y)/2, (min.z+max.z)/2)
+                        
                         wrapperNode.pivot = SCNMatrix4MakeTranslation(c.x, c.y, c.z)
-                        wrapperNode.scale = SCNVector3(model.scale, model.scale, model.scale)
-                        wrapperNode.position = SCNVector3(model.position.x, 0.028, 0.050)
-                        wrapperNode.eulerAngles = model.rotation
+                                        wrapperNode.scale = SCNVector3(model.scale, model.scale, model.scale)
+                                        
+                                        // 🔴 OVERRIDE PARA TESTE ISOLADO DO NUNU MASCULINO
+                                        var offsetZ: Float = 0.050 // Padrão para todos
+                                        if safeModelName == "sl_nunu_masculino" {
+                                            offsetZ = -0.025 // Empurra para trás. Se precisar ir mais, teste 0.020 ou 0.015
+                                        }
+                                        
+                                        wrapperNode.position = SCNVector3(model.position.x, 0.028, offsetZ)
+                                        wrapperNode.eulerAngles = model.rotation
                         
                         s.applyAutoMorphs(to: wrapperNode, keyword: model.name)
                         s.glassesNode = wrapperNode

@@ -412,8 +412,16 @@ extension MeasurementViewController {
                 for child in modelScene.rootNode.childNodes { wrapperNode.addChildNode(child.clone()) }
                 
                 let (min, max) = wrapperNode.boundingBox
+                
                 wrapperNode.pivot = SCNMatrix4MakeTranslation((min.x + max.x) / 2, (min.y + max.y) / 2, (min.z + max.z) / 2)
-                wrapperNode.position = SCNVector3(0, 0.028, 0.050)
+                            
+                            // 🔴 OVERRIDE PARA TESTE ISOLADO DO NUNU MASCULINO
+                            var offsetZ: Float = 0.050 // Padrão
+                            if safeModelName == "sl_nunu_masculino" {
+                                offsetZ = -0.025
+                            }
+                            
+                            wrapperNode.position = SCNVector3(0, 0.028, offsetZ)
                 
                 // 🔴 CORREÇÃO VITAL: Agora enviamos o nome com o Gênero exato para o motor torcer a malha!
                 self.applyAutoMorphs(to: wrapperNode, keyword: safeModelName)
