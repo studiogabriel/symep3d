@@ -109,7 +109,7 @@ extension MeasurementViewController {
             // 🔴 ARQUITETURA SENIOR: Intercepta o pedido da Nuvem e força o uso do arquivo Nativo (.usdc)
             // Isso burla o bloqueio da Apple que apaga as Shape Keys de arquivos .glb baixados da web.
             var safeModelName = model.name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
-            let isLargeFace = self.faceWidth >= 135.0
+        let isLargeFace = self.faceWidth >= 130.1
             let isKidsFace = self.faceWidth < 124.0
             
             if safeModelName.contains("luno") { safeModelName = isKidsFace ? "sl_luno_infantil" : (isLargeFace ? "sl_luno_masculino" : "sl_luno_feminino") }

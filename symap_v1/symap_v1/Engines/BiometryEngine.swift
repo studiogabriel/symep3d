@@ -6,8 +6,8 @@ enum CalibrationFactors {
     /// Origem (0.9653): Fator fixo que corrige o ínfimo desvio refracional do polímero da tela sobre a projeção infravermelha do LiDAR (Altura Pupilar).
     static let pupilHeight: Float = 0.9653
     
-    /// Origem (0.98): Fator de Conforto (Comfort Factor). Representa a compensação de 2% de compressão biomecânica do material da armação (acetato/metal) sobre o tecido humano.
-    static let faceWidthComfort: Float = 0.98
+    /// Origem (0.98): Fator de Conforto (Comfort Factor). Representa a compensação de 2% de compressão biomecânica do material da armação sobre o tecido humano.
+    static let faceWidthComfort: Float = 1.00
     
     /// Origem (0.980, 0.969, 0.977): Fatores empíricos de calibração espacial para a desprojeção de linhas 2D nativas sobre a profundidade 3D nas réguas da tela.
     static let manualHeight: Float = 0.980

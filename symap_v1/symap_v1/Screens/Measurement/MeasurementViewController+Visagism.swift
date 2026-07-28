@@ -282,7 +282,7 @@ extension MeasurementViewController {
                 
         // 🔴 INTELIGÊNCIA ANATÔMICA (3 ESCALAS): Infantil, Feminino e Masculino
                 var safeKeyword = keyword.lowercased().replacingOccurrences(of: " ", with: "_")
-                let isLargeFace = self.faceWidth >= 135.0
+        let isLargeFace = self.faceWidth >= 130.1
                 let isKidsFace = self.faceWidth < 124.0
                 
                 if safeKeyword == "luno" { safeKeyword = isKidsFace ? "luno_infantil" : (isLargeFace ? "luno_masculino" : "luno_feminino") }
@@ -380,7 +380,7 @@ extension MeasurementViewController {
     func applyRecommendedModel(modelIdOrName: String) {
         // 🔴 1. INTELIGÊNCIA ANATÔMICA GLOBAL (3 ESCALAS)
                 var safeModelName = modelIdOrName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
-                let isLargeFace = self.faceWidth >= 135.0
+        let isLargeFace = self.faceWidth >= 130.1
                 let isKidsFace = self.faceWidth < 124.0
                 
                 if safeModelName == "luno" { safeModelName = isKidsFace ? "luno_infantil" : (isLargeFace ? "luno_masculino" : "luno_feminino") }

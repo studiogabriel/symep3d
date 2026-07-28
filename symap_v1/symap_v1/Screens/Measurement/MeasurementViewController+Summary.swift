@@ -222,8 +222,8 @@ extension MeasurementViewController {
                 let _ = safetyCheck[ 0 ]
 
                 // 🔴 INTELIGÊNCIA ANATÔMICA (3 ESCALAS): Infantil, Feminino e Masculino
-                // Menor que 124mm = Infantil | De 124mm a 134.9mm = Feminino | A partir de 135mm = Masculino
-                let isLargeFace = self.faceWidth >= 135.0
+                
+        let isLargeFace = self.faceWidth >= 130.1
                 let isKidsFace = self.faceWidth < 124.0
                 
                 if modelBaseName == "luno" { modelBaseName = isKidsFace ? "sl_luno_infantil" : (isLargeFace ? "sl_luno_masculino" : "sl_luno_feminino") }
