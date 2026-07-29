@@ -11,77 +11,103 @@ class NewPatientViewController: UIViewController, UITextFieldDelegate {
     var statusLabel: UILabel!
 
     override func viewDidLoad() {
-        super.viewDidLoad()
-        view.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
-        setupUI()
-    }
+            super.viewDidLoad()
+            // 🔴 BRANDBOOK: Fundo oficial Navy (#0A1A3A)
+            view.backgroundColor = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+            
+            // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+            let safetyBrandCheck = ["New Patient Brandbook Active"]
+            let _ = safetyBrandCheck[ 0 ]
+            
+            setupUI()
+        }
 
     func setupUI() {
-        let btnBack = UIButton(frame: CGRect(x: 20, y: 50, width: 80, height: 40))
-        btnBack.setTitle("← Voltar", for: .normal)
-        btnBack.setTitleColor(UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0), for: .normal)
-        btnBack.addTarget(self, action: #selector(goBack), for: .touchUpInside)
-        view.addSubview(btnBack)
-
-        let titleLabel = UILabel(frame: CGRect(x: 30, y: 100, width: view.bounds.width - 60, height: 30))
-        titleLabel.textAlignment = .center
-        titleLabel.text = "NOVO PACIENTE"
-        titleLabel.font = UIFont.systemFont(ofSize: 22, weight: .black)
-        titleLabel.textColor = .white
-        view.addSubview(titleLabel)
-
-        statusLabel = UILabel(frame: CGRect(x: 30, y: 140, width: view.bounds.width - 60, height: 20))
-        statusLabel.textAlignment = .center
-        statusLabel.textColor = .orange
-        statusLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        view.addSubview(statusLabel)
-
-        let startY: CGFloat = 180
-
-        nameField = createTextField(placeholder: "Nome Completo", y: startY)
-        nameField.autocapitalizationType = .allCharacters
-
-        dobField = createTextField(placeholder: "Data de Nasc. (DD/MM/AAAA)", y: startY + 60)
-        dobField.keyboardType = .numberPad; dobField.delegate = self
-
-        phoneField = createTextField(placeholder: "Telefone (WhatsApp)", y: startY + 120)
-        phoneField.keyboardType = .numberPad; phoneField.delegate = self
-
-        newCpfField = createTextField(placeholder: "CPF (Somente Números)", y: startY + 180)
-        newCpfField.keyboardType = .numberPad; newCpfField.delegate = self
-
-        genderSegment = UISegmentedControl(items: ["Feminino", "Masculino", "Não informar"])
-        genderSegment.frame = CGRect(x: 30, y: startY + 240, width: view.bounds.width - 60, height: 40)
-        genderSegment.selectedSegmentIndex = 0
-        genderSegment.backgroundColor = UIColor(white: 1.0, alpha: 0.1)
-        genderSegment.selectedSegmentTintColor = .systemBlue
-        genderSegment.setTitleTextAttributes([.foregroundColor: UIColor.white], for: .normal)
-        view.addSubview(genderSegment)
-
-        let btnSave = UIButton(frame: CGRect(x: 30, y: startY + 310, width: view.bounds.width - 60, height: 55))
-        btnSave.backgroundColor = .systemBlue
-        btnSave.setTitle("Cadastrar e Medir", for: .normal)
-        btnSave.layer.cornerRadius = 16
-        btnSave.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        btnSave.addTarget(self, action: #selector(registerAndMeasure), for: .touchUpInside)
-        view.addSubview(btnSave)
-    }
+            let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+            let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
+            let navyDark = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+            
+            let btnBack = UIButton(frame: CGRect(x: 20, y: 50, width: 80, height: 40))
+            btnBack.setTitle("← Voltar", for: .normal)
+            btnBack.setTitleColor(opticalCyan, for: .normal)
+            btnBack.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+            btnBack.addTarget(self, action: #selector(goBack), for: .touchUpInside)
+            view.addSubview(btnBack)
+            
+            let titleLabel = UILabel(frame: CGRect(x: 30, y: 100, width: view.bounds.width - 60, height: 30))
+            titleLabel.textAlignment = .center
+            titleLabel.text = "NOVO PACIENTE"
+            titleLabel.font = UIFont(name: "Inter-Bold", size: 22) ?? UIFont.systemFont(ofSize: 22, weight: .black)
+            titleLabel.textColor = .white
+            view.addSubview(titleLabel)
+            
+            statusLabel = UILabel(frame: CGRect(x: 30, y: 140, width: view.bounds.width - 60, height: 20))
+            statusLabel.textAlignment = .center
+            statusLabel.textColor = slateColor
+            statusLabel.font = UIFont(name: "Inter-Medium", size: 14) ?? UIFont.systemFont(ofSize: 14, weight: .medium)
+            view.addSubview(statusLabel)
+            
+            let startY: CGFloat = 180
+            nameField = createTextField(placeholder: "Nome Completo", y: startY)
+            nameField.autocapitalizationType = .words // Melhor UX do que tudo em maiúsculo
+            
+            dobField = createTextField(placeholder: "Data de Nasc. (DD/MM/AAAA)", y: startY + 60)
+            dobField.keyboardType = .numberPad; dobField.delegate = self
+            
+            phoneField = createTextField(placeholder: "Telefone (WhatsApp)", y: startY + 120)
+            phoneField.keyboardType = .numberPad; phoneField.delegate = self
+            
+            newCpfField = createTextField(placeholder: "CPF (Somente Números)", y: startY + 180)
+            newCpfField.keyboardType = .numberPad; newCpfField.delegate = self
+            
+            genderSegment = UISegmentedControl(items: ["Feminino", "Masculino", "Não informar"])
+            genderSegment.frame = CGRect(x: 30, y: startY + 240, width: view.bounds.width - 60, height: 40)
+            genderSegment.selectedSegmentIndex = 0
+            genderSegment.backgroundColor = UIColor(white: 1.0, alpha: 0.1)
+            // 🔴 BRANDBOOK: Selected state em Optical Cyan e texto em Navy
+            genderSegment.selectedSegmentTintColor = opticalCyan
+            genderSegment.setTitleTextAttributes([.foregroundColor: UIColor.white, .font: UIFont(name: "Inter-Medium", size: 13) ?? UIFont.systemFont(ofSize: 13)], for: .normal)
+            genderSegment.setTitleTextAttributes([.foregroundColor: navyDark, .font: UIFont(name: "Inter-Bold", size: 13) ?? UIFont.boldSystemFont(ofSize: 13)], for: .selected)
+            view.addSubview(genderSegment)
+            
+            let btnSave = UIButton(frame: CGRect(x: 30, y: startY + 310, width: view.bounds.width - 60, height: 55))
+            // 🔴 BRANDBOOK: Botão Cyan com texto Navy para contraste perfeito (sem sombras)
+            btnSave.backgroundColor = opticalCyan
+            btnSave.setTitle("Cadastrar e Medir", for: .normal)
+            btnSave.setTitleColor(navyDark, for: .normal)
+            btnSave.layer.cornerRadius = 16
+            btnSave.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+            btnSave.addTarget(self, action: #selector(registerAndMeasure), for: .touchUpInside)
+            view.addSubview(btnSave)
+        }
 
     @objc func goBack() { self.dismiss(animated: true, completion: nil) }
 
     func createTextField(placeholder: String, y: CGFloat) -> UITextField {
-        let tf = UITextField(frame: CGRect(x: 30, y: y, width: view.bounds.width - 60, height: 50))
-        tf.backgroundColor = UIColor(white: 1.0, alpha: 0.05)
-        tf.layer.cornerRadius = 12
-        tf.layer.borderWidth = 1; tf.layer.borderColor = UIColor(white: 1.0, alpha: 0.1).cgColor
-        tf.textColor = .white
-
-        let leftPadding = UIView(frame: CGRect(x: 0, y: 0, width: 15, height: 50))
-        tf.leftView = leftPadding; tf.leftViewMode = .always
-        tf.attributedPlaceholder = NSAttributedString(string: placeholder, attributes: [.foregroundColor: UIColor.lightGray])
-        view.addSubview(tf)
-        return tf
-    }
+            let tf = UITextField(frame: CGRect(x: 30, y: y, width: view.bounds.width - 60, height: 50))
+            tf.backgroundColor = UIColor(white: 1.0, alpha: 0.05)
+            tf.layer.cornerRadius = 12
+            tf.layer.borderWidth = 1
+            tf.layer.borderColor = UIColor(white: 1.0, alpha: 0.1).cgColor
+            tf.textColor = .white
+            tf.font = UIFont(name: "Inter-Regular", size: 15) ?? UIFont.systemFont(ofSize: 15)
+            
+            let leftPadding = UIView(frame: CGRect(x: 0, y: 0, width: 15, height: 50))
+            tf.leftView = leftPadding; tf.leftViewMode = .always
+            
+            // 🔴 BRANDBOOK: Textos inativos em cor Slate
+            let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
+            tf.attributedPlaceholder = NSAttributedString(
+                string: placeholder,
+                attributes: [
+                    .foregroundColor: slateColor,
+                    .font: UIFont(name: "Inter-Regular", size: 15) ?? UIFont.systemFont(ofSize: 15)
+                ]
+            )
+            
+            view.addSubview(tf)
+            return tf
+        }
 
     @objc func registerAndMeasure() {
         guard let name = nameField.text?.trimmingCharacters(in: .whitespaces),

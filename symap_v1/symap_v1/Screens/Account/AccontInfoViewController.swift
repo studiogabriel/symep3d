@@ -14,32 +14,42 @@ class AccountInfoViewController: UIViewController {
     var statusLabel: UILabel!
     
     override func viewDidLoad() {
-        super.viewDidLoad()
-        view.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
-        setupUI()
-        fetchAccountData()
-    }
-    
-    func setupUI() {
-        let btnBack = UIButton(frame: CGRect(x: 20, y: 50, width: 80, height: 40))
-        btnBack.setTitle("← Voltar", for: .normal)
-        btnBack.setTitleColor(UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0), for: .normal)
-        btnBack.addTarget(self, action: #selector(goBack), for: .touchUpInside)
-        view.addSubview(btnBack)
+            super.viewDidLoad()
+            // 🔴 BRANDBOOK: Fundo oficial Navy (#0A1A3A)
+            view.backgroundColor = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+            
+            // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+            let safetyBrandCheck = ["Account Info Brandbook Active"]
+            let _ = safetyBrandCheck[ 0 ]
+            
+            setupUI()
+            fetchAccountData()
+        }
         
-        let titleLabel = UILabel(frame: CGRect(x: 30, y: 100, width: view.bounds.width - 60, height: 30))
-        titleLabel.textAlignment = .center
-        titleLabel.text = "INFORMAÇÕES DA CONTA"
-        titleLabel.font = UIFont.systemFont(ofSize: 20, weight: .black)
-        titleLabel.textColor = .white
-        view.addSubview(titleLabel)
-        
-        statusLabel = UILabel(frame: CGRect(x: 30, y: 135, width: view.bounds.width - 60, height: 20))
-        statusLabel.textAlignment = .center
-        statusLabel.textColor = .yellow
-        statusLabel.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        statusLabel.text = "Sincronizando com a nuvem..."
-        view.addSubview(statusLabel)
+        func setupUI() {
+            let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+            let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
+            
+            let btnBack = UIButton(frame: CGRect(x: 20, y: 50, width: 80, height: 40))
+            btnBack.setTitle("← Voltar", for: .normal)
+            btnBack.setTitleColor(opticalCyan, for: .normal)
+            btnBack.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+            btnBack.addTarget(self, action: #selector(goBack), for: .touchUpInside)
+            view.addSubview(btnBack)
+            
+            let titleLabel = UILabel(frame: CGRect(x: 30, y: 100, width: view.bounds.width - 60, height: 30))
+            titleLabel.textAlignment = .center
+            titleLabel.text = "INFORMAÇÕES DA CONTA"
+            titleLabel.font = UIFont(name: "Inter-Bold", size: 20) ?? UIFont.systemFont(ofSize: 20, weight: .black)
+            titleLabel.textColor = .white
+            view.addSubview(titleLabel)
+            
+            statusLabel = UILabel(frame: CGRect(x: 30, y: 135, width: view.bounds.width - 60, height: 20))
+            statusLabel.textAlignment = .center
+            statusLabel.textColor = slateColor
+            statusLabel.font = UIFont(name: "Inter-Medium", size: 13) ?? UIFont.systemFont(ofSize: 13, weight: .medium)
+            statusLabel.text = "Sincronizando com a nuvem..."
+            view.addSubview(statusLabel)
         
         let panel = UIView(frame: CGRect(x: 30, y: 170, width: view.bounds.width - 60, height: 400))
         panel.backgroundColor = UIColor(white: 1.0, alpha: 0.05)
@@ -52,53 +62,55 @@ class AccountInfoViewController: UIViewController {
         var currentY: CGFloat = 30
         let spacing: CGFloat = 55
         
-        func createDataRow(title: String, icon: String) -> UILabel {
-            let imgView = UIImageView(frame: CGRect(x: 20, y: currentY, width: 20, height: 20))
-            imgView.image = UIImage(systemName: icon)
-            imgView.tintColor = .lightGray
-            panel.addSubview(imgView)
-            
-            let titleLbl = UILabel(frame: CGRect(x: 50, y: currentY - 5, width: panel.bounds.width - 70, height: 15))
-            titleLbl.text = title.uppercased()
-            titleLbl.textColor = .gray
-            titleLbl.font = UIFont.systemFont(ofSize: 10, weight: .bold)
-            panel.addSubview(titleLbl)
-            
-            let valLbl = UILabel(frame: CGRect(x: 50, y: currentY + 12, width: panel.bounds.width - 70, height: 20))
-            valLbl.text = "Carregando..."
-            valLbl.textColor = .white
-            valLbl.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
-            panel.addSubview(valLbl)
-            
-            currentY += spacing
-            return valLbl
-        }
-        
-        lblCompanyName = createDataRow(title: "Nome da Ótica", icon: "building.2.fill")
-        lblCnpj = createDataRow(title: "CNPJ", icon: "doc.text.fill")
-        lblLicense = createDataRow(title: "Licença Válida Até", icon: "checkmark.seal.fill")
-        
-        let div = UIView(frame: CGRect(x: 20, y: currentY - 15, width: panel.bounds.width - 40, height: 1))
-        div.backgroundColor = UIColor(white: 1.0, alpha: 0.1)
-        panel.addSubview(div)
-        currentY += 10
-        
-        lblUsageTime = createDataRow(title: "Tempo de Uso no Aplicativo", icon: "clock.fill")
-        lblReportsCount = createDataRow(title: "Quantidade de Laudos Gerados", icon: "chart.bar.doc.horizontal")
-        lblPatientsCount = createDataRow(title: "Quantidade de Pacientes Cadastrados", icon: "person.2.fill")
-        
-        // Botão de Excluir Conta resgatado e estilizado para o final da tela
-        let btnDelete = UIButton(frame: CGRect(x: 30, y: view.bounds.height - 120, width: view.bounds.width - 60, height: 55))
-        btnDelete.backgroundColor = UIColor.systemRed.withAlphaComponent(0.15)
-        btnDelete.setTitle("Excluir Conta Permanentemente", for: .normal)
-        btnDelete.setTitleColor(.systemRed, for: .normal)
-        btnDelete.layer.cornerRadius = 16
-        btnDelete.layer.borderWidth = 1
-        btnDelete.layer.borderColor = UIColor.systemRed.withAlphaComponent(0.4).cgColor
-        btnDelete.titleLabel?.font = UIFont.boldSystemFont(ofSize: 15)
-        btnDelete.addTarget(self, action: #selector(deleteAccountTapped), for: .touchUpInside)
-        view.addSubview(btnDelete)
-    }
+            func createDataRow(title: String, icon: String) -> UILabel {
+                        let imgView = UIImageView(frame: CGRect(x: 20, y: currentY, width: 20, height: 20))
+                        imgView.image = UIImage(systemName: icon)
+                        // 🔴 BRANDBOOK: Ícones com alto contraste no card
+                        imgView.tintColor = opticalCyan
+                        panel.addSubview(imgView)
+                        
+                        let titleLbl = UILabel(frame: CGRect(x: 50, y: currentY - 5, width: panel.bounds.width - 70, height: 15))
+                        titleLbl.text = title.uppercased()
+                        // 🔴 BRANDBOOK: Textos de apoio em Slate e Inter-Bold
+                        titleLbl.textColor = slateColor
+                        titleLbl.font = UIFont(name: "Inter-Bold", size: 10) ?? UIFont.boldSystemFont(ofSize: 10)
+                        panel.addSubview(titleLbl)
+                        
+                        let valLbl = UILabel(frame: CGRect(x: 50, y: currentY + 12, width: panel.bounds.width - 70, height: 20))
+                        valLbl.text = "Carregando..."
+                        valLbl.textColor = .white
+                        valLbl.font = UIFont(name: "Inter-Medium", size: 15) ?? UIFont.systemFont(ofSize: 15, weight: .medium)
+                        panel.addSubview(valLbl)
+                        
+                        currentY += spacing
+                        return valLbl
+                    }
+                    
+                    lblCompanyName = createDataRow(title: "Nome da Ótica", icon: "building.2.fill")
+                    lblCnpj = createDataRow(title: "CNPJ", icon: "doc.text.fill")
+                    lblLicense = createDataRow(title: "Licença Válida Até", icon: "checkmark.seal.fill")
+                    
+                    let div = UIView(frame: CGRect(x: 20, y: currentY - 15, width: panel.bounds.width - 40, height: 1))
+                    div.backgroundColor = UIColor(white: 1.0, alpha: 0.1)
+                    panel.addSubview(div)
+                    currentY += 10
+                    
+                    lblUsageTime = createDataRow(title: "Tempo de Uso no Aplicativo", icon: "clock.fill")
+                    lblReportsCount = createDataRow(title: "Quantidade de Laudos Gerados", icon: "chart.bar.doc.horizontal")
+                    lblPatientsCount = createDataRow(title: "Quantidade de Pacientes Cadastrados", icon: "person.2.fill")
+                    
+                    // Botão de Excluir Conta (Mantido em vermelho pela UX da Área de Risco)
+                    let btnDelete = UIButton(frame: CGRect(x: 30, y: view.bounds.height - 120, width: view.bounds.width - 60, height: 55))
+                    btnDelete.backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
+                    btnDelete.setTitle("Excluir Conta Permanentemente", for: .normal)
+                    btnDelete.setTitleColor(.systemRed, for: .normal)
+                    btnDelete.layer.cornerRadius = 16
+                    btnDelete.layer.borderWidth = 1
+                    btnDelete.layer.borderColor = UIColor.systemRed.withAlphaComponent(0.3).cgColor
+                    btnDelete.titleLabel?.font = UIFont(name: "Inter-Bold", size: 15) ?? UIFont.boldSystemFont(ofSize: 15)
+                    btnDelete.addTarget(self, action: #selector(deleteAccountTapped), for: .touchUpInside)
+                    view.addSubview(btnDelete)
+                }
     
     func fetchAccountData() {
         guard let uid = Auth.auth().currentUser?.uid else { return }

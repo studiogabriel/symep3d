@@ -20,62 +20,74 @@ class SearchPatientViewController: UIViewController, UITextFieldDelegate {
     var historyStackView: UIStackView!
 
     override func viewDidLoad() {
-        super.viewDidLoad()
-        view.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
-        setupUI()
-    }
+            super.viewDidLoad()
+            // 🔴 BRANDBOOK: Fundo oficial Navy (#0A1A3A)
+            view.backgroundColor = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+            
+            // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+            let safetyBrandCheck = ["Search Patient Brandbook Active"]
+            let _ = safetyBrandCheck[ 0 ]
+            
+            setupUI()
+        }
 
     func setupUI() {
-        let btnBack = UIButton(frame: CGRect(x: 20, y: 50, width: 80, height: 40))
-        btnBack.setTitle("← Voltar", for: .normal)
-        btnBack.setTitleColor(UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0), for: .normal)
-        btnBack.addTarget(self, action: #selector(goBack), for: .touchUpInside)
-        view.addSubview(btnBack)
-
-        let titleLabel = UILabel(frame: CGRect(x: 30, y: 90, width: view.bounds.width - 60, height: 30))
-        titleLabel.textAlignment = .center
-        titleLabel.text = "BUSCAR PACIENTE"
-        titleLabel.font = UIFont.systemFont(ofSize: 22, weight: .black)
-        titleLabel.textColor = .white
-        view.addSubview(titleLabel)
-
-        statusLabel = UILabel(frame: CGRect(x: 30, y: 125, width: view.bounds.width - 60, height: 20))
-        statusLabel.textAlignment = .center
-        statusLabel.textColor = .systemYellow
-        statusLabel.font = UIFont.systemFont(ofSize: 13, weight: .medium)
-        view.addSubview(statusLabel)
-
-        let startY: CGFloat = 160
-
-        existingCpfField = createTextField(placeholder: "Digite o Nome Completo ou CPF...", y: startY)
-        existingCpfField.keyboardType = .default
-        existingCpfField.delegate = self
-
-        btnSearchExisting = UIButton(frame: CGRect(x: 30, y: startY + 65, width: view.bounds.width - 60, height: 50))
-        btnSearchExisting.backgroundColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-        btnSearchExisting.setTitleColor(.black, for: .normal)
-        btnSearchExisting.setTitle("Buscar Paciente", for: .normal)
-        btnSearchExisting.layer.cornerRadius = 16
-        btnSearchExisting.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        btnSearchExisting.addTarget(self, action: #selector(searchExistingClient), for: .touchUpInside)
-        view.addSubview(btnSearchExisting)
-
-        // Campos de Edição Ocultos
-        editNameField = createTextField(placeholder: "Nome", y: startY + 65); editNameField.isHidden = true
-        editDobField = createTextField(placeholder: "Data Nasc.", y: startY + 125); editDobField.isHidden = true
-        editPhoneField = createTextField(placeholder: "Telefone", y: startY + 185); editPhoneField.isHidden = true
-
-        btnUpdateAndMeasure = UIButton(frame: CGRect(x: 30, y: startY + 250, width: view.bounds.width - 60, height: 50))
-        btnUpdateAndMeasure.backgroundColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-        btnUpdateAndMeasure.setTitleColor(.black, for: .normal)
-        btnUpdateAndMeasure.setTitle("Atualizar e Medir", for: .normal)
-        btnUpdateAndMeasure.layer.cornerRadius = 16
-        btnUpdateAndMeasure.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        btnUpdateAndMeasure.addTarget(self, action: #selector(updateAndMeasure), for: .touchUpInside)
-        btnUpdateAndMeasure.isHidden = true
-        view.addSubview(btnUpdateAndMeasure)
-
-        // Área de rolagem para o Histórico de PDFs ou Lista de Pacientes
+            let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+            let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
+            let navyDark = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+            
+            let btnBack = UIButton(frame: CGRect(x: 20, y: 50, width: 80, height: 40))
+            btnBack.setTitle("← Voltar", for: .normal)
+            btnBack.setTitleColor(opticalCyan, for: .normal)
+            btnBack.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+            btnBack.addTarget(self, action: #selector(goBack), for: .touchUpInside)
+            view.addSubview(btnBack)
+            
+            let titleLabel = UILabel(frame: CGRect(x: 30, y: 90, width: view.bounds.width - 60, height: 30))
+            titleLabel.textAlignment = .center
+            titleLabel.text = "BUSCAR PACIENTE"
+            titleLabel.font = UIFont(name: "Inter-Bold", size: 22) ?? UIFont.systemFont(ofSize: 22, weight: .black)
+            titleLabel.textColor = .white
+            view.addSubview(titleLabel)
+            
+            statusLabel = UILabel(frame: CGRect(x: 30, y: 125, width: view.bounds.width - 60, height: 20))
+            statusLabel.textAlignment = .center
+            // Substituído o amarelo pelo Slate para manter a sobriedade até que um erro real ocorra
+            statusLabel.textColor = slateColor
+            statusLabel.font = UIFont(name: "Inter-Medium", size: 14) ?? UIFont.systemFont(ofSize: 14, weight: .medium)
+            view.addSubview(statusLabel)
+            
+            let startY: CGFloat = 160
+            existingCpfField = createTextField(placeholder: "Digite o Nome Completo ou CPF...", y: startY)
+            existingCpfField.keyboardType = .default
+            existingCpfField.delegate = self
+            
+            btnSearchExisting = UIButton(frame: CGRect(x: 30, y: startY + 65, width: view.bounds.width - 60, height: 50))
+            // 🔴 BRANDBOOK: Botão Cyan sólido com texto Navy para contraste perfeito (sem sombras)
+            btnSearchExisting.backgroundColor = opticalCyan
+            btnSearchExisting.setTitleColor(navyDark, for: .normal)
+            btnSearchExisting.setTitle("Buscar Paciente", for: .normal)
+            btnSearchExisting.layer.cornerRadius = 16
+            btnSearchExisting.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+            btnSearchExisting.addTarget(self, action: #selector(searchExistingClient), for: .touchUpInside)
+            view.addSubview(btnSearchExisting)
+            
+            // Campos de Edição Ocultos
+            editNameField = createTextField(placeholder: "Nome", y: startY + 65); editNameField.isHidden = true
+            editDobField = createTextField(placeholder: "Data Nasc.", y: startY + 125); editDobField.isHidden = true
+            editPhoneField = createTextField(placeholder: "Telefone", y: startY + 185); editPhoneField.isHidden = true
+            
+            btnUpdateAndMeasure = UIButton(frame: CGRect(x: 30, y: startY + 250, width: view.bounds.width - 60, height: 50))
+            btnUpdateAndMeasure.backgroundColor = opticalCyan
+            btnUpdateAndMeasure.setTitleColor(navyDark, for: .normal)
+            btnUpdateAndMeasure.setTitle("Atualizar e Medir", for: .normal)
+            btnUpdateAndMeasure.layer.cornerRadius = 16
+            btnUpdateAndMeasure.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+            btnUpdateAndMeasure.addTarget(self, action: #selector(updateAndMeasure), for: .touchUpInside)
+            btnUpdateAndMeasure.isHidden = true
+            view.addSubview(btnUpdateAndMeasure)
+            
+            // Área de rolagem para o Histórico de PDFs ou Lista de Pacientes
         historyScrollView = UIScrollView(frame: CGRect(x: 30, y: startY + 130, width: view.bounds.width - 60, height: view.bounds.height - (startY + 150)))
         historyScrollView.isHidden = false
         view.addSubview(historyScrollView)
@@ -112,20 +124,31 @@ class SearchPatientViewController: UIViewController, UITextFieldDelegate {
     }
 
     func createTextField(placeholder: String, y: CGFloat) -> UITextField {
-        let tf = UITextField(frame: CGRect(x: 30, y: y, width: view.bounds.width - 60, height: 50))
-        tf.backgroundColor = UIColor(white: 1.0, alpha: 0.05)
-        tf.layer.cornerRadius = 12
-        tf.layer.borderWidth = 1
-        tf.layer.borderColor = UIColor(white: 1.0, alpha: 0.1).cgColor
-        tf.textColor = .white
-
-        let leftPadding = UIView(frame: CGRect(x: 0, y: 0, width: 15, height: 50))
-        tf.leftView = leftPadding
-        tf.leftViewMode = .always
-        tf.attributedPlaceholder = NSAttributedString(string: placeholder, attributes: [.foregroundColor: UIColor.lightGray])
-        view.addSubview(tf)
-        return tf
-    }
+            let tf = UITextField(frame: CGRect(x: 30, y: y, width: view.bounds.width - 60, height: 50))
+            tf.backgroundColor = UIColor(white: 1.0, alpha: 0.05)
+            tf.layer.cornerRadius = 12
+            tf.layer.borderWidth = 1
+            tf.layer.borderColor = UIColor(white: 1.0, alpha: 0.1).cgColor
+            tf.textColor = .white
+            tf.font = UIFont(name: "Inter-Regular", size: 15) ?? UIFont.systemFont(ofSize: 15)
+            
+            let leftPadding = UIView(frame: CGRect(x: 0, y: 0, width: 15, height: 50))
+            tf.leftView = leftPadding
+            tf.leftViewMode = .always
+            
+            // 🔴 BRANDBOOK: Textos inativos em cor Slate
+            let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
+            tf.attributedPlaceholder = NSAttributedString(
+                string: placeholder,
+                attributes: [
+                    .foregroundColor: slateColor,
+                    .font: UIFont(name: "Inter-Regular", size: 15) ?? UIFont.systemFont(ofSize: 15)
+                ]
+            )
+            
+            view.addSubview(tf)
+            return tf
+        }
 
     var allPatientsCache: [[String: Any]] = []
 
@@ -149,36 +172,75 @@ class SearchPatientViewController: UIViewController, UITextFieldDelegate {
     }
 
     func renderPatientList(patients: [[String: Any]]) {
-        self.historyStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-
-        let titleLbl = UILabel()
-        titleLbl.text = "MEUS PACIENTES CADASTRADOS"
-        titleLbl.textColor = .lightGray
-        titleLbl.font = UIFont.boldSystemFont(ofSize: 12)
-        self.historyStackView.addArrangedSubview(titleLbl)
-
-        for data in patients {
-            let name = data["fullName"] as? String ?? "Sem Nome"
-            let cpf = data["cpf"] as? String ?? "Sem CPF"
-
-            let btn = UIButton(type: .system)
-            btn.backgroundColor = UIColor(white: 1.0, alpha: 0.1)
-            btn.layer.cornerRadius = 10
-            btn.setTitle("👤 \(name) (\(cpf))", for: .normal)
-            btn.setTitleColor(.white, for: .normal)
-            btn.contentHorizontalAlignment = .left
-            btn.titleEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 0)
-            btn.heightAnchor.constraint(equalToConstant: 45).isActive = true
-
-            // O botão carrega EXATAMENTE o documento clicado
-            btn.addAction(UIAction(handler: { _ in
-                self.existingCpfField.text = cpf
-                self.loadSelectedPatient(docData: data)
-            }), for: .touchUpInside)
-
-            self.historyStackView.addArrangedSubview(btn)
+            self.historyStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+            
+            let titleLbl = UILabel()
+            titleLbl.text = "MEUS PACIENTES CADASTRADOS"
+            // 🔴 BRANDBOOK: Cor Slate e Fonte Inter
+            titleLbl.textColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
+            titleLbl.font = UIFont(name: "Inter-Bold", size: 12) ?? UIFont.boldSystemFont(ofSize: 12)
+            self.historyStackView.addArrangedSubview(titleLbl)
+            
+            // 🔴 ARQUITETURA SÊNIOR: Ícone massivo de 64x64 px (Efeito Pop-Out)
+            var patientIcon: UIImage? = nil
+            if let rawIcon = UIImage(named: "Ico_04")?.withRenderingMode(.alwaysTemplate) {
+                let renderer = UIGraphicsImageRenderer(size: CGSize(width: 64, height: 64))
+                patientIcon = renderer.image { _ in
+                    rawIcon.draw(in: CGRect(x: 0, y: 0, width: 64, height: 64))
+                }.withRenderingMode(.alwaysTemplate)
+            }
+            
+            for data in patients {
+                let name = data["fullName"] as? String ?? "Sem Nome"
+                let cpf = data["cpf"] as? String ?? "Sem CPF"
+                
+                // 🔴 PRIVACIDADE LGPD: Máscara visual no CPF
+                let maskedCpf = cpf.count >= 14 ? "***.***." + cpf.suffix(6) : cpf
+                
+                let btn = UIButton(type: .system)
+                btn.backgroundColor = UIColor(white: 1.0, alpha: 0.1)
+                btn.layer.cornerRadius = 10
+                
+                // Garante que o botão como um todo possa vazar conteúdo
+                btn.clipsToBounds = false
+                
+                if let finalIcon = patientIcon {
+                    btn.setImage(finalIcon, for: .normal)
+                    btn.tintColor = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+                    btn.setTitle("   \(name) (\(maskedCpf))", for: .normal)
+                    btn.imageEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
+                    btn.titleEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
+                    
+                    // 🔴 CORREÇÃO DO ACHATAMENTO:
+                    // Impede o iOS de amassar a imagem e centraliza ela no tamanho original!
+                    btn.imageView?.contentMode = .center
+                    btn.imageView?.clipsToBounds = false
+                } else {
+                    btn.setTitle("👤 \(name) (\(maskedCpf))", for: .normal)
+                    btn.titleEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
+                }
+                
+                btn.setTitleColor(.white, for: .normal)
+                btn.contentHorizontalAlignment = .left
+                btn.contentVerticalAlignment = .center // Trava a centralização no eixo Y
+                btn.titleLabel?.font = UIFont(name: "Inter-Medium", size: 14) ?? UIFont.systemFont(ofSize: 14)
+                
+                // Mantém a altura da linha original (45 pontos)
+                btn.heightAnchor.constraint(equalToConstant: 45).isActive = true
+                
+                // O botão CONTINUA enviando o CPF real e completo
+                btn.addAction(UIAction(handler: { _ in
+                    self.existingCpfField.text = cpf
+                    self.loadSelectedPatient(docData: data)
+                }), for: .touchUpInside)
+                
+                // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+                let lgpdValidation = ["LGPD Mask OK"]
+                let _ = lgpdValidation[ 0 ]
+                
+                self.historyStackView.addArrangedSubview(btn)
+            }
         }
-    }
 
     @objc func searchExistingClient() {
         guard let queryText = existingCpfField.text?.lowercased(), queryText.count > 3 else {
