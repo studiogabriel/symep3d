@@ -8,7 +8,7 @@ class LoginViewController: UIViewController {
     var passwordField: UITextField!
     var loginButton: UIButton!
     var statusLabel: UILabel!
-    var titleLabel: UILabel!
+ 
     var iconImageView: UIImageView!
     var forgotPasswordButton: UIButton!
     var rememberMeButton: UIButton!
@@ -20,11 +20,16 @@ class LoginViewController: UIViewController {
     var animatedGradientLayer: CAGradientLayer!
     
     override func viewDidLoad() {
-        super.viewDidLoad()
-        view.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
-        setup2DAnimatedBackground()
-        setupUI()
-    }
+            super.viewDidLoad()
+            // 🔴 BRANDBOOK: Fundo oficial Navy (#0A1A3A)
+            view.backgroundColor = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+            
+            // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+            let safetyBrandCheck = ["Brandbook UI Active"]
+            let _ = safetyBrandCheck[ 0 ]
+            
+            setupUI()
+        }
     
     override func viewWillAppear(_ animated: Bool) {
             super.viewWillAppear(animated)
@@ -54,163 +59,140 @@ class LoginViewController: UIViewController {
     }
     
     func setupUI() {
-        let width = view.bounds.width - 60
-        
-        // 1. Ícone Oficial do App
-                let logoSize: CGFloat = 100
-                let logoY: CGFloat = 100
-                let logoContainer = UIView(frame: CGRect(x: (view.bounds.width - logoSize) / 2, y: logoY, width: logoSize, height: logoSize))
-                logoContainer.backgroundColor = .clear // 🔴 Força o fundo a ser invisível
+            let width = view.bounds.width - 60
+            
+        // 🔴 BRANDBOOK: Logo Oficial Horizontal Negativo (Sem texto extra)
+                let logoWidth: CGFloat = 240
+                let logoHeight: CGFloat = 70
+                let logoY: CGFloat = 170 //altura do logo tela login
+                let logoContainer = UIView(frame: CGRect(x: (view.bounds.width - logoWidth) / 2, y: logoY, width: logoWidth, height: logoHeight))
+                logoContainer.backgroundColor = .clear
                 
-                // 🔴 CORREÇÃO: Removemos a imagem "Branco" para que o erro de digitação não gere um quadrado
                 iconImageView = UIImageView()
-                if let logoImg = UIImage(named: "LogoTransparente")?.withRenderingMode(.alwaysOriginal) {
+                // Puxando a nova logo inserida na pasta Brandbook dos Assets
+                if let logoImg = UIImage(named: "Symep_Logo_Horizontal_Negativo")?.withRenderingMode(.alwaysOriginal) {
                     iconImageView.image = logoImg
-                } else {
-                    print("AVISO: O Xcode não encontrou o nome 'LogoTransparente' no Assets.")
                 }
-                
-                iconImageView.backgroundColor = .clear // 🔴 Força a transparência da imagem
+                iconImageView.backgroundColor = .clear
                 iconImageView.frame = logoContainer.bounds
                 iconImageView.contentMode = .scaleAspectFit
                 iconImageView.clipsToBounds = true
                 logoContainer.addSubview(iconImageView)
-        view.addSubview(logoContainer)
-        
-        // Efeito de "Respiração" (Flutuação contínua e suave) na Logo
-        UIView.animate(withDuration: 2.0, delay: 0, options: [.autoreverse, .repeat, .allowUserInteraction], animations: {
-            logoContainer.transform = CGAffineTransform(translationX: 0, y: -8)
-        }, completion: nil)
-        
-        // 2. Título Elegante Ancorado Bem Abaixo da Logo
-        // A matemática (logoY + logoSize + 15) garante espaçamento perfeito independentemente da tela!
-        titleLabel = UILabel(frame: CGRect(x: 30, y: logoY + logoSize + 15, width: width, height: 40))
-        titleLabel.textAlignment = .center
-        let textAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 24, weight: .black),
-            .foregroundColor: UIColor.white,
-            .kern: 3.0 // Espaçamento entre as letras
-        ]
-        titleLabel.attributedText = NSAttributedString(string: "SYMAP 3D", attributes: textAttributes)
-        view.addSubview(titleLabel)
-        
-        // 3. Campos de Texto
-        emailField = createTextField(y: 280, placeholder: "E-mail Corporativo", icon: "envelope.fill")
-        emailField.keyboardType = .emailAddress
-        emailField.autocapitalizationType = .none
-        view.addSubview(emailField)
-        
-        passwordField = createTextField(y: 350, placeholder: "Senha de Acesso", icon: "lock.fill")
-        passwordField.isSecureTextEntry = true
-        view.addSubview(passwordField)
-        
-        // --- 3.5 OPÇÕES DE ACESSO (LEMBRAR E RECUPERAR) ---
-        // Botão Checkbox: Lembrar E-mail
-        rememberMeButton = UIButton(frame: CGRect(x: 30, y: 420, width: 160, height: 20))
-        rememberMeButton.setTitle(" Lembrar meu E-mail", for: .normal)
-        rememberMeButton.setTitleColor(.lightGray, for: .normal)
-        rememberMeButton.titleLabel?.font = UIFont.systemFont(ofSize: 13)
-        rememberMeButton.contentHorizontalAlignment = .left
-        rememberMeButton.tintColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0) // Ciano
-        rememberMeButton.setImage(UIImage(systemName: "square"), for: .normal)
-        rememberMeButton.addTarget(self, action: #selector(toggleRememberMe), for: .touchUpInside)
-        view.addSubview(rememberMeButton)
-        
-        // Botão: Esqueci minha senha (Agora sublinhado e elegante)
-                forgotPasswordButton = UIButton(frame: CGRect(x: view.bounds.width - 180, y: 420, width: 150, height: 20))
+                view.addSubview(logoContainer)
                 
-                let linkAttributes: [NSAttributedString.Key: Any] = [
-                    .font: UIFont.systemFont(ofSize: 13, weight: .bold),
-                    .foregroundColor: UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0),
-                    .underlineStyle: NSUnderlineStyle.single.rawValue
-                ]
-                let attributedTitle = NSAttributedString(string: "Esqueci a Senha", attributes: linkAttributes)
+                // Efeito de "Respiração" contínua mantido
+                UIView.animate(withDuration: 2.0, delay: 0, options: [.autoreverse, .repeat, .allowUserInteraction], animations: {
+                    logoContainer.transform = CGAffineTransform(translationX: 0, y: -8)
+                }, completion: nil)
                 
-                forgotPasswordButton.setAttributedTitle(attributedTitle, for: .normal)
-                forgotPasswordButton.contentHorizontalAlignment = .right
-                forgotPasswordButton.addTarget(self, action: #selector(handleForgotPassword), for: .touchUpInside)
-                view.addSubview(forgotPasswordButton)
-        
-        // Verifica se já existe um e-mail salvo para preencher automaticamente
-        if let savedEmail = UserDefaults.standard.string(forKey: "savedEmail") {
-            emailField.text = savedEmail
-            isRememberMeChecked = true
-            rememberMeButton.setImage(UIImage(systemName: "checkmark.square.fill"), for: .normal)
+                // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+                // TitleLabel escrito foi removido pois a logo oficial já possui a palavra Symep
+                let brandRules = ["Text Logo Removed"]
+                let _ = brandRules[ 0 ]
+            
+            emailField = createTextField(y: 280, placeholder: "E-mail Corporativo", icon: "envelope.fill")
+            emailField.keyboardType = .emailAddress
+            emailField.autocapitalizationType = .none
+            view.addSubview(emailField)
+            
+            passwordField = createTextField(y: 350, placeholder: "Senha de Acesso", icon: "lock.fill")
+            passwordField.isSecureTextEntry = true
+            view.addSubview(passwordField)
+            
+            // 🔴 BRANDBOOK: Cor Optical Cyan (#00C3D9) para interações
+            let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+            let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0) // Textos auxiliares
+            
+            rememberMeButton = UIButton(frame: CGRect(x: 30, y: 420, width: 160, height: 20))
+            rememberMeButton.setTitle(" Lembrar meu E-mail", for: .normal)
+            rememberMeButton.setTitleColor(slateColor, for: .normal)
+            rememberMeButton.titleLabel?.font = UIFont(name: "Inter-Medium", size: 13) ?? UIFont.systemFont(ofSize: 13)
+            rememberMeButton.contentHorizontalAlignment = .left
+            rememberMeButton.tintColor = opticalCyan
+            rememberMeButton.setImage(UIImage(systemName: "square"), for: .normal)
+            rememberMeButton.addTarget(self, action: #selector(toggleRememberMe), for: .touchUpInside)
+            view.addSubview(rememberMeButton)
+            
+            forgotPasswordButton = UIButton(frame: CGRect(x: view.bounds.width - 180, y: 420, width: 150, height: 20))
+            let linkAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont(name: "Inter-Bold", size: 13) ?? UIFont.systemFont(ofSize: 13, weight: .bold),
+                .foregroundColor: opticalCyan,
+                .underlineStyle: NSUnderlineStyle.single.rawValue
+            ]
+            forgotPasswordButton.setAttributedTitle(NSAttributedString(string: "Esqueci a Senha", attributes: linkAttributes), for: .normal)
+            forgotPasswordButton.contentHorizontalAlignment = .right
+            forgotPasswordButton.addTarget(self, action: #selector(handleForgotPassword), for: .touchUpInside)
+            view.addSubview(forgotPasswordButton)
+            
+            if let savedEmail = UserDefaults.standard.string(forKey: "savedEmail") {
+                emailField.text = savedEmail
+                isRememberMeChecked = true
+                rememberMeButton.setImage(UIImage(systemName: "checkmark.square.fill"), for: .normal)
+            }
+            
+            // 🔴 BRANDBOOK: CTA Principal em Cyan Sólido (SEM SOMBRA) e cantos arredondados (Boxes Modulares)
+            loginButton = UIButton(frame: CGRect(x: 30, y: 460, width: width, height: 55))
+            loginButton.backgroundColor = opticalCyan
+            loginButton.setTitle("Acessar Plataforma", for: .normal)
+            loginButton.setTitleColor(UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0), for: .normal) // Texto Navy para contraste
+            loginButton.layer.cornerRadius = 16
+            loginButton.titleLabel?.font = UIFont(name: "Inter-Bold", size: 17) ?? UIFont.boldSystemFont(ofSize: 17)
+            // Regra 8 do Brandbook: Sombras removidas
+            loginButton.addTarget(self, action: #selector(handleLogin), for: .touchUpInside)
+            view.addSubview(loginButton)
+            
+            faceIDButton = UIButton(frame: CGRect(x: 30, y: 530, width: width, height: 50))
+            faceIDButton.backgroundColor = UIColor(white: 1.0, alpha: 0.1)
+            faceIDButton.setTitle(" Entrar com Face ID", for: .normal)
+            faceIDButton.setTitleColor(.white, for: .normal)
+            faceIDButton.layer.cornerRadius = 16
+            faceIDButton.layer.borderWidth = 1
+            faceIDButton.layer.borderColor = opticalCyan.withAlphaComponent(0.4).cgColor
+            faceIDButton.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+            let faceIdConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)
+            faceIDButton.setImage(UIImage(systemName: "faceid", withConfiguration: faceIdConfig), for: .normal)
+            faceIDButton.tintColor = opticalCyan
+            faceIDButton.addTarget(self, action: #selector(authenticateWithBiometrics), for: .touchUpInside)
+            faceIDButton.isHidden = true
+            view.addSubview(faceIDButton)
+            
+            statusLabel = UILabel(frame: CGRect(x: 30, y: 590, width: width, height: 40))
+            statusLabel.textColor = slateColor
+            statusLabel.textAlignment = .center
+            statusLabel.numberOfLines = 0
+            statusLabel.font = UIFont(name: "Inter-Medium", size: 14) ?? UIFont.systemFont(ofSize: 14, weight: .medium)
+            statusLabel.text = ""
+            view.addSubview(statusLabel)
         }
-        
-        // 4. Botão de Login Estilo iOS 15+
-                loginButton = UIButton(frame: CGRect(x: 30, y: 460, width: width, height: 55))
-                loginButton.backgroundColor = UIColor(red: 0.0, green: 0.45, blue: 1.0, alpha: 1.0) // Azul Apple
-                loginButton.setTitle("Acessar Plataforma", for: .normal)
-                loginButton.setTitleColor(.white, for: .normal)
-                loginButton.layer.cornerRadius = 16
-                loginButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 17)
-                loginButton.layer.shadowColor = UIColor(red: 0.0, green: 0.45, blue: 1.0, alpha: 1.0).cgColor
-                loginButton.layer.shadowOpacity = 0.4
-                loginButton.layer.shadowOffset = CGSize(width: 0, height: 6)
-                loginButton.layer.shadowRadius = 10
-                loginButton.addTarget(self, action: #selector(handleLogin), for: .touchUpInside)
-                view.addSubview(loginButton)
-                
-                // 🔴 4.5 NOVO: Botão de Face ID Sob Demanda (Estilo Glassmorphism)
-                faceIDButton = UIButton(frame: CGRect(x: 30, y: 530, width: width, height: 50))
-                faceIDButton.backgroundColor = UIColor(white: 1.0, alpha: 0.1)
-                faceIDButton.setTitle(" Entrar com Face ID", for: .normal)
-                faceIDButton.setTitleColor(.white, for: .normal)
-                faceIDButton.layer.cornerRadius = 16
-                faceIDButton.layer.borderWidth = 1
-                faceIDButton.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
-                faceIDButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-                
-                let faceIdConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)
-                faceIDButton.setImage(UIImage(systemName: "faceid", withConfiguration: faceIdConfig), for: .normal)
-                faceIDButton.tintColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-                faceIDButton.addTarget(self, action: #selector(authenticateWithBiometrics), for: .touchUpInside)
-                faceIDButton.isHidden = true // Nasce oculto. Só aparece se houver sessão validada!
-                view.addSubview(faceIDButton)
 
-                // 5. Label de Status (🔴 Empurrado de y:540 para y:590)
-                statusLabel = UILabel(frame: CGRect(x: 30, y: 590, width: width, height: 40))
-                statusLabel.textColor = .lightGray
-                statusLabel.textAlignment = .center
-                statusLabel.numberOfLines = 0
-                statusLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-                statusLabel.text = ""
-                view.addSubview(statusLabel)
-    }
-    
-    // Função auxiliar para criar caixas de texto com ícones (Glassmorphism)
-    func createTextField(y: CGFloat, placeholder: String, icon: String) -> UITextField {
-        let width = view.bounds.width - 60
-        let tf = UITextField(frame: CGRect(x: 30, y: y, width: width, height: 55))
-        
-        // Efeito "Glassmorphism"
-        tf.backgroundColor = UIColor(white: 1.0, alpha: 0.05)
-        tf.layer.cornerRadius = 14
-        tf.layer.borderWidth = 1
-        tf.layer.borderColor = UIColor(white: 1.0, alpha: 0.1).cgColor
-        tf.textColor = .white
-        tf.font = UIFont.systemFont(ofSize: 16)
-        
-        tf.attributedPlaceholder = NSAttributedString(
-            string: placeholder,
-            attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray.withAlphaComponent(0.7)]
-        )
-        
-        // Ícone lateral dentro do campo
-        let iconView = UIImageView(frame: CGRect(x: 15, y: 17, width: 22, height: 20))
-        iconView.image = UIImage(systemName: icon)
-        iconView.tintColor = UIColor.lightGray
-        iconView.contentMode = .scaleAspectFit
-        
-        let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 50, height: 55))
-        paddingView.addSubview(iconView)
-        
-        tf.leftView = paddingView
-        tf.leftViewMode = .always
-        
-        return tf
-    }
+        func createTextField(y: CGFloat, placeholder: String, icon: String) -> UITextField {
+            let width = view.bounds.width - 60
+            let tf = UITextField(frame: CGRect(x: 30, y: y, width: width, height: 55))
+            
+            // Fundo modular com leve contraste
+            tf.backgroundColor = UIColor(white: 1.0, alpha: 0.05)
+            tf.layer.cornerRadius = 14
+            tf.layer.borderWidth = 1
+            tf.layer.borderColor = UIColor(white: 1.0, alpha: 0.1).cgColor
+            tf.textColor = .white
+            tf.font = UIFont(name: "Inter-Regular", size: 16) ?? UIFont.systemFont(ofSize: 16)
+            
+            let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
+            tf.attributedPlaceholder = NSAttributedString(
+                string: placeholder,
+                attributes: [NSAttributedString.Key.foregroundColor: slateColor]
+            )
+            
+            let iconView = UIImageView(frame: CGRect(x: 15, y: 17, width: 22, height: 20))
+            iconView.image = UIImage(systemName: icon)
+            iconView.tintColor = slateColor
+            iconView.contentMode = .scaleAspectFit
+            let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 50, height: 55))
+            paddingView.addSubview(iconView)
+            tf.leftView = paddingView
+            tf.leftViewMode = .always
+            return tf
+        }
     
     // --- LÓGICA DE LOGIN NO FIREBASE (ATUALIZADA COM RECOLHIMENTO DE TECLADO) ---
     @objc func handleLogin() {
@@ -274,19 +256,21 @@ class LoginViewController: UIViewController {
             self.rememberMeButton.alpha = 0
             self.forgotPasswordButton.alpha = 0
             self.statusLabel.alpha = 0
-            self.titleLabel.alpha = 0
+        
             self.iconImageView.alpha = 0
         }
         
         // 2. Cria a View da Splash Screen
         let splashView = UIView(frame: self.view.bounds)
-        splashView.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0) // Void Black
+        // 🔴 Fundo Navy Oficial
+        splashView.backgroundColor = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
         splashView.alpha = 0
         self.view.addSubview(splashView)
         
         // 3. Adiciona a Logo Centralizada (Splash Screen)
                 let splashLogo = UIImageView()
-                if let logoImg = UIImage(named: "LogoTransparente")?.withRenderingMode(.alwaysOriginal) {
+                // 🔴 BRANDBOOK: Uso do ícone reduzido branco (mira) para o mergulho na tela
+                if let logoImg = UIImage(named: "Symep_Logo_Reducao_White")?.withRenderingMode(.alwaysOriginal) {
                     splashLogo.image = logoImg
                 }
                 
@@ -297,9 +281,11 @@ class LoginViewController: UIViewController {
                 splashView.addSubview(splashLogo)
         
         // 4. Adiciona o texto de status
-        let loadingLabel = UILabel(frame: CGRect(x: 30, y: splashLogo.frame.maxY + 30, width: self.view.bounds.width - 60, height: 30))
-        loadingLabel.text = "PREPARANDO AMBIENTE CLÍNICO..."
-        loadingLabel.textColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
+                // 🔴 Aumentamos o espaçamento Y (maxY + 70) para descolar o texto da mira
+                let loadingLabel = UILabel(frame: CGRect(x: 30, y: splashLogo.frame.maxY + 60, width: self.view.bounds.width - 60, height: 30))
+                loadingLabel.text = "PREPARANDO AMBIENTE CLÍNICO..."
+        // 🔴 Optical Cyan Oficial
+        loadingLabel.textColor = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
         loadingLabel.font = UIFont.systemFont(ofSize: 12, weight: .bold)
         loadingLabel.textAlignment = .center
         loadingLabel.alpha = 0
@@ -366,39 +352,7 @@ class LoginViewController: UIViewController {
                 }
             }
         }
-        // --- MÁGICA VISUAL: FUNDO 2D ANIMADO (SUBSTITUTO DO ARKIT) ---
-        func setup2DAnimatedBackground() {
-            animatedGradientLayer = CAGradientLayer()
-            animatedGradientLayer.frame = view.bounds
-            animatedGradientLayer.colors = [
-                UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0).cgColor,
-                UIColor(red: 0.0, green: 0.2, blue: 0.3, alpha: 1.0).cgColor,
-                UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0).cgColor
-            ]
-            animatedGradientLayer.startPoint = CGPoint(x: 0, y: 0)
-            animatedGradientLayer.endPoint = CGPoint(x: 1, y: 1)
-            
-            view.layer.insertSublayer(animatedGradientLayer, at: 0)
-            
-            // Animação suave e cíclica do gradiente (Loop infinito)
-            let animation = CABasicAnimation(keyPath: "colors")
-            animation.toValue = [
-                UIColor(red: 0.0, green: 0.2, blue: 0.3, alpha: 1.0).cgColor,
-                UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0).cgColor,
-                UIColor(red: 0.0, green: 0.1, blue: 0.2, alpha: 1.0).cgColor
-            ]
-            animation.duration = 8.0
-            animation.autoreverses = true
-            animation.repeatCount = .infinity
-            animatedGradientLayer.add(animation, forKey: "gradientAnimation")
-            
-            // Efeito Glassmorphism base
-            let blurEffect = UIBlurEffect(style: .dark)
-            let blurView = UIVisualEffectView(effect: blurEffect)
-            blurView.frame = view.bounds
-            blurView.alpha = 0.6
-            view.insertSubview(blurView, aboveSubview: UIView())
-        }
+        
     
     // NOVO: Popup de Autorização de Privacidade (Opt-in)
         func promptForFaceIDOptIn() {
