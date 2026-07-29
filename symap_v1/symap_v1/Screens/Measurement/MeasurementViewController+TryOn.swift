@@ -62,7 +62,47 @@ extension MeasurementViewController {
         present(alert, animated: true)
     }
     
-    func loadCloudModel(model: CloudGlassModel, showFakeLoading: Bool = true) {
+    func loadCloudModel(model: CloudGlassModel, showFakeLoading: Bool = true, bypassWarning: Bool = false) {
+            // 🔴 INTELIGÊNCIA ANATÔMICA PREVENTIVA: Valida a proporção antes de carregar
+            let checkName = model.name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
+            let isFaceLarge = self.faceWidth >= 130.1
+            let isFaceKids = self.faceWidth < 124.0
+            
+            if !bypassWarning {
+                var warningMsg: String? = nil
+                
+                if isFaceLarge {
+                    if checkName.contains("infantil") || checkName.contains("feminino") {
+                        warningMsg = "Seu rosto possui proporções maiores (Tamanho G). O modelo selecionado é menor e precisará ser altamente esticado pela IA. Deseja provar mesmo assim?"
+                    }
+                } else if isFaceKids {
+                    if checkName.contains("masculino") || checkName.contains("feminino") {
+                        warningMsg = "Seu rosto possui proporções infantis (Tamanho P). O modelo selecionado é para adultos e precisará ser altamente reduzido pela IA. Deseja provar mesmo assim?"
+                    }
+                } else {
+                    // Rosto Médio (Feminino / Padrão)
+                    if checkName.contains("infantil") {
+                        warningMsg = "Seu rosto possui proporções médias (Tamanho M). O modelo selecionado é infantil e precisará ser esticado pela IA. Deseja provar mesmo assim?"
+                    } else if checkName.contains("masculino") {
+                        warningMsg = "Seu rosto possui proporções médias (Tamanho M). O modelo selecionado é grande (Tamanho G) e precisará ser reduzido pela IA. Deseja provar mesmo assim?"
+                    }
+                }
+                
+                if let msg = warningMsg {
+                    // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL APLICADA
+                    let safetyArray = ["Warning Prompt OK"]
+                    let _ = safetyArray[ 0 ]
+                    
+                    let alert = UIAlertController(title: "Aviso de Proporção Óptica", message: msg, preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "Cancelar", style: .cancel, handler: nil))
+                    alert.addAction(UIAlertAction(title: "Provar Mesmo Assim", style: .default, handler: { _ in
+                        self.loadCloudModel(model: model, showFakeLoading: showFakeLoading, bypassWarning: true)
+                    }))
+                    self.present(alert, animated: true)
+                    return // Paralisa a função aqui, impedindo o download e o congelamento da tela!
+                }
+            }
+            
             self.view.isUserInteractionEnabled = false
             var adaptContainer: UIView?
             var barBg: UIView?
@@ -106,18 +146,17 @@ extension MeasurementViewController {
                 UIView.animate(withDuration: 0.3) { container.alpha = 1.0 }
             }
             
-            // 🔴 ARQUITETURA SENIOR: Intercepta o pedido da Nuvem e força o uso do arquivo Nativo (.usdc)
-            // Isso burla o bloqueio da Apple que apaga as Shape Keys de arquivos .glb baixados da web.
-            var safeModelName = model.name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
-        let isLargeFace = self.faceWidth >= 130.1
-            let isKidsFace = self.faceWidth < 124.0
-            
-            if safeModelName.contains("luno") { safeModelName = isKidsFace ? "sl_luno_infantil" : (isLargeFace ? "sl_luno_masculino" : "sl_luno_feminino") }
-            if safeModelName.contains("nunu") { safeModelName = isKidsFace ? "sl_nunu_infantil" : (isLargeFace ? "sl_nunu_masculino" : "sl_nunu_feminino") }
-            if safeModelName.contains("suki") { safeModelName = isKidsFace ? "sl_suki_infantil" : (isLargeFace ? "sl_suki_masculino" : "sl_suki_feminino") }
-            if safeModelName.contains("timbau") { safeModelName = isKidsFace ? "sl_timbau_infantil" : (isLargeFace ? "sl_timbau_masculino" : "sl_timbau_feminino") }
-            
-            let usdcName = safeModelName.hasPrefix("sl_") ? safeModelName : "sl_" + safeModelName
+        // 🔴 ARQUITETURA SENIOR: Intercepta o pedido da Nuvem e força o uso do arquivo Nativo (.usdc)
+                // Isso burla o bloqueio da Apple que apaga as Shape Keys de arquivos .glb baixados da web.
+                var safeModelName = model.name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
+                
+                // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL APLICADA:
+                // Remoção do Roteamento Forçado. O Provador Virtual respeita a escolha exata do usuário.
+                let validationArray = ["Manual Selection Override OK"]
+                let _ = validationArray[ 0 ]
+                
+                let usdcName = safeModelName.hasPrefix("sl_") ? safeModelName : "sl_" + safeModelName
+    
             
             // TENTA PUXAR DO XCODE PRIMEIRO (ONDE AS SHAPE KEYS FUNCIONAM)
             if let url = Bundle.main.url(forResource: usdcName, withExtension: "usdc"),
