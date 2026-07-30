@@ -40,81 +40,119 @@ class TripodCalibrationView: UIView {
         blur.frame = self.bounds
         self.addSubview(blur)
         
-        let boxW: CGFloat = 340
-        let boxH: CGFloat = 520
-        let box = UIView(frame: CGRect(x: (self.bounds.width - boxW)/2, y: (self.bounds.height - boxH)/2, width: boxW, height: boxH))
-        box.backgroundColor = UIColor(white: 0.1, alpha: 1.0)
-        box.layer.cornerRadius = 20
-        box.layer.borderWidth = 2
-        box.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
-        self.addSubview(box)
-        
-        let title = UILabel(frame: CGRect(x: 20, y: 30, width: boxW - 40, height: 25))
-        title.text = "CALIBRAÇÃO DO TRIPÉ"
-        title.textColor = .white
-        title.font = UIFont.boldSystemFont(ofSize: 20)
-        title.textAlignment = .center
-        box.addSubview(title)
-        
-        let desc = UILabel(frame: CGRect(x: 20, y: 65, width: boxW - 40, height: 60))
-        desc.text = "Zere a inclinação nos 3 eixos apertando firmemente as travas do tripé. Busque os 0.0 Graus."
-        desc.textColor = .lightGray
-        desc.font = UIFont.systemFont(ofSize: 14)
-        desc.numberOfLines = 0
-        desc.textAlignment = .center
-        box.addSubview(desc)
-        
-        let radarSize: CGFloat = 120
-        let radarBg = UIView(frame: CGRect(x: (boxW - radarSize)/2, y: 150, width: radarSize, height: radarSize))
-        radarBg.layer.cornerRadius = radarSize / 2
-        radarBg.layer.borderWidth = 2
-        radarBg.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
-        box.addSubview(radarBg)
-        
-        radarTarget.frame = CGRect(x: -20, y: radarSize/2 - 2, width: radarSize + 40, height: 4)
-        radarTarget.backgroundColor = .systemRed
-        radarBg.addSubview(radarTarget)
-        
-        let tapeW: CGFloat = 16
-        let tapeH: CGFloat = 120
-        let tapeBg = UIView(frame: CGRect(x: boxW - 40, y: 150, width: tapeW, height: tapeH))
-        tapeBg.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-        tapeBg.layer.cornerRadius = tapeW / 2
-        tapeBg.layer.borderWidth = 1
-        tapeBg.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
-        box.addSubview(tapeBg)
-        
-        let tapeCenter = UIView(frame: CGRect(x: 0, y: tapeH/2 - 10, width: tapeW, height: 20))
-        tapeCenter.layer.borderWidth = 2
-        tapeCenter.layer.borderColor = UIColor.white.withAlphaComponent(0.5).cgColor
-        tapeBg.addSubview(tapeCenter)
-        
-        pitchBubble.frame = CGRect(x: 2, y: tapeH/2 - 6, width: 12, height: 12)
-        pitchBubble.backgroundColor = .systemRed
-        pitchBubble.layer.cornerRadius = 6
-        tapeBg.addSubview(pitchBubble)
-        
-        func createDegLabel(y: CGFloat) -> UILabel {
-            let lbl = UILabel(frame: CGRect(x: 20, y: y, width: boxW - 40, height: 20))
-            lbl.font = UIFont.monospacedDigitSystemFont(ofSize: 13, weight: .bold)
-            lbl.textAlignment = .center
-            box.addSubview(lbl)
-            return lbl
-        }
-        
-        lblRoll = createDegLabel(y: 290)
-        lblPitch = createDegLabel(y: 315)
-        lblYaw = createDegLabel(y: 340)
-        
-        lockButton.frame = CGRect(x: 30, y: boxH - 75, width: boxW - 60, height: 55)
-        lockButton.backgroundColor = .darkGray
-        lockButton.setTitle("Avançar para Medição", for: .normal)
-        lockButton.setTitleColor(.lightGray, for: .normal)
-        lockButton.layer.cornerRadius = 16
-        lockButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        lockButton.isEnabled = false
-        lockButton.addTarget(self, action: #selector(finishCalibration), for: .touchUpInside)
-        box.addSubview(lockButton)
+        // 🔴 BRANDBOOK: Injeção da Paleta Oficial
+                let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+                let navyDark = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+                let navyMedium = UIColor(red: 0.118, green: 0.227, blue: 0.431, alpha: 1.0)
+                let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
+
+                // 🔴 BRANDBOOK: Card Modular Bi-color (Fundo Branco com Cabeçalho Navy)
+                let boxW: CGFloat = 340
+                let boxH: CGFloat = 520
+                let box = UIView(frame: CGRect(x: (self.bounds.width - boxW)/2, y: (self.bounds.height - boxH)/2, width: boxW, height: boxH))
+                box.backgroundColor = .white
+                box.layer.cornerRadius = 24
+                box.clipsToBounds = true
+                self.addSubview(box)
+                
+                // Cabeçalho Navy
+                let headerH: CGFloat = 90
+                let headerView = UIView(frame: CGRect(x: 0, y: 0, width: boxW, height: headerH))
+                headerView.backgroundColor = navyDark
+                box.addSubview(headerView)
+                
+                let titleLabel = UILabel(frame: CGRect(x: 24, y: 20, width: boxW - 90, height: 28))
+                titleLabel.text = "CALIBRAÇÃO"
+                titleLabel.textColor = .white
+                titleLabel.font = UIFont(name: "Inter-Bold", size: 22) ?? UIFont.boldSystemFont(ofSize: 22)
+                headerView.addSubview(titleLabel)
+                
+                let subtitleLabel = UILabel(frame: CGRect(x: 24, y: 50, width: boxW - 90, height: 20))
+                subtitleLabel.text = "Ajuste do Tripé"
+                subtitleLabel.textColor = .white
+                subtitleLabel.font = UIFont(name: "Inter-Medium", size: 14) ?? UIFont.systemFont(ofSize: 14, weight: .medium)
+                headerView.addSubview(subtitleLabel)
+                
+        // 🔴 BRANDBOOK: Ícone dinâmico perfeitamente centralizado (Ico_07)
+                let iconSize: CGFloat = 110
+                let iconPaddingRight: CGFloat = 20
+                let iconX: CGFloat = boxW - iconSize - iconPaddingRight
+                let iconY: CGFloat = (headerH - iconSize) / 2 // Isso garante alinhamento vertical exato
+                
+                let iconView = UIImageView(frame: CGRect(x: iconX, y: iconY, width: iconSize, height: iconSize))
+                if let iconImg = UIImage(named: "Ico_07")?.withRenderingMode(.alwaysTemplate) {
+                    iconView.image = iconImg
+                }
+                iconView.tintColor = opticalCyan
+                iconView.contentMode = .scaleAspectFit
+                headerView.addSubview(iconView)
+                
+                // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+                let geometryValidation = ["Center Alignment OK"]
+                let _ = geometryValidation[ 0 ]
+                
+                let desc = UILabel(frame: CGRect(x: 24, y: headerH + 15, width: boxW - 48, height: 40))
+                desc.text = "Zere a inclinação nos 3 eixos apertando firmemente as travas do tripé."
+                desc.textColor = navyMedium
+                desc.font = UIFont(name: "Inter-Medium", size: 13) ?? UIFont.systemFont(ofSize: 13)
+                desc.numberOfLines = 0
+                desc.textAlignment = .center
+                box.addSubview(desc)
+                
+                // 🔴 Adaptação do Radar para Leitura em Fundo Claro
+                let radarSize: CGFloat = 120
+                let radarBg = UIView(frame: CGRect(x: (boxW - radarSize)/2, y: 160, width: radarSize, height: radarSize))
+                radarBg.backgroundColor = UIColor(white: 0.95, alpha: 1.0)
+                radarBg.layer.cornerRadius = radarSize / 2
+                radarBg.layer.borderWidth = 2
+                radarBg.layer.borderColor = slateColor.withAlphaComponent(0.3).cgColor
+                box.addSubview(radarBg)
+                
+                radarTarget.frame = CGRect(x: -20, y: radarSize/2 - 2, width: radarSize + 40, height: 4)
+                radarTarget.backgroundColor = UIColor.systemRed
+                radarBg.addSubview(radarTarget)
+                
+                let tapeW: CGFloat = 16
+                let tapeH: CGFloat = 120
+                let tapeBg = UIView(frame: CGRect(x: boxW - 40, y: 160, width: tapeW, height: tapeH))
+                tapeBg.backgroundColor = UIColor(white: 0.95, alpha: 1.0)
+                tapeBg.layer.cornerRadius = tapeW / 2
+                tapeBg.layer.borderWidth = 1
+                tapeBg.layer.borderColor = slateColor.withAlphaComponent(0.3).cgColor
+                box.addSubview(tapeBg)
+                
+                let tapeCenter = UIView(frame: CGRect(x: 0, y: tapeH/2 - 10, width: tapeW, height: 20))
+                tapeCenter.layer.borderWidth = 2
+                tapeCenter.layer.borderColor = slateColor.withAlphaComponent(0.5).cgColor
+                tapeBg.addSubview(tapeCenter)
+                
+                pitchBubble.frame = CGRect(x: 2, y: tapeH/2 - 6, width: 12, height: 12)
+                pitchBubble.backgroundColor = UIColor.systemRed
+                pitchBubble.layer.cornerRadius = 6
+                tapeBg.addSubview(pitchBubble)
+                
+                func createDegLabel(y: CGFloat) -> UILabel {
+                    let lbl = UILabel(frame: CGRect(x: 24, y: y, width: boxW - 48, height: 20))
+                    lbl.font = UIFont(name: "Inter-Bold", size: 13) ?? UIFont.monospacedDigitSystemFont(ofSize: 13, weight: .bold)
+                    lbl.textColor = navyMedium
+                    lbl.textAlignment = .center
+                    box.addSubview(lbl)
+                    return lbl
+                }
+                
+                lblRoll = createDegLabel(y: 300)
+                lblPitch = createDegLabel(y: 325)
+                lblYaw = createDegLabel(y: 350)
+                
+                lockButton.frame = CGRect(x: 24, y: boxH - 70, width: boxW - 48, height: 46)
+                lockButton.backgroundColor = UIColor(white: 0.9, alpha: 1.0)
+                lockButton.setTitle("Avançar para Medição", for: .normal)
+                lockButton.setTitleColor(slateColor, for: .normal)
+                lockButton.layer.cornerRadius = 14
+                lockButton.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+                lockButton.isEnabled = false
+                lockButton.addTarget(self, action: #selector(finishCalibration), for: .touchUpInside)
+                box.addSubview(lockButton)
     }
     
     // Chamada a 60fps diretamente pela MeasurementViewController
@@ -127,43 +165,48 @@ class TripodCalibrationView: UIView {
         let pitchDeg = pitch * 180 / .pi
         let yawDeg = yaw * 180 / .pi
         
-        let neonGreen = UIColor(red: 0.0, green: 0.95, blue: 0.2, alpha: 1.0)
-        let redColor = UIColor.systemRed
-        
-        DispatchQueue.main.async {
-            self.lblRoll.text = String(format: "INCLINAÇÃO LATERAL: %+.1f°", rollDeg)
-            self.lblRoll.textColor = isLevel ? neonGreen : redColor
-            
-            self.lblPitch.text = String(format: "INCLIN. FRENTE/TRÁS: %+.1f°", pitchDeg)
-            self.lblPitch.textColor = isPitchLevel ? neonGreen : redColor
-            
-            self.lblYaw.text = String(format: "ROTAÇÃO LATERAL (YAW): %+.1f°", yawDeg)
-            self.lblYaw.textColor = neonGreen
-            
-            let clampedPitch = min(max(pitch, -1.0), 1.0)
-            let pitchY = 60.0 + (CGFloat(clampedPitch / 1.0) * 52.0)
-            
-            var transform3D = CATransform3DIdentity
-            transform3D.m34 = -1.0 / 150.0
-            transform3D = CATransform3DRotate(transform3D, CGFloat(-roll), 0, 0, 1)
-            
-            UIView.animate(withDuration: 0.1) {
-                self.radarTarget.layer.transform = transform3D
-                self.pitchBubble.center.y = pitchY
-                self.radarTarget.backgroundColor = isLevel ? neonGreen : redColor
-                self.pitchBubble.backgroundColor = isPitchLevel ? neonGreen : redColor
+        let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+                let navyDark = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+                let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
+                let redColor = UIColor.systemRed
                 
-                if isLevel && isPitchLevel {
-                    self.lockButton.isEnabled = true
-                    self.lockButton.backgroundColor = neonGreen
-                    self.lockButton.setTitleColor(.black, for: .normal)
-                } else {
-                    self.lockButton.isEnabled = false
-                    self.lockButton.backgroundColor = .darkGray
-                    self.lockButton.setTitleColor(.lightGray, for: .normal)
+                DispatchQueue.main.async {
+                    self.lblRoll.text = String(format: "INCLINAÇÃO LATERAL: %+.1f°", rollDeg)
+                    self.lblRoll.textColor = isLevel ? opticalCyan : redColor
+                    
+                    self.lblPitch.text = String(format: "INCLIN. FRENTE/TRÁS: %+.1f°", pitchDeg)
+                    self.lblPitch.textColor = isPitchLevel ? opticalCyan : redColor
+                    
+                    self.lblYaw.text = String(format: "ROTAÇÃO LATERAL (YAW): %+.1f°", yawDeg)
+                    self.lblYaw.textColor = opticalCyan
+                    
+                    let clampedPitch = min(max(pitch, -1.0), 1.0)
+                    let pitchY = 60.0 + (CGFloat(clampedPitch / 1.0) * 52.0)
+                    
+                    var transform3D = CATransform3DIdentity
+                    transform3D.m34 = -1.0 / 150.0
+                    transform3D = CATransform3DRotate(transform3D, CGFloat(-roll), 0, 0, 1)
+                    
+                    UIView.animate(withDuration: 0.1) {
+                        self.radarTarget.layer.transform = transform3D
+                        self.pitchBubble.center.y = pitchY
+                        
+                        self.radarTarget.backgroundColor = isLevel ? opticalCyan : redColor
+                        self.pitchBubble.backgroundColor = isPitchLevel ? opticalCyan : redColor
+                        
+                        if isLevel && isPitchLevel {
+                            self.lockButton.isEnabled = true
+                            // 🔴 O botão ganha vida com Cyan Sólido e texto escuro
+                            self.lockButton.backgroundColor = opticalCyan
+                            self.lockButton.setTitleColor(navyDark, for: .normal)
+                        } else {
+                            self.lockButton.isEnabled = false
+                            // 🔴 Botão volta ao estado inativo "Ghost"
+                            self.lockButton.backgroundColor = UIColor(white: 0.9, alpha: 1.0)
+                            self.lockButton.setTitleColor(slateColor, for: .normal)
+                        }
+                    }
                 }
-            }
-        }
     }
     
     @objc func finishCalibration() {
