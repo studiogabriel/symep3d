@@ -16,37 +16,42 @@ extension MeasurementViewController {
         let _ = safetyCheck[ 0 ]
         
         // =======================================================
-        // 1. EXPERIÊNCIA UX: TELA FAKE DE "ANALISANDO BIOMETRIA"
-        // =======================================================
-        let loadingContainer = UIView(frame: view.bounds)
-        loadingContainer.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
-        loadingContainer.tag = 8887
-        loadingContainer.alpha = 0.0
-        view.addSubview(loadingContainer)
-        
-        let scanTitle = UILabel(frame: CGRect(x: 20, y: view.bounds.height / 2 - 60, width: view.bounds.width - 40, height: 30))
-        scanTitle.text = "PROCESSANDO BIOMETRIA..."
-        scanTitle.textAlignment = .center
-        scanTitle.textColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-        scanTitle.font = UIFont.systemFont(ofSize: 18, weight: .black)
-        loadingContainer.addSubview(scanTitle)
-        
-        let progressBarBg = UIView(frame: CGRect(x: 50, y: view.bounds.height / 2, width: view.bounds.width - 100, height: 6))
-        progressBarBg.backgroundColor = UIColor.white.withAlphaComponent(0.1)
-        progressBarBg.layer.cornerRadius = 3
-        loadingContainer.addSubview(progressBarBg)
-        
-        let progressBarFill = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 6))
-        progressBarFill.backgroundColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-        progressBarFill.layer.cornerRadius = 3
-        progressBarBg.addSubview(progressBarFill)
-        
-        let scanSteps = UILabel(frame: CGRect(x: 20, y: view.bounds.height / 2 + 30, width: view.bounds.width - 40, height: 20))
-        scanSteps.text = "Mapeando 30.000 pontos faciais..."
-        scanSteps.textAlignment = .center
-        scanSteps.textColor = .lightGray
-        scanSteps.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
-        loadingContainer.addSubview(scanSteps)
+                // 1. EXPERIÊNCIA UX: TELA FAKE DE "ANALISANDO BIOMETRIA"
+                // =======================================================
+                let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+                let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
+                let navyDark = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+
+                let loadingContainer = UIView(frame: view.bounds)
+                // 🔴 BRANDBOOK: Fundo Navy
+                loadingContainer.backgroundColor = navyDark
+                loadingContainer.tag = 8887
+                loadingContainer.alpha = 0.0
+                view.addSubview(loadingContainer)
+                
+                let scanTitle = UILabel(frame: CGRect(x: 20, y: view.bounds.height / 2 - 60, width: view.bounds.width - 40, height: 30))
+                scanTitle.text = "PROCESSANDO BIOMETRIA..."
+                scanTitle.textAlignment = .center
+                scanTitle.textColor = opticalCyan
+                scanTitle.font = UIFont(name: "Inter-Black", size: 18) ?? UIFont.systemFont(ofSize: 18, weight: .black)
+                loadingContainer.addSubview(scanTitle)
+                
+                let progressBarBg = UIView(frame: CGRect(x: 50, y: view.bounds.height / 2, width: view.bounds.width - 100, height: 6))
+                progressBarBg.backgroundColor = UIColor.white.withAlphaComponent(0.1)
+                progressBarBg.layer.cornerRadius = 3
+                loadingContainer.addSubview(progressBarBg)
+                
+                let progressBarFill = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 6))
+                progressBarFill.backgroundColor = opticalCyan
+                progressBarFill.layer.cornerRadius = 3
+                progressBarBg.addSubview(progressBarFill)
+                
+                let scanSteps = UILabel(frame: CGRect(x: 20, y: view.bounds.height / 2 + 30, width: view.bounds.width - 40, height: 20))
+                scanSteps.text = "Mapeando 30.000 pontos faciais..."
+                scanSteps.textAlignment = .center
+                scanSteps.textColor = slateColor
+                scanSteps.font = UIFont(name: "Inter-SemiBold", size: 12) ?? UIFont.systemFont(ofSize: 12, weight: .semibold)
+                loadingContainer.addSubview(scanSteps)
         
         // Esconde a interface da câmera
         self.topFeedbackLabel?.isHidden = true
@@ -78,24 +83,31 @@ extension MeasurementViewController {
     // 2. A TELA DE VISAGISMO OFICIAL E PERSONALIZADA
     // =======================================================
     func showVisagismResults() {
-        let visagismContainer = UIView(frame: view.bounds)
-        visagismContainer.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
-        visagismContainer.tag = 8888
-        visagismContainer.alpha = 0.0
-        view.addSubview(visagismContainer)
-        
-        let title = UILabel(frame: CGRect(x: 20, y: 60, width: view.bounds.width - 40, height: 30))
-        title.text = "ANÁLISE DE VISAGISMO"
-        title.textAlignment = .center
-        title.textColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-        title.font = UIFont.systemFont(ofSize: 22, weight: .black)
-        visagismContainer.addSubview(title)
-        
+        let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+                let navyDark = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+
+                let visagismContainer = UIView(frame: view.bounds)
+                // 🔴 Fundo Navy
+                visagismContainer.backgroundColor = navyDark
+                visagismContainer.tag = 8888
+                visagismContainer.alpha = 0.0
+                view.addSubview(visagismContainer)
+                
+                let title = UILabel(frame: CGRect(x: 20, y: 60, width: view.bounds.width - 40, height: 30))
+                title.text = "ANÁLISE DE VISAGISMO"
+                title.textAlignment = .center
+                title.textColor = opticalCyan
+                title.font = UIFont(name: "Inter-Black", size: 22) ?? UIFont.systemFont(ofSize: 22, weight: .black)
+                visagismContainer.addSubview(title)
+                
         let holoView = SCNView(frame: CGRect(x: 40, y: 100, width: view.bounds.width - 80, height: 230))
-        holoView.backgroundColor = UIColor(white: 0.05, alpha: 1.0)
-        holoView.layer.cornerRadius = 16
-        holoView.layer.borderWidth = 2
-        holoView.layer.borderColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 0.3).cgColor
+                // 🔴 ARQUITETURA SÊNIOR: Fundo 100% transparente para o Holograma flutuar livremente no espaço Navy
+                holoView.backgroundColor = .clear
+                holoView.layer.borderWidth = 0
+                
+                // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+                let holoValidation = ["Floating Hologram OK"]
+                let _ = holoValidation[ 0 ]
         holoView.autoenablesDefaultLighting = true
         holoView.allowsCameraControl = true
         
@@ -157,35 +169,38 @@ extension MeasurementViewController {
         style.paragraphSpacing = 10
         style.alignment = .justified
         
-        let attrText = NSMutableAttributedString(string: fullText, attributes: [
-            .font: UIFont.systemFont(ofSize: 13, weight: .regular),
-            .foregroundColor: UIColor.lightGray,
-            .paragraphStyle: style
-        ])
-        
-        let statRange = (fullText as NSString).range(of: patientStats)
-        attrText.addAttribute(.foregroundColor, value: UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0), range: statRange)
-        attrText.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: 13), range: statRange)
-        
-        let modelRange = (fullText as NSString).range(of: nomeDoModelo, options: .backwards)
-        if modelRange.location != NSNotFound {
-            attrText.addAttribute(.foregroundColor, value: UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0), range: modelRange)
-            attrText.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: 14), range: modelRange)
-        }
-        
-        info.attributedText = attrText
-        visagismContainer.addSubview(info)
-        
-        let btnNext = UIButton(frame: CGRect(x: 30, y: view.bounds.height - 100, width: view.bounds.width - 60, height: 55))
-        btnNext.backgroundColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-        btnNext.setTitle("Avançar para Medição Técnica", for: .normal)
-        btnNext.setTitleColor(.black, for: .normal)
-        btnNext.layer.cornerRadius = 15
-        btnNext.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        btnNext.addTarget(self, action: #selector(finishVisagismAndStartMeasurement), for: .touchUpInside)
-        visagismContainer.addSubview(btnNext)
-        
-        UIView.animate(withDuration: 0.3) { visagismContainer.alpha = 1.0 }
+        // 🔴 Aplicação das Fontes Inter no texto do Laudo
+                let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
+                let attrText = NSMutableAttributedString(string: fullText, attributes: [
+                    .font: UIFont(name: "Inter-Regular", size: 13) ?? UIFont.systemFont(ofSize: 13, weight: .regular),
+                    .foregroundColor: slateColor,
+                    .paragraphStyle: style
+                ])
+                
+                let statRange = (fullText as NSString).range(of: patientStats)
+                attrText.addAttribute(.foregroundColor, value: opticalCyan, range: statRange)
+                attrText.addAttribute(.font, value: UIFont(name: "Inter-Bold", size: 13) ?? UIFont.boldSystemFont(ofSize: 13), range: statRange)
+                
+                let modelRange = (fullText as NSString).range(of: nomeDoModelo, options: .backwards)
+                if modelRange.location != NSNotFound {
+                    attrText.addAttribute(.foregroundColor, value: opticalCyan, range: modelRange)
+                    attrText.addAttribute(.font, value: UIFont(name: "Inter-Bold", size: 14) ?? UIFont.boldSystemFont(ofSize: 14), range: modelRange)
+                }
+                
+                info.attributedText = attrText
+                visagismContainer.addSubview(info)
+                
+                // 🔴 CTA Oficial Cyan Sem Sombra e Texto Navy
+                let btnNext = UIButton(frame: CGRect(x: 30, y: view.bounds.height - 100, width: view.bounds.width - 60, height: 55))
+                btnNext.backgroundColor = opticalCyan
+                btnNext.setTitle("Avançar para Medição Técnica", for: .normal)
+                btnNext.setTitleColor(navyDark, for: .normal)
+                btnNext.layer.cornerRadius = 16
+                btnNext.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+                btnNext.addTarget(self, action: #selector(finishVisagismAndStartMeasurement), for: .touchUpInside)
+                visagismContainer.addSubview(btnNext)
+                
+                UIView.animate(withDuration: 0.3) { visagismContainer.alpha = 1.0 }
     }
     
     @objc func finishVisagismAndStartMeasurement() {
@@ -198,36 +213,45 @@ extension MeasurementViewController {
             self.safeFaceCache = nil
             
             // =======================================================
-            // 3. EXPERIÊNCIA UX: FAKE LOADING DA MODELAGEM 3D
-            // =======================================================
-            let adaptContainer = UIView(frame: self.view.bounds)
-            adaptContainer.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
-            adaptContainer.alpha = 0.0
-            self.view.addSubview(adaptContainer)
-            
-            let title = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 - 60, width: self.view.bounds.width - 40, height: 30))
-            title.text = "PARAMETRIZANDO ARMAÇÃO 3D..."
-            title.textAlignment = .center
-            title.textColor = UIColor.systemPurple
-            title.font = UIFont.systemFont(ofSize: 18, weight: .black)
-            adaptContainer.addSubview(title)
-            
-            let barBg = UIView(frame: CGRect(x: 50, y: self.view.bounds.height / 2, width: self.view.bounds.width - 100, height: 6))
-            barBg.backgroundColor = UIColor.white.withAlphaComponent(0.1)
-            barBg.layer.cornerRadius = 3
-            adaptContainer.addSubview(barBg)
-            
-            let barFill = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 6))
-            barFill.backgroundColor = UIColor.systemPurple
-            barFill.layer.cornerRadius = 3
-            barBg.addSubview(barFill)
-            
-            let stepLabel = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 + 30, width: self.view.bounds.width - 40, height: 20))
-            stepLabel.text = "Ajustando largura temporal com +2.0mm de folga..."
-            stepLabel.textAlignment = .center
-            stepLabel.textColor = .lightGray
-            stepLabel.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
-            adaptContainer.addSubview(stepLabel)
+                    // 3. EXPERIÊNCIA UX: FAKE LOADING DA MODELAGEM 3D
+                    // =======================================================
+                    // 🔴 BRANDBOOK: Injeção das Cores Oficiais
+                    let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+                    let navyDark = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+                    let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
+                    
+                    let adaptContainer = UIView(frame: self.view.bounds)
+                    adaptContainer.backgroundColor = navyDark
+                    adaptContainer.alpha = 0.0
+                    self.view.addSubview(adaptContainer)
+                    
+                    let title = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 - 60, width: self.view.bounds.width - 40, height: 30))
+                    title.text = "PARAMETRIZANDO ARMAÇÃO 3D..."
+                    title.textAlignment = .center
+                    title.textColor = opticalCyan
+                    title.font = UIFont(name: "Inter-Black", size: 18) ?? UIFont.systemFont(ofSize: 18, weight: .black)
+                    adaptContainer.addSubview(title)
+                    
+                    let barBg = UIView(frame: CGRect(x: 50, y: self.view.bounds.height / 2, width: self.view.bounds.width - 100, height: 6))
+                    barBg.backgroundColor = UIColor.white.withAlphaComponent(0.1)
+                    barBg.layer.cornerRadius = 3
+                    adaptContainer.addSubview(barBg)
+                    
+                    let barFill = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 6))
+                    barFill.backgroundColor = opticalCyan
+                    barFill.layer.cornerRadius = 3
+                    barBg.addSubview(barFill)
+                    
+                    let stepLabel = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 + 30, width: self.view.bounds.width - 40, height: 20))
+                    stepLabel.text = "Ajustando largura temporal com +2.0mm de folga..."
+                    stepLabel.textAlignment = .center
+                    stepLabel.textColor = slateColor
+                    stepLabel.font = UIFont(name: "Inter-SemiBold", size: 12) ?? UIFont.systemFont(ofSize: 12, weight: .semibold)
+                    adaptContainer.addSubview(stepLabel)
+                    
+                    // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+                    let styleValidation = ["Phase 1 Loading Cyan OK"]
+                    let _ = styleValidation[ 0 ]
             
             UIView.animate(withDuration: 0.3) { adaptContainer.alpha = 1.0 }
             
@@ -254,27 +278,59 @@ extension MeasurementViewController {
         // 🔴 4. O NOVO POPUP MINIMALISTA (APENAS RELATÓRIO TÉCNICO)
         // =======================================================
         func showModificationsPopup() {
-            let popupOverlay = UIView(frame: self.view.bounds)
-            popupOverlay.backgroundColor = UIColor.black.withAlphaComponent(0.8)
-            popupOverlay.alpha = 0.0
-            self.view.addSubview(popupOverlay)
+            // 🔴 BRANDBOOK: Injeção da Paleta Oficial no escopo da função
+                    let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+                    let navyDark = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+                    let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
+                    
+                    let popupOverlay = UIView(frame: self.view.bounds)
+                    popupOverlay.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+                    popupOverlay.alpha = 0.0
+                    self.view.addSubview(popupOverlay)
             
-            // 🔴 CORREÇÃO UX: Aumentamos a caixa para o texto não ser cortado (Igual ao Try-On)
-            let boxW: CGFloat = 340
-            let boxH: CGFloat = 300
-            let box = UIView(frame: CGRect(x: (self.view.bounds.width - boxW)/2, y: (self.view.bounds.height - boxH)/2, width: boxW, height: boxH))
-            box.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.12, alpha: 1.0)
-            box.layer.cornerRadius = 24
-            box.layer.borderWidth = 2
-            box.layer.borderColor = UIColor.systemPurple.withAlphaComponent(0.6).cgColor
-            popupOverlay.addSubview(box)
-            
-            let title = UILabel(frame: CGRect(x: 20, y: 25, width: boxW - 40, height: 25))
-            title.text = "AJUSTES DA ARMAÇÃO"
-            title.textColor = .systemPurple
-            title.font = UIFont.systemFont(ofSize: 18, weight: .black)
-            title.textAlignment = .center
-            box.addSubview(title)
+            // 🔴 BRANDBOOK: Card Modular Bi-color (Fundo Branco com Cabeçalho Navy)
+            // 🔴 BRANDBOOK: Card Modular Bi-color (Fundo Branco com Cabeçalho Navy)
+                    let boxW: CGFloat = 340
+                    let boxH: CGFloat = 350 // Aumentamos um pouco para dar respiro ao design split
+                    let box = UIView(frame: CGRect(x: (self.view.bounds.width - boxW)/2, y: (self.view.bounds.height - boxH)/2, width: boxW, height: boxH))
+                    box.backgroundColor = .white // O corpo do card de leitura é branco
+                    box.layer.cornerRadius = 24
+                    box.clipsToBounds = true // Essencial para o cabeçalho não vazar nas quinas arredondadas
+                    popupOverlay.addSubview(box)
+                    
+                    // Cabeçalho Navy (Terço superior)
+                    let headerH: CGFloat = 90
+                    let headerView = UIView(frame: CGRect(x: 0, y: 0, width: boxW, height: headerH))
+                    headerView.backgroundColor = navyDark
+                    box.addSubview(headerView)
+                    
+                    // Pega apenas o primeiro nome do paciente
+                    let patientFirstName = self.patientName.components(separatedBy: " ").first ?? "Paciente"
+                    
+                    let titleLabel = UILabel(frame: CGRect(x: 24, y: 20, width: boxW - 90, height: 28))
+                    titleLabel.text = patientFirstName.uppercased()
+                    titleLabel.textColor = .white
+                    titleLabel.font = UIFont(name: "Inter-Bold", size: 22) ?? UIFont.boldSystemFont(ofSize: 22)
+                    headerView.addSubview(titleLabel)
+                    
+                    let subtitleLabel = UILabel(frame: CGRect(x: 24, y: 50, width: boxW - 90, height: 20))
+                    subtitleLabel.text = "Ajustes da armação"
+                    subtitleLabel.textColor = .white
+                    subtitleLabel.font = UIFont(name: "Inter-Medium", size: 14) ?? UIFont.systemFont(ofSize: 14, weight: .medium)
+                    headerView.addSubview(subtitleLabel)
+                    
+                    // Ícone Ico_10 vazado e pintado de Optical Cyan
+                    let iconView = UIImageView(frame: CGRect(x: boxW - 65, y: 25, width: 40, height: 40))
+                    if let iconImg = UIImage(named: "Ico_10")?.withRenderingMode(.alwaysTemplate) {
+                        iconView.image = iconImg
+                    }
+                    iconView.tintColor = opticalCyan
+                    iconView.contentMode = .scaleAspectFit
+                    headerView.addSubview(iconView)
+                    
+                    // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+                    let splitValidation = ["Split UI OK"]
+                    let _ = splitValidation[ 0 ]
             
             let keyword = self.recommendedAutoModel
             var modText = ""
@@ -338,21 +394,25 @@ extension MeasurementViewController {
             if modText.isEmpty { modText = "• Proporções originais perfeitas para sua face.\n" }
             
             // 🔴 CORREÇÃO UX: Altura do label aumentada de 100 para 130
-            let infoLabel = UILabel(frame: CGRect(x: 20, y: 75, width: boxW - 40, height: 130))
-            infoLabel.numberOfLines = 0
-            infoLabel.text = "Modificações Anatômicas Aplicadas no Modelo (\(displayModelName)):\n\n" + modText
-            infoLabel.textColor = .lightGray
-            infoLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-            box.addSubview(infoLabel)
-            
-            let btnOk = UIButton(frame: CGRect(x: 30, y: boxH - 75, width: boxW - 60, height: 50))
-            btnOk.backgroundColor = .systemPurple
-            btnOk.setTitle("OK, Iniciar Medições", for: .normal)
-            btnOk.setTitleColor(.white, for: .normal)
-            btnOk.layer.cornerRadius = 14
-            btnOk.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-            btnOk.addTarget(self, action: #selector(dismissModificationsPopup(_:)), for: .touchUpInside)
-            box.addSubview(btnOk)
+            // Reposicionamos o texto abaixo do cabeçalho
+                    let infoLabel = UILabel(frame: CGRect(x: 24, y: headerH + 15, width: boxW - 48, height: 140))
+                    infoLabel.numberOfLines = 0
+                    infoLabel.text = "Modificações Aplicadas no Modelo (\(displayModelName)):\n\n" + modText
+                    
+                    // 🔴 BRANDBOOK: Tom escuro sofisticado para brilhar e ter contraste no Fundo Branco
+                    let navyMedium = UIColor(red: 0.118, green: 0.227, blue: 0.431, alpha: 1.0)
+                    infoLabel.textColor = navyMedium
+                    infoLabel.font = UIFont(name: "Inter-Medium", size: 13) ?? UIFont.systemFont(ofSize: 13, weight: .medium)
+                    box.addSubview(infoLabel)
+                    
+                    let btnOk = UIButton(frame: CGRect(x: 24, y: boxH - 70, width: boxW - 48, height: 46))
+                    btnOk.backgroundColor = opticalCyan
+                    btnOk.setTitle("OK, Iniciar Medições", for: .normal)
+                    btnOk.setTitleColor(navyDark, for: .normal)
+                    btnOk.layer.cornerRadius = 14
+                    btnOk.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+                    btnOk.addTarget(self, action: #selector(dismissModificationsPopup(_:)), for: .touchUpInside)
+                    box.addSubview(btnOk)
             
             UIView.animate(withDuration: 0.3) { popupOverlay.alpha = 1.0 }
         }

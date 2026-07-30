@@ -89,62 +89,140 @@ extension MeasurementViewController {
                 }
                 
                 if let msg = warningMsg {
-                    // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL APLICADA
-                    let safetyArray = ["Warning Prompt OK"]
-                    let _ = safetyArray[ 0 ]
+                            // 🔴 BRANDBOOK: Injeção da Paleta Oficial
+                            let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+                            let navyDark = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+                            let navyMedium = UIColor(red: 0.118, green: 0.227, blue: 0.431, alpha: 1.0)
+                            
+                            // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL APLICADA
+                            let safetyArray = ["Warning Prompt OK"]
+                            let _ = safetyArray[ 0 ]
+                            
+                            let warningOverlay = UIView(frame: self.view.bounds)
+                            warningOverlay.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+                            warningOverlay.alpha = 0.0
+                            self.view.addSubview(warningOverlay)
+                            
+                            let boxW: CGFloat = 340
+                            let boxH: CGFloat = 350
+                            let box = UIView(frame: CGRect(x: (self.view.bounds.width - boxW)/2, y: (self.view.bounds.height - boxH)/2, width: boxW, height: boxH))
+                            box.backgroundColor = .white
+                            box.layer.cornerRadius = 24
+                            box.clipsToBounds = true
+                            warningOverlay.addSubview(box)
+                            
+                            let headerH: CGFloat = 90
+                            let headerView = UIView(frame: CGRect(x: 0, y: 0, width: boxW, height: headerH))
+                            headerView.backgroundColor = navyDark
+                            box.addSubview(headerView)
+                            
+                            let titleLabel = UILabel(frame: CGRect(x: 24, y: 20, width: boxW - 90, height: 28))
+                            titleLabel.text = "ATENÇÃO"
+                            titleLabel.textColor = .white
+                            titleLabel.font = UIFont(name: "Inter-Bold", size: 22) ?? UIFont.boldSystemFont(ofSize: 22)
+                            headerView.addSubview(titleLabel)
+                            
+                            let subtitleLabel = UILabel(frame: CGRect(x: 24, y: 50, width: boxW - 90, height: 20))
+                            subtitleLabel.text = "Aviso de Proporção"
+                            subtitleLabel.textColor = .white
+                            subtitleLabel.font = UIFont(name: "Inter-Medium", size: 14) ?? UIFont.systemFont(ofSize: 14, weight: .medium)
+                            headerView.addSubview(subtitleLabel)
+                            
+                            let iconView = UIImageView(frame: CGRect(x: boxW - 65, y: 25, width: 40, height: 40))
+                            if let iconImg = UIImage(named: "Ico_10")?.withRenderingMode(.alwaysTemplate) {
+                                iconView.image = iconImg
+                            }
+                            iconView.tintColor = opticalCyan
+                            iconView.contentMode = .scaleAspectFit
+                            headerView.addSubview(iconView)
+                            
+                            let infoLabel = UILabel(frame: CGRect(x: 24, y: headerH + 15, width: boxW - 48, height: 100))
+                            infoLabel.numberOfLines = 0
+                            infoLabel.text = msg
+                            infoLabel.textColor = navyMedium
+                            infoLabel.font = UIFont(name: "Inter-Medium", size: 13) ?? UIFont.systemFont(ofSize: 13, weight: .medium)
+                            box.addSubview(infoLabel)
+                            
+                            // Botões de Ação
+                            let btnCancel = UIButton(frame: CGRect(x: 24, y: boxH - 125, width: boxW - 48, height: 46))
+                            btnCancel.backgroundColor = UIColor(white: 0.9, alpha: 1.0)
+                            btnCancel.setTitle("Cancelar", for: .normal)
+                            btnCancel.setTitleColor(navyMedium, for: .normal)
+                            btnCancel.layer.cornerRadius = 14
+                            btnCancel.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+                            btnCancel.addAction(UIAction(handler: { _ in
+                                UIView.animate(withDuration: 0.3, animations: { warningOverlay.alpha = 0.0 }) { _ in
+                                    warningOverlay.removeFromSuperview()
+                                }
+                            }), for: .touchUpInside)
+                            box.addSubview(btnCancel)
+                            
+                            let btnProceed = UIButton(frame: CGRect(x: 24, y: boxH - 70, width: boxW - 48, height: 46))
+                            btnProceed.backgroundColor = opticalCyan
+                            btnProceed.setTitle("Provar Mesmo Assim", for: .normal)
+                            btnProceed.setTitleColor(navyDark, for: .normal)
+                            btnProceed.layer.cornerRadius = 14
+                            btnProceed.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+                            btnProceed.addAction(UIAction(handler: { _ in
+                                UIView.animate(withDuration: 0.3, animations: { warningOverlay.alpha = 0.0 }) { _ in
+                                    warningOverlay.removeFromSuperview()
+                                    self.loadCloudModel(model: model, showFakeLoading: showFakeLoading, bypassWarning: true)
+                                }
+                            }), for: .touchUpInside)
+                            box.addSubview(btnProceed)
+                            
+                            UIView.animate(withDuration: 0.3) { warningOverlay.alpha = 1.0 }
+                            
+                            return // Paralisa a função aqui, impedindo o download e o congelamento da tela!
+                        }
+            }
+            
+        self.view.isUserInteractionEnabled = false
+                var adaptContainer: UIView?
+                var barBg: UIView?
+                var barFill: UIView?
+                var stepLabel: UILabel?
+                
+                if showFakeLoading {
+                    let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+                    let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
+                    let navyDark = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
                     
-                    let alert = UIAlertController(title: "Aviso de Proporção Óptica", message: msg, preferredStyle: .alert)
-                    alert.addAction(UIAlertAction(title: "Cancelar", style: .cancel, handler: nil))
-                    alert.addAction(UIAlertAction(title: "Provar Mesmo Assim", style: .default, handler: { _ in
-                        self.loadCloudModel(model: model, showFakeLoading: showFakeLoading, bypassWarning: true)
-                    }))
-                    self.present(alert, animated: true)
-                    return // Paralisa a função aqui, impedindo o download e o congelamento da tela!
+                    let container = UIView(frame: self.view.bounds)
+                    container.backgroundColor = navyDark
+                    container.alpha = 0.0
+                    self.view.addSubview(container)
+                    adaptContainer = container
+                    
+                    let title = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 - 60, width: self.view.bounds.width - 40, height: 30))
+                    title.text = "PERSONALIZANDO MODELO..."
+                    title.textAlignment = .center
+                    title.textColor = opticalCyan
+                    title.font = UIFont(name: "Inter-Black", size: 18) ?? UIFont.systemFont(ofSize: 18, weight: .black)
+                    container.addSubview(title)
+                    
+                    let bg = UIView(frame: CGRect(x: 50, y: self.view.bounds.height / 2, width: self.view.bounds.width - 100, height: 6))
+                    bg.backgroundColor = UIColor.white.withAlphaComponent(0.1)
+                    bg.layer.cornerRadius = 3
+                    container.addSubview(bg)
+                    barBg = bg
+                    
+                    let fill = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 6))
+                    fill.backgroundColor = opticalCyan
+                    fill.layer.cornerRadius = 3
+                    bg.addSubview(fill)
+                    barFill = fill
+                    
+                    let lbl = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 + 30, width: self.view.bounds.width - 40, height: 20))
+                    lbl.text = "Injetando biometria na armação (\(model.name))..."
+                    lbl.textAlignment = .center
+                    lbl.textColor = slateColor
+                    lbl.font = UIFont(name: "Inter-SemiBold", size: 12) ?? UIFont.systemFont(ofSize: 12, weight: .semibold)
+                    container.addSubview(lbl)
+                    stepLabel = lbl
+                    
+                    UIView.animate(withDuration: 0.3) { container.alpha = 1.0 }
                 }
-            }
-            
-            self.view.isUserInteractionEnabled = false
-            var adaptContainer: UIView?
-            var barBg: UIView?
-            var barFill: UIView?
-            var stepLabel: UILabel?
-            
-            if showFakeLoading {
-                let container = UIView(frame: self.view.bounds)
-                container.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
-                container.alpha = 0.0
-                self.view.addSubview(container)
-                adaptContainer = container
-                
-                let title = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 - 60, width: self.view.bounds.width - 40, height: 30))
-                title.text = "PERSONALIZANDO MODELO..."
-                title.textAlignment = .center
-                title.textColor = .systemPurple
-                title.font = UIFont.systemFont(ofSize: 18, weight: .black)
-                container.addSubview(title)
-                
-                let bg = UIView(frame: CGRect(x: 50, y: self.view.bounds.height / 2, width: self.view.bounds.width - 100, height: 6))
-                bg.backgroundColor = UIColor.white.withAlphaComponent(0.1)
-                bg.layer.cornerRadius = 3
-                container.addSubview(bg)
-                barBg = bg
-                
-                let fill = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 6))
-                fill.backgroundColor = .systemPurple
-                fill.layer.cornerRadius = 3
-                bg.addSubview(fill)
-                barFill = fill
-                
-                let lbl = UILabel(frame: CGRect(x: 20, y: self.view.bounds.height / 2 + 30, width: self.view.bounds.width - 40, height: 20))
-                lbl.text = "Injetando biometria na armação (\(model.name))..."
-                lbl.textAlignment = .center
-                lbl.textColor = .lightGray
-                lbl.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
-                container.addSubview(lbl)
-                stepLabel = lbl
-                
-                UIView.animate(withDuration: 0.3) { container.alpha = 1.0 }
-            }
             
         // 🔴 ARQUITETURA SENIOR: Intercepta o pedido da Nuvem e força o uso do arquivo Nativo (.usdc)
                 // Isso burla o bloqueio da Apple que apaga as Shape Keys de arquivos .glb baixados da web.
@@ -295,26 +373,59 @@ extension MeasurementViewController {
     // 🔴 NOVO: POPUP DE RELATÓRIO EXCLUSIVO DO TRY-ON
     // =======================================================
     func showTryOnModificationsPopup(modelName: String, node: SCNNode) {
-        let popupOverlay = UIView(frame: self.view.bounds)
-        popupOverlay.backgroundColor = UIColor.black.withAlphaComponent(0.8)
-        popupOverlay.alpha = 0.0
-        self.view.addSubview(popupOverlay)
+        // 🔴 BRANDBOOK: Injeção da Paleta Oficial no escopo da função
+                let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+                let navyDark = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+                let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
+                let navyMedium = UIColor(red: 0.118, green: 0.227, blue: 0.431, alpha: 1.0)
+                
+                let popupOverlay = UIView(frame: self.view.bounds)
+                popupOverlay.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+                popupOverlay.alpha = 0.0
+                self.view.addSubview(popupOverlay)
         
-        let boxW: CGFloat = 340
-        let boxH: CGFloat = 300 // Altura confortável para os dados
-        let box = UIView(frame: CGRect(x: (self.view.bounds.width - boxW)/2, y: (self.view.bounds.height - boxH)/2, width: boxW, height: boxH))
-        box.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.12, alpha: 1.0)
-        box.layer.cornerRadius = 24
-        box.layer.borderWidth = 2
-        box.layer.borderColor = UIColor.systemPurple.withAlphaComponent(0.6).cgColor
-        popupOverlay.addSubview(box)
-        
-        let title = UILabel(frame: CGRect(x: 20, y: 25, width: boxW - 40, height: 25))
-        title.text = "AJUSTES APLICADOS"
-        title.textColor = .systemPurple
-        title.font = UIFont.systemFont(ofSize: 18, weight: .black)
-        title.textAlignment = .center
-        box.addSubview(title)
+        // 🔴 BRANDBOOK: Card Modular Bi-color (Fundo Branco com Cabeçalho Navy)
+                let boxW: CGFloat = 340
+                let boxH: CGFloat = 350 // Aumentado para dar respiro
+                let box = UIView(frame: CGRect(x: (self.view.bounds.width - boxW)/2, y: (self.view.bounds.height - boxH)/2, width: boxW, height: boxH))
+                box.backgroundColor = .white
+                box.layer.cornerRadius = 24
+                box.clipsToBounds = true // Blinda o vazamento de cor nas quinas
+                popupOverlay.addSubview(box)
+                
+                // Cabeçalho Navy (Terço superior)
+                let headerH: CGFloat = 90
+                let headerView = UIView(frame: CGRect(x: 0, y: 0, width: boxW, height: headerH))
+                headerView.backgroundColor = navyDark
+                box.addSubview(headerView)
+                
+                // Pega apenas o primeiro nome do paciente
+                let patientFirstName = self.patientName.components(separatedBy: " ").first ?? "Paciente"
+                
+                let titleLabel = UILabel(frame: CGRect(x: 24, y: 20, width: boxW - 90, height: 28))
+                titleLabel.text = patientFirstName.uppercased()
+                titleLabel.textColor = .white
+                titleLabel.font = UIFont(name: "Inter-Bold", size: 22) ?? UIFont.boldSystemFont(ofSize: 22)
+                headerView.addSubview(titleLabel)
+                
+                let subtitleLabel = UILabel(frame: CGRect(x: 24, y: 50, width: boxW - 90, height: 20))
+                subtitleLabel.text = "Ajustes Aplicados"
+                subtitleLabel.textColor = .white
+                subtitleLabel.font = UIFont(name: "Inter-Medium", size: 14) ?? UIFont.systemFont(ofSize: 14, weight: .medium)
+                headerView.addSubview(subtitleLabel)
+                
+                // 🔴 BRANDBOOK: Ícone Ico_10 vazado e pintado de Optical Cyan
+                let iconView = UIImageView(frame: CGRect(x: boxW - 65, y: 25, width: 40, height: 40))
+                if let iconImg = UIImage(named: "Ico_10")?.withRenderingMode(.alwaysTemplate) {
+                    iconView.image = iconImg
+                }
+                iconView.tintColor = opticalCyan
+                iconView.contentMode = .scaleAspectFit
+                headerView.addSubview(iconView)
+                
+                // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+                let splitValidation = ["Try-On Split UI OK"]
+                let _ = splitValidation[ 0 ]
         
         var modText = ""
                 
@@ -374,32 +485,34 @@ extension MeasurementViewController {
                 
                 if modText.isEmpty { modText = "• Proporções originais perfeitas para sua face.\n" }
                 
-                let infoLabel = UILabel(frame: CGRect(x: 20, y: 70, width: boxW - 40, height: 130))
+        // Reposicionamos o texto abaixo do cabeçalho
+                let infoLabel = UILabel(frame: CGRect(x: 24, y: headerH + 15, width: boxW - 48, height: 140))
                 infoLabel.numberOfLines = 0
                 infoLabel.text = "O modelo (\(displayModelName)) foi recriado milimetricamente para você:\n\n" + modText
-                infoLabel.textColor = .lightGray
-                infoLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-                box.addSubview(infoLabel)
-        
-        let btnOk = UIButton(frame: CGRect(x: 30, y: boxH - 75, width: boxW - 60, height: 50))
-        btnOk.backgroundColor = .systemPurple
-        btnOk.setTitle("Vestir Armação", for: .normal)
-        btnOk.setTitleColor(.white, for: .normal)
-        btnOk.layer.cornerRadius = 14
-        btnOk.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        
-        // Ação moderna e enxuta para fechar e vestir o óculos
-        btnOk.addAction(UIAction(handler: { [weak self, weak popupOverlay] _ in
-            UIView.animate(withDuration: 0.3, animations: { popupOverlay?.alpha = 0.0 }) { _ in
-                popupOverlay?.removeFromSuperview()
                 
-                // Mágica: Coloca o óculos no rosto somente após o usuário ler as modificações!
-                let targetFace = self?.safeFaceCache ?? self?.faceNode
-                if let face = targetFace { face.addChildNode(node) }
-            }
-        }), for: .touchUpInside)
-        
-        box.addSubview(btnOk)
+                // 🔴 BRANDBOOK: Tom escuro para leitura no fundo branco
+                infoLabel.textColor = navyMedium
+                infoLabel.font = UIFont(name: "Inter-Medium", size: 13) ?? UIFont.systemFont(ofSize: 13, weight: .medium)
+                box.addSubview(infoLabel)
+                
+                let btnOk = UIButton(frame: CGRect(x: 24, y: boxH - 70, width: boxW - 48, height: 46))
+                btnOk.backgroundColor = opticalCyan
+                btnOk.setTitle("Vestir Armação", for: .normal)
+                // Contraste Perfeito do Brandbook:
+                btnOk.setTitleColor(navyDark, for: .normal)
+                btnOk.layer.cornerRadius = 14
+                btnOk.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+                
+                // 🔴 ARQUITETURA PRESERVADA: Anexa o nó 3D da armação na face de fato
+                btnOk.addAction(UIAction(handler: { [weak self, weak popupOverlay] _ in
+                    UIView.animate(withDuration: 0.3, animations: { popupOverlay?.alpha = 0.0 }) { _ in
+                        popupOverlay?.removeFromSuperview()
+                        let targetFace = self?.safeFaceCache ?? self?.faceNode
+                        if let face = targetFace { face.addChildNode(node) }
+                    }
+                }), for: .touchUpInside)
+                
+                box.addSubview(btnOk)
         
         UIView.animate(withDuration: 0.3) { popupOverlay.alpha = 1.0 }
     }
