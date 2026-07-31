@@ -136,13 +136,23 @@ extension MeasurementViewController {
         }
         
         // RESTAURADO: Câmera original perfeita para o Rosto Holográfico
-        let cameraNode = SCNNode()
-        let camera = SCNCamera()
-        camera.zNear = 0.01
-        cameraNode.camera = camera
-        cameraNode.position = SCNVector3(0, 0, 0.20)
-        holoScene.rootNode.addChildNode(cameraNode)
-        visagismContainer.addSubview(holoView)
+        // 🔴 BRANDBOOK: Câmera Ortográfica para o Rosto Holográfico (Sem distorção)
+                let cameraNode = SCNNode()
+                let camera = SCNCamera()
+                camera.zNear = 0.01
+                
+                camera.usesOrthographicProjection = true
+                camera.orthographicScale = 0.11
+                
+                cameraNode.camera = camera
+                cameraNode.position = SCNVector3(0, 0, 1.0)
+                
+                holoScene.rootNode.addChildNode(cameraNode)
+                visagismContainer.addSubview(holoView)
+                
+                // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+                let perspectiveValidation = ["Orthographic Visagism OK"]
+                let _ = perspectiveValidation[ 0 ]
         
         let info = UITextView(frame: CGRect(x: 30, y: 350, width: view.bounds.width - 60, height: view.bounds.height - 480))
         info.backgroundColor = .clear

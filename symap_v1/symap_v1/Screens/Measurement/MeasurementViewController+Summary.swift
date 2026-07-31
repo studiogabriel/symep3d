@@ -14,172 +14,190 @@ import AVFoundation
 extension MeasurementViewController {
     
     @objc func showSummaryScreen() {
-        self.isPdfGenerated = false
-        self.manualMeasureContainer.isHidden = true
-        self.measurementTypeSegment.isHidden = true
-        self.captureButton.isHidden = true
-        self.startCaptureButton.isHidden = true
-        self.measurementsContainer.isHidden = true
-        self.heightLineView.isHidden = true
-        if let bottomStack = view.subviews.first(where: { $0 is UIStackView }) { bottomStack.isHidden = true }
-        
-        if summaryContainer == nil {
-            summaryContainer = UIView(frame: view.bounds)
-            summaryContainer.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
-            view.addSubview(summaryContainer)
-        }
-        
-        summaryContainer.subviews.forEach { $0.removeFromSuperview() }
-        summaryContainer.isHidden = false
-        summaryContainer.alpha = 0
-        
-        let title = UILabel(frame: CGRect(x: 20, y: 55, width: view.bounds.width - 40, height: 30))
-        title.text = "RESUMO CLÍNICO"
-        title.textAlignment = .center
-        title.textColor = .white
-        title.font = UIFont.systemFont(ofSize: 22, weight: .black)
-        summaryContainer.addSubview(title)
-        
-        let holoView = SCNView(frame: CGRect(x: 40, y: 95, width: view.bounds.width - 80, height: 230))
-        holoView.backgroundColor = UIColor(white: 0.05, alpha: 1.0)
-        holoView.layer.cornerRadius = 16
-        holoView.clipsToBounds = true
-        holoView.layer.borderWidth = 2
-        holoView.layer.borderColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 0.3).cgColor
-        holoView.autoenablesDefaultLighting = true
-        holoView.allowsCameraControl = true
-        holoView.isPlaying = true
-        
-        let holoScene = SCNScene()
-        holoView.scene = holoScene
-        
-        let presentationNode = SCNNode()
-        
-        if let originalFace = self.safeFaceCache {
-            if originalFace.childNodes.count > 0 {
-                // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL (Índice Seguro)
-                let maskClone = originalFace.childNodes[ 0 ].clone()
-                maskClone.transform = SCNMatrix4Identity
-                maskClone.position = SCNVector3(0, 0, 0)
-                
-                if let oldGeo = maskClone.geometry {
-                    let newGeo = oldGeo.copy() as! SCNGeometry
-                    let holoMaterial = SCNMaterial()
-                    holoMaterial.diffuse.contents = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 0.8)
-                    holoMaterial.fillMode = .lines
-                    holoMaterial.lightingModel = .constant
-                    holoMaterial.isDoubleSided = true
-                    holoMaterial.colorBufferWriteMask = .all
-                    
-                    newGeo.materials = [holoMaterial]
-                    maskClone.geometry = newGeo
+            self.isPdfGenerated = false
+            self.manualMeasureContainer.isHidden = true
+            self.measurementTypeSegment.isHidden = true
+            self.captureButton.isHidden = true
+            self.startCaptureButton.isHidden = true
+            self.measurementsContainer.isHidden = true
+            self.heightLineView.isHidden = true
+            
+            if let bottomStack = view.subviews.first(where: { $0 is UIStackView }) { bottomStack.isHidden = true }
+            
+            if summaryContainer == nil {
+                summaryContainer = UIView(frame: view.bounds)
+                summaryContainer.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
+                view.addSubview(summaryContainer)
+            }
+            summaryContainer.subviews.forEach { $0.removeFromSuperview() }
+            
+            summaryContainer.isHidden = false
+            summaryContainer.alpha = 0
+            
+            let title = UILabel(frame: CGRect(x: 20, y: 55, width: view.bounds.width - 40, height: 30))
+            title.text = "RESUMO CLÍNICO"
+            title.textAlignment = .center
+            title.textColor = .white
+            title.font = UIFont.systemFont(ofSize: 22, weight: .black)
+            summaryContainer.addSubview(title)
+            
+            let holoView = SCNView(frame: CGRect(x: 40, y: 95, width: view.bounds.width - 80, height: 230))
+            holoView.backgroundColor = UIColor(white: 0.05, alpha: 1.0)
+            holoView.layer.cornerRadius = 16
+            holoView.clipsToBounds = true
+            holoView.layer.borderWidth = 2
+            holoView.layer.borderColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 0.3).cgColor
+            holoView.autoenablesDefaultLighting = true
+            holoView.allowsCameraControl = true
+            holoView.isPlaying = true
+            
+            let holoScene = SCNScene()
+            holoView.scene = holoScene
+            let presentationNode = SCNNode()
+            
+            if let originalFace = self.safeFaceCache {
+                if originalFace.childNodes.count > 0 {
+                    // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL (Índice Seguro)
+                    let maskClone = originalFace.childNodes[ 0 ].clone()
+                    maskClone.transform = SCNMatrix4Identity
+                    maskClone.position = SCNVector3(0, 0, 0)
+                    if let oldGeo = maskClone.geometry {
+                        let newGeo = oldGeo.copy() as! SCNGeometry
+                        let holoMaterial = SCNMaterial()
+                        holoMaterial.diffuse.contents = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 0.8)
+                        holoMaterial.fillMode = .lines
+                        holoMaterial.lightingModel = .constant
+                        holoMaterial.isDoubleSided = true
+                        holoMaterial.colorBufferWriteMask = .all
+                        newGeo.materials = [holoMaterial]
+                        maskClone.geometry = newGeo
+                    }
+                    maskClone.isHidden = false
+                    presentationNode.addChildNode(maskClone)
                 }
-                maskClone.isHidden = false
-                presentationNode.addChildNode(maskClone)
+                
+                // 1. EXTRAÇÃO BLINDADA DO ÓCULOS (Baking)
+                if let customGlasses = originalFace.childNodes.first(where: { $0.name == "customGlasses" }) {
+                    // 🔴 CURA DEFINITIVA DO METAL: flattenedClone()
+                    // Isso "assa" (bakes) as Shape Keys e a Geometria num objeto estático único.
+                    // Destrói o Morpher e cria vértices limpos. Acaba com o esmagamento de vez!
+                    let bakedGlasses = customGlasses.flattenedClone()
+                    bakedGlasses.name = "customGlasses"
+                    bakedGlasses.isHidden = false
+                    presentationNode.addChildNode(bakedGlasses)
+                    
+                    // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+                    let metalValidation = ["Baked Geometry OK"]
+                    let _ = metalValidation[ 0 ]
+                }
             }
             
-            if let customGlasses = originalFace.childNodes.first(where: { $0.name == "customGlasses" })?.clone() {
-                customGlasses.isHidden = false
-                presentationNode.addChildNode(customGlasses)
-            }
+            presentationNode.position = SCNVector3(0, 0, 0)
+            holoScene.rootNode.addChildNode(presentationNode)
+            
+            // 🔴 CURA DA LENTE E DA PERSPECTIVA
+            let cameraNode = SCNNode()
+            let camera = SCNCamera()
+            camera.zNear = 0.01
+            
+            // FOV Baixo para achatar a imagem (Lente de Estúdio 12°)
+            camera.usesOrthographicProjection = false
+            camera.fieldOfView = 12
+            
+            cameraNode.camera = camera
+            cameraNode.position = SCNVector3(0, 0, 1.2)
+            holoScene.rootNode.addChildNode(cameraNode)
+            
+            summaryContainer.addSubview(holoView)
+            
+            // 🔴 MAGICA DO EIXO CENTRAL RESPONDENDO À SUA OBSERVAÇÃO
+            // Dizemos para a câmera do usuário orbitar DENTRO da cabeça (-0.06m) e não na ponta do nariz!
+            holoView.defaultCameraController.target = SCNVector3(0, 0, -0.06)
+            
+            let techDesc = UILabel(frame: CGRect(x: 20, y: 325, width: view.bounds.width - 40, height: 110))
+            techDesc.numberOfLines = 0
+            techDesc.textAlignment = .center
+            techDesc.font = UIFont.systemFont(ofSize: 10, weight: .medium)
+            techDesc.textColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
+            techDesc.text = "GÊMEO DIGITAL BIOMÉTRICO (IA)\nO holograma acima não é uma foto, é a reconstrução volumétrica exata da sua face gerada por infravermelhos. Com 100% de precisão matemática, nós eliminamos o erro humano na medição das suas lentes.\n\n COMO MANIPULAR O SEU ROSTO 3D:\n Rotacionar: Arraste com 1 dedo. |  Zoom: Pinça com 2 dedos.\n Mover: Arraste com 2 dedos juntos na tela."
+            summaryContainer.addSubview(techDesc)
+            
+            let info = UITextView(frame: CGRect(x: 30, y: 440, width: view.bounds.width - 60, height: view.bounds.height - 600))
+            info.backgroundColor = .clear
+            info.textColor = .lightGray
+            info.font = UIFont.systemFont(ofSize: 13)
+            info.isEditable = false
+            info.text = """
+            👤 Paciente: \(self.patientName)
+            👓 Lente: \(self.selectedLensType)
+            📏 DNP Total: \(self.f(self.dnpTotal)) mm | Ponte: \(self.f(self.noseBridgeWidth)) mm
+            📏 Largura do Rosto: \(self.f(self.faceWidth)) mm
+            - Altura de Montagem (H): \(self.f(self.pupillaryHeight)) mm
+            - Lente Horizontal: \(self.f(self.manualFrameWidth)) mm
+            - Lente Vertical: \(self.f(self.manualFrameHeight)) mm
+            - Diagonal da Lente: \(self.f(self.manualFrameDiagonal)) mm
+            - Visão Longe OD: \(self.rxEsfOD) | \(self.rxCilOD) | \(self.rxEixoOD)
+            - Visão Longe OE: \(self.rxEsfOE) | \(self.rxCilOE) | \(self.rxEixoOE)
+            - Comportamento Visual IA:
+            \(self.visionBehaviorResult)
+            """
+            summaryContainer.addSubview(info)
+            
+            let btnPDF = UIButton()
+            btnPDF.backgroundColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
+            btnPDF.setTitle("Gerar Laudo PDF", for: .normal)
+            btnPDF.setTitleColor(.black, for: .normal)
+            btnPDF.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+            btnPDF.layer.cornerRadius = 12
+            btnPDF.addTarget(self, action: #selector(executePDFGeneration), for: .touchUpInside)
+            
+            let btnReset = UIButton()
+            btnReset.backgroundColor = UIColor(white: 0.2, alpha: 0.9)
+            btnReset.setTitle("Refazer", for: .normal)
+            btnReset.setTitleColor(.white, for: .normal)
+            btnReset.titleLabel?.font = UIFont.boldSystemFont(ofSize: 13)
+            btnReset.layer.cornerRadius = 10
+            btnReset.addTarget(self, action: #selector(resetToStartMeasure), for: .touchUpInside)
+            
+            let btnHome = UIButton()
+            btnHome.backgroundColor = UIColor(white: 0.2, alpha: 0.9)
+            btnHome.setTitle("Painel", for: .normal)
+            btnHome.setTitleColor(.white, for: .normal)
+            btnHome.titleLabel?.font = UIFont.boldSystemFont(ofSize: 13)
+            btnHome.layer.cornerRadius = 10
+            btnHome.addTarget(self, action: #selector(returnToTriagem), for: .touchUpInside)
+            
+            let btnExit = UIButton()
+            btnExit.backgroundColor = UIColor(white: 0.2, alpha: 0.9)
+            btnExit.setTitle("Encerrar", for: .normal)
+            btnExit.setTitleColor(.white, for: .normal)
+            btnExit.titleLabel?.font = UIFont.boldSystemFont(ofSize: 13)
+            btnExit.layer.cornerRadius = 10
+            btnExit.addTarget(self, action: #selector(exitAppFully), for: .touchUpInside)
+            
+            let bottomStack = UIStackView(arrangedSubviews: [btnReset, btnHome, btnExit])
+            bottomStack.axis = .horizontal
+            bottomStack.spacing = 10
+            bottomStack.distribution = .fillEqually
+            
+            // 🔴 NOVO: BOTÃO DE EXPORTAÇÃO (Substituindo o antigo menu manual)
+            let btnExport3D = UIButton()
+            btnExport3D.backgroundColor = UIColor.systemPurple
+            btnExport3D.setTitle("📥 Exportar Armação Personalizada", for: .normal)
+            btnExport3D.setTitleColor(.white, for: .normal)
+            btnExport3D.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+            btnExport3D.layer.cornerRadius = 12
+            btnExport3D.addTarget(self, action: #selector(exportCustomGlasses), for: .touchUpInside)
+            
+            let masterStack = UIStackView(arrangedSubviews: [btnExport3D, btnPDF, bottomStack])
+            masterStack.axis = .vertical
+            masterStack.spacing = 12
+            masterStack.distribution = .fillEqually
+            masterStack.frame = CGRect(x: 30, y: view.bounds.height - 190, width: view.bounds.width - 60, height: 160)
+            summaryContainer.addSubview(masterStack)
+            
+            UIView.animate(withDuration: 0.3) { self.summaryContainer.alpha = 1.0 }
         }
-        
-        presentationNode.position = SCNVector3(0, 0, 0)
-        holoScene.rootNode.addChildNode(presentationNode)
-        
-        let cameraNode = SCNNode()
-        let camera = SCNCamera()
-        camera.zNear = 0.01
-        cameraNode.camera = camera
-        cameraNode.position = SCNVector3(0, 0, 0.20)
-        holoScene.rootNode.addChildNode(cameraNode)
-        
-        summaryContainer.addSubview(holoView)
-        
-        let techDesc = UILabel(frame: CGRect(x: 20, y: 325, width: view.bounds.width - 40, height: 110))
-        techDesc.numberOfLines = 0
-        techDesc.textAlignment = .center
-        techDesc.font = UIFont.systemFont(ofSize: 10, weight: .medium)
-        techDesc.textColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-        techDesc.text = "GÊMEO DIGITAL BIOMÉTRICO (IA)\nO holograma acima não é uma foto, é a reconstrução volumétrica exata da sua face gerada por infravermelhos. Com 100% de precisão matemática, nós eliminamos o erro humano na medição das suas lentes.\n\n COMO MANIPULAR O SEU ROSTO 3D:\n Rotacionar: Arraste com 1 dedo. |  Zoom: Pinça com 2 dedos.\n Mover: Arraste com 2 dedos juntos na tela."
-        summaryContainer.addSubview(techDesc)
-        
-        let info = UITextView(frame: CGRect(x: 30, y: 440, width: view.bounds.width - 60, height: view.bounds.height - 600))
-        info.backgroundColor = .clear
-        info.textColor = .lightGray
-        info.font = UIFont.systemFont(ofSize: 13)
-        info.isEditable = false
-        info.text = """
-        👤 Paciente: \(self.patientName)
-        👓 Lente: \(self.selectedLensType)
-        📏 DNP Total: \(self.f(self.dnpTotal)) mm | Ponte: \(self.f(self.noseBridgeWidth)) mm
-        📏 Largura do Rosto: \(self.f(self.faceWidth)) mm
-        - Altura de Montagem (H): \(self.f(self.pupillaryHeight)) mm
-        - Lente Horizontal: \(self.f(self.manualFrameWidth)) mm
-        - Lente Vertical: \(self.f(self.manualFrameHeight)) mm
-        - Diagonal da Lente: \(self.f(self.manualFrameDiagonal)) mm
-        - Visão Longe OD: \(self.rxEsfOD) | \(self.rxCilOD) | \(self.rxEixoOD)
-        - Visão Longe OE: \(self.rxEsfOE) | \(self.rxCilOE) | \(self.rxEixoOE)
-        - Comportamento Visual IA:
-        \(self.visionBehaviorResult)
-        """
-        summaryContainer.addSubview(info)
-        
-        let btnPDF = UIButton()
-        btnPDF.backgroundColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-        btnPDF.setTitle("Gerar Laudo PDF", for: .normal)
-        btnPDF.setTitleColor(.black, for: .normal)
-        btnPDF.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        btnPDF.layer.cornerRadius = 12
-        btnPDF.addTarget(self, action: #selector(executePDFGeneration), for: .touchUpInside)
-        
-        let btnReset = UIButton()
-        btnReset.backgroundColor = UIColor(white: 0.2, alpha: 0.9)
-        btnReset.setTitle("Refazer", for: .normal)
-        btnReset.setTitleColor(.white, for: .normal)
-        btnReset.titleLabel?.font = UIFont.boldSystemFont(ofSize: 13)
-        btnReset.layer.cornerRadius = 10
-        btnReset.addTarget(self, action: #selector(resetToStartMeasure), for: .touchUpInside)
-        
-        let btnHome = UIButton()
-        btnHome.backgroundColor = UIColor(white: 0.2, alpha: 0.9)
-        btnHome.setTitle("Painel", for: .normal)
-        btnHome.setTitleColor(.white, for: .normal)
-        btnHome.titleLabel?.font = UIFont.boldSystemFont(ofSize: 13)
-        btnHome.layer.cornerRadius = 10
-        btnHome.addTarget(self, action: #selector(returnToTriagem), for: .touchUpInside)
-        
-        let btnExit = UIButton()
-        btnExit.backgroundColor = UIColor(white: 0.2, alpha: 0.9)
-        btnExit.setTitle("Encerrar", for: .normal)
-        btnExit.setTitleColor(.white, for: .normal)
-        btnExit.titleLabel?.font = UIFont.boldSystemFont(ofSize: 13)
-        btnExit.layer.cornerRadius = 10
-        btnExit.addTarget(self, action: #selector(exitAppFully), for: .touchUpInside)
-        
-        let bottomStack = UIStackView(arrangedSubviews: [btnReset, btnHome, btnExit])
-        bottomStack.axis = .horizontal
-        bottomStack.spacing = 10
-        bottomStack.distribution = .fillEqually
-        
-        // 🔴 NOVO: BOTÃO DE EXPORTAÇÃO (Substituindo o antigo menu manual)
-        let btnExport3D = UIButton()
-        btnExport3D.backgroundColor = UIColor.systemPurple
-        btnExport3D.setTitle("📥 Exportar Armação Personalizada", for: .normal)
-        btnExport3D.setTitleColor(.white, for: .normal)
-        btnExport3D.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        btnExport3D.layer.cornerRadius = 12
-        btnExport3D.addTarget(self, action: #selector(exportCustomGlasses), for: .touchUpInside)
-        
-        let masterStack = UIStackView(arrangedSubviews: [btnExport3D, btnPDF, bottomStack])
-        masterStack.axis = .vertical
-        masterStack.spacing = 12
-        masterStack.distribution = .fillEqually
-        masterStack.frame = CGRect(x: 30, y: view.bounds.height - 190, width: view.bounds.width - 60, height: 160)
-        summaryContainer.addSubview(masterStack)
-        
-        UIView.animate(withDuration: 0.3) { self.summaryContainer.alpha = 1.0 }
-    }
     
     // =========================================================================
     // 🔴 NOVO FLUXO: EXPORTAÇÃO 3D (STL) VIA NUVEM

@@ -166,7 +166,7 @@
 				DEVELOPMENT_TEAM = N38DC5JY64;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = symap_v1/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Symap ";
+				INFOPLIST_KEY_CFBundleDisplayName = "Symep 3D";
 				INFOPLIST_KEY_NSCameraUsageDescription = "O Symap precisa acessar a sua camera para realizar o escaneamento facial biometrico 3D e montar as armacoes virtuais";
 				INFOPLIST_KEY_NSMotionUsageDescription = "O Symap utiliza os sensores de movimento e giroscopio para garantir que o aparelho esteja perfeitamente nivelado no momento da captura biometrica";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "O Symap precisa de permissao para salvar os laudos biometricos em pdf diretamente na sua galeria de fotos";
@@ -202,7 +202,7 @@
 				DEVELOPMENT_TEAM = N38DC5JY64;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = symap_v1/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Symap ";
+				INFOPLIST_KEY_CFBundleDisplayName = "Symep 3D";
 				INFOPLIST_KEY_NSCameraUsageDescription = "O Symap precisa acessar a sua camera para realizar o escaneamento facial biometrico 3D e montar as armacoes virtuais";
 				INFOPLIST_KEY_NSMotionUsageDescription = "O Symap utiliza os sensores de movimento e giroscopio para garantir que o aparelho esteja perfeitamente nivelado no momento da captura biometrica";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "O Symap precisa de permissao para salvar os laudos biometricos em pdf diretamente na sua galeria de fotos";
