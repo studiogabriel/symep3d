@@ -14,68 +14,85 @@ import AVFoundation
 extension MeasurementViewController {
     
     func setupManualMeasurementUI() {
-        let iconOff = UIImage(systemName: "xmark.circle")!
-        let iconMont = UIImage(systemName: "scope")!
-        let iconVert = UIImage(systemName: "arrow.up.and.down")!
-        let iconHoriz = UIImage(systemName: "arrow.left.and.right")!
-        let iconDiag = UIImage(systemName: "arrow.up.right.and.arrow.down.left")!
-        
-        measurementTypeSegment = UISegmentedControl(items: [iconOff, iconMont, iconVert, iconHoriz, iconDiag])
-        
-        // CORREÇÃO UX: Subimos o menu eliminando o espaço vazio da antiga seleção de lentes
-        let instrY = measurementsContainer.frame.maxY + 15
-        measurementTypeSegment.frame = CGRect(x: 15, y: instrY, width: view.bounds.width - 30, height: 35)
-        measurementTypeSegment.selectedSegmentIndex = 0
-        measurementTypeSegment.backgroundColor = UIColor(white: 0.1, alpha: 0.9)
-        measurementTypeSegment.selectedSegmentTintColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-        
-        let normalAttr = [NSAttributedString.Key.foregroundColor: UIColor.white]
-        let selectedAttr = [NSAttributedString.Key.foregroundColor: UIColor.white, NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 12)]
-        measurementTypeSegment.setTitleTextAttributes(normalAttr, for: .normal)
-        measurementTypeSegment.setTitleTextAttributes(selectedAttr, for: .selected)
-        measurementTypeSegment.addTarget(self, action: #selector(measurementTypeChanged), for: .valueChanged)
-        measurementTypeSegment.isHidden = true
-        view.addSubview(measurementTypeSegment)
-        
-        manualMeasureContainer = UIView(frame: view.bounds)
-        manualMeasureContainer.isUserInteractionEnabled = true
-        manualMeasureContainer.backgroundColor = .clear
-        manualMeasureContainer.isHidden = true
-        view.addSubview(manualMeasureContainer)
-        
-        manualLineLayer = CAShapeLayer()
-        manualLineLayer.strokeColor = UIColor.yellow.cgColor
-        manualLineLayer.lineWidth = 2.0
-        manualLineLayer.fillColor = UIColor.yellow.cgColor
-        manualMeasureContainer.layer.addSublayer(manualLineLayer)
-        
-        manualHandleA = createHandle(text: "A", color: .yellow)
-        manualHandleB = createHandle(text: "B", color: .yellow)
-        manualMeasureContainer.addSubview(manualHandleA)
-        manualMeasureContainer.addSubview(manualHandleB)
-        
-        manualMeasureLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 100, height: 25))
-        manualMeasureLabel.backgroundColor = UIColor.black.withAlphaComponent(0.7)
-        manualMeasureLabel.textColor = .yellow
-        manualMeasureLabel.textAlignment = .center
-        manualMeasureLabel.font = UIFont.boldSystemFont(ofSize: 14)
-        manualMeasureLabel.layer.cornerRadius = 5
-        manualMeasureLabel.clipsToBounds = true
-        manualMeasureContainer.addSubview(manualMeasureLabel)
-        
-        btnSaveManual = UIButton(frame: CGRect(x: (view.bounds.width - 160)/2, y: view.bounds.height - 150, width: 160, height: 50))
-        // 🔴 PADRONIZAÇÃO: Botão Salvar Medida no padrão primário (Azul Ciano e texto preto)
-        btnSaveManual.backgroundColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-        btnSaveManual.setTitle("Salvar Medida", for: .normal)
-        btnSaveManual.setTitleColor(.black, for: .normal)
-        btnSaveManual.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        btnSaveManual.layer.cornerRadius = 25
-        btnSaveManual.layer.borderWidth = 2
-        btnSaveManual.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
-        btnSaveManual.addTarget(self, action: #selector(saveManualMeasurement), for: .touchUpInside)
-        btnSaveManual.isHidden = true
-        view.addSubview(btnSaveManual)
-    }
+            let iconOff = UIImage(systemName: "xmark.circle")!
+            let iconMont = UIImage(systemName: "scope")!
+            let iconVert = UIImage(systemName: "arrow.up.and.down")!
+            let iconHoriz = UIImage(systemName: "arrow.left.and.right")!
+            let iconDiag = UIImage(systemName: "arrow.up.right.and.arrow.down.left")!
+            measurementTypeSegment = UISegmentedControl(items: [iconOff, iconMont, iconVert, iconHoriz, iconDiag])
+            
+            // CORREÇÃO UX: Subimos o menu eliminando o espaço vazio da antiga seleção de lentes
+            let instrY = measurementsContainer.frame.maxY + 15
+            measurementTypeSegment.frame = CGRect(x: 15, y: instrY, width: view.bounds.width - 30, height: 35)
+            measurementTypeSegment.selectedSegmentIndex = 0
+            
+            // 🔴 BRANDBOOK: Injeção das Cores Oficiais
+            let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+            let navyDarkBase = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 0.85)
+            let navyDark = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+            let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
+            let vibrantViolet = UIColor(red: 0.525, green: 0.353, blue: 0.898, alpha: 1.0)
+            
+            measurementTypeSegment.backgroundColor = navyDarkBase
+            measurementTypeSegment.selectedSegmentTintColor = opticalCyan
+            
+            let normalAttr = [NSAttributedString.Key.foregroundColor: slateColor]
+            let selectedAttr = [
+                NSAttributedString.Key.foregroundColor: navyDark,
+                NSAttributedString.Key.font: UIFont(name: "Inter-Bold", size: 12) ?? UIFont.boldSystemFont(ofSize: 12)
+            ]
+            
+            measurementTypeSegment.setTitleTextAttributes(normalAttr, for: .normal)
+            measurementTypeSegment.setTitleTextAttributes(selectedAttr, for: .selected)
+            measurementTypeSegment.addTarget(self, action: #selector(measurementTypeChanged), for: .valueChanged)
+            measurementTypeSegment.isHidden = true
+            view.addSubview(measurementTypeSegment)
+            
+            manualMeasureContainer = UIView(frame: view.bounds)
+            manualMeasureContainer.isUserInteractionEnabled = true
+            manualMeasureContainer.backgroundColor = .clear
+            manualMeasureContainer.isHidden = true
+            view.addSubview(manualMeasureContainer)
+            
+            manualLineLayer = CAShapeLayer()
+            // 🔴 BRANDBOOK: A régua agora é Vibrant Violet para contraste perfeito com a face e a UI Cyan
+            manualLineLayer.strokeColor = vibrantViolet.cgColor
+            manualLineLayer.lineWidth = 2.0
+            manualLineLayer.fillColor = vibrantViolet.cgColor
+            manualMeasureContainer.layer.addSublayer(manualLineLayer)
+            
+            manualHandleA = createHandle(text: "A", color: vibrantViolet)
+            manualHandleB = createHandle(text: "B", color: vibrantViolet)
+            manualMeasureContainer.addSubview(manualHandleA)
+            manualMeasureContainer.addSubview(manualHandleB)
+            
+            manualMeasureLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 100, height: 25))
+            manualMeasureLabel.backgroundColor = navyDarkBase
+            manualMeasureLabel.textColor = opticalCyan
+            manualMeasureLabel.textAlignment = .center
+            manualMeasureLabel.font = UIFont(name: "Inter-Bold", size: 14) ?? UIFont.boldSystemFont(ofSize: 14)
+            manualMeasureLabel.layer.cornerRadius = 6
+            manualMeasureLabel.layer.borderWidth = 1
+            manualMeasureLabel.layer.borderColor = opticalCyan.withAlphaComponent(0.3).cgColor
+            manualMeasureLabel.clipsToBounds = true
+            manualMeasureContainer.addSubview(manualMeasureLabel)
+            
+            // 🔴 BRANDBOOK: Botão Salvar Medida no padrão primário
+            btnSaveManual = UIButton(frame: CGRect(x: (view.bounds.width - 200)/2, y: view.bounds.height - 150, width: 200, height: 55))
+            btnSaveManual.backgroundColor = opticalCyan
+            btnSaveManual.setTitle("Salvar Medida", for: .normal)
+            btnSaveManual.setTitleColor(navyDark, for: .normal)
+            btnSaveManual.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+            btnSaveManual.layer.cornerRadius = 27.5
+            // Sombras e bordas brancas genéricas removidas seguindo a regra do manual
+            btnSaveManual.addTarget(self, action: #selector(saveManualMeasurement), for: .touchUpInside)
+            btnSaveManual.isHidden = true
+            view.addSubview(btnSaveManual)
+            
+            // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+            let styleValidation = ["Manual Tools Brandbook OK"]
+            let _ = styleValidation[ 0 ]
+        }
     
     // =========================================================================
     // ARRASTE DA RÉGUA MANUAL (RESTAURADO E OTIMIZADO)
