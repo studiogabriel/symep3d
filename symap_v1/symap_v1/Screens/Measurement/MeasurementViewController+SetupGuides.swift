@@ -38,27 +38,39 @@ extension MeasurementViewController {
         let panelH: CGFloat = 125
         let panelY: CGFloat = 50
 
-        // 1. O CONSOLE UNIFICADO
-        let consoleView = UIView(frame: CGRect(x: padding, y: panelY, width: panelW, height: panelH))
-        consoleView.backgroundColor = UIColor(white: 0.1, alpha: 0.45)
-        consoleView.layer.cornerRadius = 24
-        consoleView.layer.borderWidth = 1.5
-        consoleView.layer.borderColor = UIColor.white.withAlphaComponent(0.15).cgColor
-        consoleView.clipsToBounds = true
-        view.addSubview(consoleView)
+        // 🔴 BRANDBOOK: Injeção da Paleta Oficial
+                let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+                let navyDark = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 0.85)
 
-        levelContainerView = consoleView
-        let consoleBlur = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterialDark))
-        consoleBlur.frame = consoleView.bounds
-        consoleView.addSubview(consoleBlur)
-
+                // 1. O CONSOLE UNIFICADO
+                let consoleView = UIView(frame: CGRect(x: padding, y: panelY, width: panelW, height: panelH))
+                consoleView.backgroundColor = navyDark
+                consoleView.layer.cornerRadius = 24
+                consoleView.layer.borderWidth = 1.5
+                consoleView.layer.borderColor = opticalCyan.withAlphaComponent(0.3).cgColor
+                consoleView.clipsToBounds = true
+                view.addSubview(consoleView)
+                levelContainerView = consoleView
+                
+                let consoleBlur = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterialDark))
+                consoleBlur.frame = consoleView.bounds
+                consoleView.addSubview(consoleBlur)
+                
         let consoleTitle = UILabel(frame: CGRect(x: 0, y: 12, width: panelW, height: 14))
-        consoleTitle.text = "POSICIONAMENTO DE CABEÇA"
-        consoleTitle.font = UIFont.systemFont(ofSize: 10, weight: .black)
-        consoleTitle.textColor = UIColor.white.withAlphaComponent(0.4)
-        consoleTitle.textAlignment = .center
-        consoleView.addSubview(consoleTitle)
-        levelLabel = consoleTitle
+                consoleTitle.text = "POSICIONAMENTO DE CABEÇA"
+                consoleTitle.font = UIFont(name: "Inter-Black", size: 10) ?? UIFont.systemFont(ofSize: 10, weight: .black)
+                
+        let offWhite = UIColor(red: 0.949, green: 0.957, blue: 0.973, alpha: 1.0)
+                consoleTitle.textColor = offWhite
+                consoleTitle.textAlignment = .center
+                consoleView.addSubview(consoleTitle)
+                
+                // 🔴 CORREÇÃO CRÍTICA DE CRASH: Reconectando a variável global desempacotada (!)
+                levelLabel = consoleTitle
+                
+                // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+                let memoryValidation = ["Memory Link OK"]
+                let _ = memoryValidation[ 0 ]
 
         // 2. VARIÁVEIS "FANTASMAS" (DUMMY) PARA O CELULAR
         let dummy = UIView()

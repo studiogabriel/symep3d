@@ -124,46 +124,46 @@ extension MeasurementViewController {
         let pitchCenterY = pitchTapeH / 2.0
         let newHeadPitchY = pitchCenterY + (CGFloat(clampedPitch / maxPitch) * (pitchCenterY - 8.0))
         
-        let neonGreen = UIColor(red: 0.0, green: 0.95, blue: 0.2, alpha: 1.0)
-        
-        DispatchQueue.main.async {
-            UIView.animate(withDuration: 0.1) {
-                self.headLevelTargetZone.layer.transform = transform3D
-                self.headLevelBubbleView.transform = CGAffineTransform(translationX: yawTranslation, y: 0)
-                self.headPitchBubbleView.center.y = newHeadPitchY
-                self.headPitchBubbleView.backgroundColor = self.isHeadPitchLevel ? neonGreen : .lightGray
-            }
-            
-            self.updateRadarColor(container: self.headLevelContainerView,
-                                  targetGroup: self.headLevelTargetZone,
-                                  bubble: self.headLevelBubbleView,
-                                  isAligned: isAligned,
-                                  isFaceRadar: true)
-            self.updateCentralSyncCore()
-        }
+        // 🔴 BRANDBOOK: Vibrant Violet substitui o verde
+                let vibrantViolet = UIColor(red: 0.525, green: 0.353, blue: 0.898, alpha: 1.0)
+                DispatchQueue.main.async {
+                    UIView.animate(withDuration: 0.1) {
+                        self.headLevelTargetZone.layer.transform = transform3D
+                        self.headLevelBubbleView.transform = CGAffineTransform(translationX: yawTranslation, y: 0)
+                        self.headPitchBubbleView.center.y = newHeadPitchY
+                        self.headPitchBubbleView.backgroundColor = self.isHeadPitchLevel ? vibrantViolet : .lightGray
+                    }
+                    
+                    self.updateRadarColor(container: self.headLevelContainerView,
+                                          targetGroup: self.headLevelTargetZone,
+                                          bubble: self.headLevelBubbleView,
+                                          isAligned: isAligned,
+                                          isFaceRadar: true)
+                    self.updateCentralSyncCore()
+                }
     }
     
     func updateRadarColor(container: UIView, targetGroup: UIView, bubble: UIView, isAligned: Bool, isFaceRadar: Bool) {
-        let neonGreen = UIColor(red: 0.0, green: 0.95, blue: 0.2, alpha: 1.0)
-        let bubbleDefault = isFaceRadar ? UIColor.systemPink : .clear
-        
-        if isAligned && container.layer.borderColor != neonGreen.withAlphaComponent(0.8).cgColor {
-            let impact = UIImpactFeedbackGenerator(style: .medium)
-            impact.impactOccurred()
+            // 🔴 BRANDBOOK: Vibrant Violet
+            let vibrantViolet = UIColor(red: 0.525, green: 0.353, blue: 0.898, alpha: 1.0)
+            let bubbleDefault = isFaceRadar ? UIColor.systemPink : .clear
             
-            UIView.animate(withDuration: 0.2) {
-                container.layer.borderColor = neonGreen.withAlphaComponent(0.8).cgColor
-                container.backgroundColor = neonGreen.withAlphaComponent(0.15)
-                if isFaceRadar { bubble.backgroundColor = neonGreen }
-            }
-        } else if !isAligned && container.layer.borderColor != UIColor.white.withAlphaComponent(0.2).cgColor {
-            UIView.animate(withDuration: 0.2) {
-                container.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
-                container.backgroundColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 0.08)
-                if isFaceRadar { bubble.backgroundColor = bubbleDefault }
+            if isAligned && container.layer.borderColor != vibrantViolet.withAlphaComponent(0.8).cgColor {
+                let impact = UIImpactFeedbackGenerator(style: .medium)
+                impact.impactOccurred()
+                UIView.animate(withDuration: 0.2) {
+                    container.layer.borderColor = vibrantViolet.withAlphaComponent(0.8).cgColor
+                    container.backgroundColor = vibrantViolet.withAlphaComponent(0.15)
+                    if isFaceRadar { bubble.backgroundColor = vibrantViolet }
+                }
+            } else if !isAligned && container.layer.borderColor != UIColor.white.withAlphaComponent(0.2).cgColor {
+                UIView.animate(withDuration: 0.2) {
+                    container.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
+                    container.backgroundColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 0.08)
+                    if isFaceRadar { bubble.backgroundColor = bubbleDefault }
+                }
             }
         }
-    }
     
     func updateCentralSyncCore() {
         guard let console = self.levelContainerView else { return }
@@ -173,54 +173,57 @@ extension MeasurementViewController {
         let lockIcon = badgeView?.viewWithTag(803) as? UIImageView
         
         let isAllAligned = self.isPhoneLevel && self.isPhonePitchLevel && self.isHeadLevel && self.isHeadPitchLevel
-        let neonGreen = UIColor(red: 0.0, green: 0.95, blue: 0.2, alpha: 1.0)
-        
-        if isAllAligned && badgeView?.backgroundColor != neonGreen.withAlphaComponent(0.2) {
-            let impact = UIImpactFeedbackGenerator(style: .heavy)
-            impact.impactOccurred()
-            
-            // 🔴 UX: PROGRESSIVE DISCLOSURE (Esconde Radares)
-            UIView.animate(withDuration: 0.3, delay: 0.1, options: .curveEaseOut) {
-                circuitLine?.backgroundColor = neonGreen.withAlphaComponent(0.8)
-                badgeView?.backgroundColor = neonGreen.withAlphaComponent(0.2)
-                badgeView?.layer.borderColor = neonGreen.cgColor
-                badgeView?.layer.shadowColor = neonGreen.cgColor
-                badgeView?.layer.shadowOpacity = 1.0
-                badgeView?.layer.shadowRadius = 10
-                lockIcon?.tintColor = neonGreen
-                lockIcon?.image = UIImage(systemName: "lock.fill")
-                lockIcon?.transform = CGAffineTransform(scaleX: 1.4, y: 1.4)
+        // 🔴 BRANDBOOK: Vibrant Violet (Nível travado) e Off-White (Textos destravados)
+                let vibrantViolet = UIColor(red: 0.525, green: 0.353, blue: 0.898, alpha: 1.0)
+                let offWhite = UIColor(red: 0.949, green: 0.957, blue: 0.973, alpha: 1.0)
                 
-                // Oculta os radares laterais para dar paz visual
-                self.headLevelContainerView?.alpha = 0.0
-                self.headPitchContainerView?.alpha = 0.0
-                
-                // Informa o alinhamento
-                self.headLevelLabel?.text = "ALINHAMENTO TRAVADO"
-                self.headLevelLabel?.textColor = neonGreen
-                self.headLevelLabel?.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
+                if isAllAligned && badgeView?.backgroundColor != vibrantViolet.withAlphaComponent(0.2) {
+                    let impact = UIImpactFeedbackGenerator(style: .heavy)
+                    impact.impactOccurred()
+                    
+                    // 🔴 UX: PROGRESSIVE DISCLOSURE (Esconde Radares)
+                    UIView.animate(withDuration: 0.3, delay: 0.1, options: .curveEaseOut) {
+                        circuitLine?.backgroundColor = vibrantViolet.withAlphaComponent(0.8)
+                        badgeView?.backgroundColor = vibrantViolet.withAlphaComponent(0.2)
+                        badgeView?.layer.borderColor = vibrantViolet.cgColor
+                        badgeView?.layer.shadowColor = vibrantViolet.cgColor
+                        badgeView?.layer.shadowOpacity = 1.0
+                        badgeView?.layer.shadowRadius = 10
+                        
+                        lockIcon?.tintColor = vibrantViolet
+                        lockIcon?.image = UIImage(systemName: "lock.fill")
+                        lockIcon?.transform = CGAffineTransform(scaleX: 1.4, y: 1.4)
+                        
+                        // Oculta os radares laterais para dar paz visual
+                        self.headLevelContainerView?.alpha = 0.0
+                        self.headPitchContainerView?.alpha = 0.0
+                        
+                        // Informa o alinhamento
+                        self.headLevelLabel?.text = "ALINHAMENTO TRAVADO"
+                        self.headLevelLabel?.textColor = vibrantViolet
+                        self.headLevelLabel?.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
+                    }
+                } else if !isAllAligned && badgeView?.backgroundColor != UIColor(white: 0.05, alpha: 1.0) {
+                    UIView.animate(withDuration: 0.2) {
+                        circuitLine?.backgroundColor = UIColor.white.withAlphaComponent(0.1)
+                        badgeView?.backgroundColor = UIColor(white: 0.05, alpha: 1.0)
+                        badgeView?.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
+                        badgeView?.layer.shadowOpacity = 0
+                        
+                        lockIcon?.tintColor = .lightGray
+                        lockIcon?.image = UIImage(systemName: "lock.open.fill")
+                        lockIcon?.transform = .identity
+                        
+                        // 🔴 UX: Traz os radares de volta instantaneamente se o alinhamento for quebrado
+                        self.headLevelContainerView?.alpha = 1.0
+                        self.headPitchContainerView?.alpha = 1.0
+                        
+                        self.headLevelLabel?.text = "POSICIONAMENTO DE CABEÇA"
+                        self.headLevelLabel?.textColor = offWhite
+                        self.headLevelLabel?.transform = .identity
+                    }
+                }
             }
-            
-        } else if !isAllAligned && badgeView?.backgroundColor != UIColor(white: 0.05, alpha: 1.0) {
-            UIView.animate(withDuration: 0.2) {
-                circuitLine?.backgroundColor = UIColor.white.withAlphaComponent(0.1)
-                badgeView?.backgroundColor = UIColor(white: 0.05, alpha: 1.0)
-                badgeView?.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
-                badgeView?.layer.shadowOpacity = 0
-                lockIcon?.tintColor = .lightGray
-                lockIcon?.image = UIImage(systemName: "lock.open.fill")
-                lockIcon?.transform = .identity
-                
-                // 🔴 UX: Traz os radares de volta instantaneamente se o alinhamento for quebrado
-                self.headLevelContainerView?.alpha = 1.0
-                self.headPitchContainerView?.alpha = 1.0
-                
-                self.headLevelLabel?.text = "POSICIONAMENTO DE CABEÇA"
-                self.headLevelLabel?.textColor = UIColor.white.withAlphaComponent(0.4)
-                self.headLevelLabel?.transform = .identity
-            }
-        }
-    }
     
     func updateHeadPitchUI(angle: Float) {}
 }

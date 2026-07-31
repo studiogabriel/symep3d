@@ -62,68 +62,79 @@ extension MeasurementViewController {
             }
             
             // =========================================================================
-            // 🔴 GATILHO DA AUTO-CAPTURA
-            // =========================================================================
-            if allConditionsMet {
-                if self.stabilityStartTime == nil {
-                    self.stabilityStartTime = Date()
-                    self.topFeedbackLabel?.text = "Perfeito! Mantenha a posição..."
-                    self.topFeedbackLabel?.textColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
+                    // 🔴 GATILHO DA AUTO-CAPTURA (AGORA INTEGRADO AO BRANDBOOK)
+                    // =========================================================================
+                    let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+                    let navyDarkBase = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 0.85)
+                    let navyMedium = UIColor(red: 0.118, green: 0.227, blue: 0.431, alpha: 0.95)
                     
-                    self.startCaptureButton.setTitle("✅ Alinhado", for: .normal)
-                    self.startCaptureButton.backgroundColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-                    self.startCaptureButton.setTitleColor(.black, for: .normal)
-                    self.startCaptureButton.layer.borderColor = UIColor.clear.cgColor
-                } else {
-                    let elapsed = Date().timeIntervalSince(self.stabilityStartTime!)
-                    if elapsed >= 1.0 { self.startCountdown() }
-                }
-            } else {
-                self.stabilityStartTime = nil
-                if self.countdownTimer != nil {
-                    self.finishCountdownAndCapture(aborted: true)
-                } else {
-                    // UX: Deixa a função updatePhoneHorizonUI gerenciar o alerta laranja do Tripé
-                    if !self.isPhoneLevel || !self.isPhonePitchLevel {
-                        self.startCaptureButton.setTitle("Ajuste o Tripé", for: .normal)
-                        self.startCaptureButton.backgroundColor = .systemOrange
-                        self.startCaptureButton.setTitleColor(.white, for: .normal)
-                        self.startCaptureButton.layer.borderColor = UIColor.systemOrange.cgColor
-                    } else if !self.isFaceDetected {
-                        self.topFeedbackLabel?.text = "Rosto não detectado"
-                        self.topFeedbackLabel?.textColor = .lightGray
-                        
-                        self.startCaptureButton.setTitle("Aguardando Rosto...", for: .normal)
-                        self.startCaptureButton.backgroundColor = UIColor.white.withAlphaComponent(0.1)
-                        self.startCaptureButton.setTitleColor(.lightGray, for: .normal)
-                        self.startCaptureButton.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
-                    } else if currentDistance < 0.35 {
-                        self.topFeedbackLabel?.text = "Afaste o celular levemente"
-                        self.topFeedbackLabel?.textColor = .lightGray
-                        
-                        self.startCaptureButton.setTitle("Muito Perto", for: .normal)
-                        self.startCaptureButton.backgroundColor = .systemOrange
-                        self.startCaptureButton.setTitleColor(.white, for: .normal)
-                        self.startCaptureButton.layer.borderColor = UIColor.systemOrange.cgColor
-                    } else if currentDistance > 0.40 {
-                        self.topFeedbackLabel?.text = "Aproxime o celular levemente"
-                        self.topFeedbackLabel?.textColor = .lightGray
-                        
-                        self.startCaptureButton.setTitle("Muito Longe", for: .normal)
-                        self.startCaptureButton.backgroundColor = UIColor.white.withAlphaComponent(0.1)
-                        self.startCaptureButton.setTitleColor(.white, for: .normal)
-                        self.startCaptureButton.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                    // 🔴 BRANDBOOK: Novas Cores
+                    let vibrantViolet = UIColor(red: 0.525, green: 0.353, blue: 0.898, alpha: 1.0)
+                    let offWhite = UIColor(red: 0.949, green: 0.957, blue: 0.973, alpha: 1.0)
+
+                    if allConditionsMet {
+                        if self.stabilityStartTime == nil {
+                            self.stabilityStartTime = Date()
+                            self.topFeedbackLabel?.text = "Perfeito! Mantenha a posição..."
+                            self.topFeedbackLabel?.textColor = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+                            self.topFeedbackLabel?.backgroundColor = opticalCyan
+                            
+                            self.startCaptureButton.setTitle("✅ Alinhado", for: .normal)
+                            self.startCaptureButton.backgroundColor = opticalCyan
+                            self.startCaptureButton.setTitleColor(UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0), for: .normal)
+                            self.startCaptureButton.layer.borderColor = UIColor.clear.cgColor
+                        } else {
+                            let elapsed = Date().timeIntervalSince(self.stabilityStartTime!)
+                            if elapsed >= 1.0 { self.startCountdown() }
+                        }
                     } else {
-                        self.topFeedbackLabel?.text = "Mantenha os níveis centralizados"
-                        self.topFeedbackLabel?.textColor = .lightGray
-                        
-                        self.startCaptureButton.setTitle("Centralize os Níveis", for: .normal)
-                        self.startCaptureButton.backgroundColor = UIColor.white.withAlphaComponent(0.1)
-                        self.startCaptureButton.setTitleColor(.white, for: .normal)
-                        self.startCaptureButton.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                        self.stabilityStartTime = nil
+                        if self.countdownTimer != nil {
+                            self.finishCountdownAndCapture(aborted: true)
+                        } else {
+                            // Estado Padrão (Fundo Navy Medium e Botão Navy Dark)
+                            self.topFeedbackLabel?.backgroundColor = navyMedium
+                            
+                            if !self.isPhoneLevel || !self.isPhonePitchLevel {
+                                self.startCaptureButton.setTitle("Ajuste o Tripé", for: .normal)
+                                self.startCaptureButton.backgroundColor = vibrantViolet
+                                self.startCaptureButton.setTitleColor(offWhite, for: .normal)
+                                self.startCaptureButton.layer.borderColor = vibrantViolet.cgColor
+                            } else if !self.isFaceDetected {
+                                self.topFeedbackLabel?.text = "Rosto não detectado"
+                                self.topFeedbackLabel?.textColor = offWhite
+                                
+                                self.startCaptureButton.setTitle("Aguardando Rosto...", for: .normal)
+                                self.startCaptureButton.backgroundColor = navyDarkBase
+                                self.startCaptureButton.setTitleColor(offWhite, for: .normal)
+                                self.startCaptureButton.layer.borderColor = offWhite.withAlphaComponent(0.3).cgColor
+                            } else if currentDistance < 0.35 {
+                                self.topFeedbackLabel?.text = "Afaste o celular levemente"
+                                self.topFeedbackLabel?.textColor = offWhite
+                                
+                                self.startCaptureButton.setTitle("Muito Perto", for: .normal)
+                                self.startCaptureButton.backgroundColor = vibrantViolet
+                                self.startCaptureButton.setTitleColor(offWhite, for: .normal)
+                                self.startCaptureButton.layer.borderColor = vibrantViolet.cgColor
+                            } else if currentDistance > 0.40 {
+                                self.topFeedbackLabel?.text = "Aproxime o celular levemente"
+                                self.topFeedbackLabel?.textColor = offWhite
+                                
+                                self.startCaptureButton.setTitle("Muito Longe", for: .normal)
+                                self.startCaptureButton.backgroundColor = navyDarkBase
+                                self.startCaptureButton.setTitleColor(offWhite, for: .normal)
+                                self.startCaptureButton.layer.borderColor = offWhite.withAlphaComponent(0.3).cgColor
+                            } else {
+                                self.topFeedbackLabel?.text = "Mantenha os níveis centralizados"
+                                self.topFeedbackLabel?.textColor = offWhite
+                                
+                                self.startCaptureButton.setTitle("Centralize os Níveis", for: .normal)
+                                self.startCaptureButton.backgroundColor = navyDarkBase
+                                self.startCaptureButton.setTitleColor(offWhite, for: .normal)
+                                self.startCaptureButton.layer.borderColor = offWhite.withAlphaComponent(0.3).cgColor
+                            }
+                        }
                     }
-                }
-            }
         }
     }
     
