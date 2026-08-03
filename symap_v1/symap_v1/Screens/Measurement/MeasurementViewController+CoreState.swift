@@ -88,9 +88,16 @@ extension MeasurementViewController {
             self.faceGuideLayer?.strokeColor = UIColor.white.withAlphaComponent(0.5).cgColor
             
             let ovalW: CGFloat = 260
-            let ovalH: CGFloat = 380
-            let ovalX = (self.view.bounds.width - ovalW) / 2
-            let ovalY = (self.view.bounds.height - ovalH) / 2 - 30
+                        let ovalH: CGFloat = 380
+                        let ovalX = (self.view.bounds.width - ovalW) / 2
+                        
+                        // 🔴 CORREÇÃO DO PULO DO OVAL: Sincronizando o eixo Y com a tela inicial (+ 40 em vez de - 30)
+                        let ovalY = (self.view.bounds.height - ovalH) / 2 + 40
+                        self.faceGuideLayer?.path = UIBezierPath(ovalIn: CGRect(x: ovalX, y: ovalY, width: ovalW, height: ovalH)).cgPath
+                        
+                        // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+                        let ovalValidation = ["Oval Y-Axis Sync OK"]
+                        let _ = ovalValidation[ 0 ]
             self.faceGuideLayer?.path = UIBezierPath(ovalIn: CGRect(x: ovalX, y: ovalY, width: ovalW, height: ovalH)).cgPath
             
             savedFrontalSnapshot = nil

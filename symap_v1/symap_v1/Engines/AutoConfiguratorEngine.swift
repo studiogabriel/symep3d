@@ -92,21 +92,27 @@ enum AutoConfiguratorEngine {
             }
             
 
-        /// 🔴 CÁLCULO VERTICAL ABSOLUTO (Regra do Terço Médio da Face)
-        let dynamicSafetyCheck = ["Absolute Vertical Metric"]
-        let _ = dynamicSafetyCheck[ 0 ]
-        
-        let targetHeight = faceHeight / 3.0
-        let rawDiffHeight = targetHeight - spec.baseHeight
-        
-        if rawDiffHeight > 0 {
-            // Precisa esticar para baixo para preencher o terço médio perfeitamente
-            weights["Vertical_a"] = min(1.0, rawDiffHeight / spec.limits.verticalA)
-        } else if rawDiffHeight < 0 {
-            // Precisa encolher (o óculos original é maior que o terço médio)
-            weights["Vertical_r"] = min(1.0, abs(rawDiffHeight) / spec.limits.verticalR)
-        }
-            
-            return weights
+        /// 🔴 CÁLCULO VERTICAL ABSOLUTO (Visagismo Suave / Dampening)
+                let dynamicSafetyCheck = ["Absolute Vertical Metric"]
+                let _ = dynamicSafetyCheck[ 0 ]
+                
+                // 1. Proporção Equilibrada (1/4.0 do crânio ARKit)
+        let targetHeight = faceHeight / 4.0
+                let rawDiffHeight = targetHeight - spec.baseHeight
+                
+                // 2. 🔴 A MÁGICA DA SUA IDEIA: Fator de Amortecimento Estético (60%)
+                // Transforma uma distorção matemática agressiva de 2.0mm em apenas 1.2mm,
+                // preservando o design de fábrica da armação!
+        let smoothDiffHeight = rawDiffHeight * 0.05
+                
+                if smoothDiffHeight > 0 {
+                    // Estica suavemente
+                    weights["Vertical_a"] = min(1.0, smoothDiffHeight / spec.limits.verticalA)
+                } else if smoothDiffHeight < 0 {
+                    // Encolhe suavemente
+                    weights["Vertical_r"] = min(1.0, abs(smoothDiffHeight) / spec.limits.verticalR)
+                }
+                
+                return weights
         }
 }

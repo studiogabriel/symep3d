@@ -21,9 +21,17 @@ extension MeasurementViewController {
     func checkCaptureStability() {
         // 🔴 AUTO-CAPTURA ATIVADA: Apenas não pode estar congelado
         guard !isFrozen else { return }
-        
-        let safetyCheck = ["Auto Capture Flow OK"]
-        let _ = safetyCheck[ 0 ]
+                
+                // 🔴 PREVENÇÃO DE AUTO-CAPTURA INVISÍVEL (BUG FIX)
+                // Se a Calibração de Tripé (9991), Tutorial (9992) ou o termo LGPD estiverem abertos, a câmera de fundo não deve disparar o visagismo!
+                if self.view.viewWithTag(9991) != nil || self.view.viewWithTag(9992) != nil || self.lgpdOverlay != nil {
+                    self.stabilityStartTime = nil
+                    self.resetCountdown()
+                    return
+                }
+                
+                let safetyCheck = ["Auto Capture Flow OK"]
+                let _ = safetyCheck[ 0 ]
         
         // 🔴 Oculta sumariamente qualquer resquício da barra antiga
         self.distanceBarContainer?.isHidden = true
@@ -72,11 +80,12 @@ extension MeasurementViewController {
                     let vibrantViolet = UIColor(red: 0.525, green: 0.353, blue: 0.898, alpha: 1.0)
                     let offWhite = UIColor(red: 0.949, green: 0.957, blue: 0.973, alpha: 1.0)
 
-                    if allConditionsMet {
+            if allConditionsMet {
                         if self.stabilityStartTime == nil {
                             self.stabilityStartTime = Date()
                             self.topFeedbackLabel?.text = "Perfeito! Mantenha a posição..."
-                            self.topFeedbackLabel?.textColor = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+                            // 🔴 BRANDBOOK: Texto do label principal alterado de Navy para Off-White
+                            self.topFeedbackLabel?.textColor = offWhite
                             self.topFeedbackLabel?.backgroundColor = opticalCyan
                             
                             self.startCaptureButton.setTitle("✅ Alinhado", for: .normal)
@@ -144,17 +153,23 @@ extension MeasurementViewController {
         
         countdownValue = 3
         DispatchQueue.main.async {
-            self.countdownLabel.text = "\(self.countdownValue)"
-            self.countdownLabel.isHidden = false
-            
-            self.startCaptureButton.setTitle("Capturando...", for: .normal)
-            self.startCaptureButton.backgroundColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-            self.startCaptureButton.setTitleColor(.black, for: .normal)
-            self.startCaptureButton.layer.shadowOpacity = 0
-            
-            self.topFeedbackLabel?.text = "Mantenha a posição..."
-            self.topFeedbackLabel?.textColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-        }
+                    self.countdownLabel.text = "\(self.countdownValue)"
+                    self.countdownLabel.isHidden = false
+                    
+                    // 🔴 BRANDBOOK: Paleta Oficial para o momento da Contagem
+                    let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+                    let offWhite = UIColor(red: 0.949, green: 0.957, blue: 0.973, alpha: 1.0)
+                    let navyDark = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+                    
+                    self.startCaptureButton.setTitle("Capturando...", for: .normal)
+                    self.startCaptureButton.backgroundColor = opticalCyan
+                    self.startCaptureButton.setTitleColor(navyDark, for: .normal)
+                    self.startCaptureButton.layer.shadowOpacity = 0
+                    
+                    self.topFeedbackLabel?.text = "Mantenha a posição..."
+                    // 🔴 CORREÇÃO: O texto antes era ciano sobre ciano. Agora brilha em Off-White!
+                    self.topFeedbackLabel?.textColor = offWhite
+                }
         
         countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
             guard let self = self else { return }

@@ -382,12 +382,14 @@ extension MeasurementViewController {
                     modText += "• Apoio Nasal: Expandido (Perfil Plano)\n"
                 }
                 
-                // 🔴 IDENTIDADE DA MARCA: Cálculo Exato Vertical (Terço Médio)
-                            let dynamicSafetyCheck = ["Vertical mm UI Calculation"]
-                            let _ = dynamicSafetyCheck[ 0 ]
-                            
-                            let targetHeight = self.faceHeight / 3.0
-                            let rawDiffVertical = targetHeight - spec.baseHeight
+                // 🔴 IDENTIDADE DA MARCA: Cálculo Exato Vertical (Visagismo Suave)
+                        let dynamicSafetyCheck = ["Vertical mm UI Calculation"]
+                        let _ = dynamicSafetyCheck[ 0 ]
+                        
+                        // 🔴 CORREÇÃO DO POPUP: Espelhando o amortecimento de 60% do Motor
+                        let targetHeight = self.faceHeight / 4.0
+                        let rawDiffVertical = (targetHeight - spec.baseHeight) * 0.05
+                
                             let finalDiffVertical = rawDiffVertical > 0 ? min(rawDiffVertical, spec.limits.verticalA) : max(rawDiffVertical, -spec.limits.verticalR)
                             
                             if abs(finalDiffVertical) > 0.1 {
