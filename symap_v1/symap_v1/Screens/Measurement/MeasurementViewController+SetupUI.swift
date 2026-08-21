@@ -201,9 +201,11 @@ extension MeasurementViewController {
                 faceGuideLayer.lineDashPattern = dashPattern
                 view.layer.insertSublayer(faceGuideLayer, below: topFeedbackLabel.layer)
                 
+        // 🔴 BRANDBOOK: Borda de inclinação alterada de Laranja para Vibrant Violet Oficial
+                let vibrantViolet = UIColor(red: 0.525, green: 0.353, blue: 0.898, alpha: 1.0)
                 let tripodAlertBorder = UIView(frame: view.bounds)
                 tripodAlertBorder.layer.borderWidth = 8
-                tripodAlertBorder.layer.borderColor = UIColor.systemOrange.cgColor
+                tripodAlertBorder.layer.borderColor = vibrantViolet.cgColor
                 tripodAlertBorder.isUserInteractionEnabled = false
                 tripodAlertBorder.alpha = 0
                 tripodAlertBorder.tag = 881

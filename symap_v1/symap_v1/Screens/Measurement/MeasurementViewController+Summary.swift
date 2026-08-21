@@ -24,9 +24,19 @@ extension MeasurementViewController {
             
             if let bottomStack = view.subviews.first(where: { $0 is UIStackView }) { bottomStack.isHidden = true }
             
+            // 🔴 BRANDBOOK: Injeção das Tintas Oficiais para a Tela de Resumo
+            let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+            let navyDark = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+            let navyMedium = UIColor(red: 0.118, green: 0.227, blue: 0.431, alpha: 1.0)
+            let navyDarkBase = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 0.85)
+            let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
+            let vibrantViolet = UIColor(red: 0.525, green: 0.353, blue: 0.898, alpha: 1.0)
+            let offWhite = UIColor(red: 0.949, green: 0.957, blue: 0.973, alpha: 1.0)
+            
             if summaryContainer == nil {
                 summaryContainer = UIView(frame: view.bounds)
-                summaryContainer.backgroundColor = UIColor(red: 0.07, green: 0.07, blue: 0.08, alpha: 1.0)
+                // Fundo imponente em Navy Oficial
+                summaryContainer.backgroundColor = navyDark
                 view.addSubview(summaryContainer)
             }
             summaryContainer.subviews.forEach { $0.removeFromSuperview() }
@@ -35,18 +45,21 @@ extension MeasurementViewController {
             summaryContainer.alpha = 0
             
             let title = UILabel(frame: CGRect(x: 20, y: 55, width: view.bounds.width - 40, height: 30))
-            title.text = "RESUMO CLÍNICO"
             title.textAlignment = .center
-            title.textColor = .white
-            title.font = UIFont.systemFont(ofSize: 22, weight: .black)
+            title.attributedText = NSAttributedString(string: "RESUMO CLÍNICO", attributes: [
+                .font: UIFont(name: "Inter-Bold", size: 22) ?? UIFont.systemFont(ofSize: 22, weight: .black),
+                .foregroundColor: offWhite,
+                .kern: 1.5
+            ])
             summaryContainer.addSubview(title)
             
             let holoView = SCNView(frame: CGRect(x: 40, y: 95, width: view.bounds.width - 80, height: 230))
-            holoView.backgroundColor = UIColor(white: 0.05, alpha: 1.0)
+            // Glassmorphism suave com fundo Navy translúcido no box 3D
+            holoView.backgroundColor = navyDarkBase
             holoView.layer.cornerRadius = 16
             holoView.clipsToBounds = true
-            holoView.layer.borderWidth = 2
-            holoView.layer.borderColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 0.3).cgColor
+            holoView.layer.borderWidth = 1.5
+            holoView.layer.borderColor = opticalCyan.withAlphaComponent(0.3).cgColor
             holoView.autoenablesDefaultLighting = true
             holoView.allowsCameraControl = true
             holoView.isPlaying = true
@@ -64,7 +77,7 @@ extension MeasurementViewController {
                     if let oldGeo = maskClone.geometry {
                         let newGeo = oldGeo.copy() as! SCNGeometry
                         let holoMaterial = SCNMaterial()
-                        holoMaterial.diffuse.contents = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 0.8)
+                        holoMaterial.diffuse.contents = opticalCyan.withAlphaComponent(0.8)
                         holoMaterial.fillMode = .lines
                         holoMaterial.lightingModel = .constant
                         holoMaterial.isDoubleSided = true
@@ -76,17 +89,14 @@ extension MeasurementViewController {
                     presentationNode.addChildNode(maskClone)
                 }
                 
-                // 1. EXTRAÇÃO BLINDADA DO ÓCULOS (Baking)
+                // 1. EXTRAÇÃO BLINDADA DO ÓCULOS (Baking de Geometria)
                 if let customGlasses = originalFace.childNodes.first(where: { $0.name == "customGlasses" }) {
-                    // 🔴 CURA DEFINITIVA DO METAL: flattenedClone()
-                    // Isso "assa" (bakes) as Shape Keys e a Geometria num objeto estático único.
-                    // Destrói o Morpher e cria vértices limpos. Acaba com o esmagamento de vez!
                     let bakedGlasses = customGlasses.flattenedClone()
                     bakedGlasses.name = "customGlasses"
                     bakedGlasses.isHidden = false
                     presentationNode.addChildNode(bakedGlasses)
                     
-                    // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
+                    // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL (Índice Seguro)
                     let metalValidation = ["Baked Geometry OK"]
                     let _ = metalValidation[ 0 ]
                 }
@@ -95,12 +105,10 @@ extension MeasurementViewController {
             presentationNode.position = SCNVector3(0, 0, 0)
             holoScene.rootNode.addChildNode(presentationNode)
             
-            // 🔴 CURA DA LENTE E DA PERSPECTIVA
+            // 🔴 CURA DA LENTE E DA PERSPECTIVA (Câmera Retrato)
             let cameraNode = SCNNode()
             let camera = SCNCamera()
             camera.zNear = 0.01
-            
-            // FOV Baixo para achatar a imagem (Lente de Estúdio 12°)
             camera.usesOrthographicProjection = false
             camera.fieldOfView = 12
             
@@ -110,24 +118,32 @@ extension MeasurementViewController {
             
             summaryContainer.addSubview(holoView)
             
-            // 🔴 MAGICA DO EIXO CENTRAL RESPONDENDO À SUA OBSERVAÇÃO
-            // Dizemos para a câmera do usuário orbitar DENTRO da cabeça (-0.06m) e não na ponta do nariz!
+            // 🔴 AJUSTE DE ÓRBITA DA CÂMERA
             holoView.defaultCameraController.target = SCNVector3(0, 0, -0.06)
             
             let techDesc = UILabel(frame: CGRect(x: 20, y: 325, width: view.bounds.width - 40, height: 110))
             techDesc.numberOfLines = 0
             techDesc.textAlignment = .center
-            techDesc.font = UIFont.systemFont(ofSize: 10, weight: .medium)
-            techDesc.textColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-            techDesc.text = "GÊMEO DIGITAL BIOMÉTRICO (IA)\nO holograma acima não é uma foto, é a reconstrução volumétrica exata da sua face gerada por infravermelhos. Com 100% de precisão matemática, nós eliminamos o erro humano na medição das suas lentes.\n\n COMO MANIPULAR O SEU ROSTO 3D:\n Rotacionar: Arraste com 1 dedo. |  Zoom: Pinça com 2 dedos.\n Mover: Arraste com 2 dedos juntos na tela."
+            techDesc.textColor = opticalCyan
+            
+            let descText = "GÊMEO DIGITAL BIOMÉTRICO (IA)\nO holograma acima é a reconstrução volumétrica exata da sua face gerada por infravermelhos. Com precisão matemática, eliminamos o erro na medição das suas lentes.\n\nCOMO MANIPULAR O SEU ROSTO 3D:\nRotacionar: Arraste com 1 dedo. | Zoom: Pinça com 2 dedos.\nMover: Arraste com 2 dedos juntos na tela."
+            
+            let descParagraph = NSMutableParagraphStyle()
+            descParagraph.lineSpacing = 3
+            descParagraph.alignment = .center
+            techDesc.attributedText = NSAttributedString(string: descText, attributes: [
+                .font: UIFont(name: "Inter-Medium", size: 10) ?? UIFont.systemFont(ofSize: 10, weight: .medium),
+                .paragraphStyle: descParagraph
+            ])
             summaryContainer.addSubview(techDesc)
             
-            let info = UITextView(frame: CGRect(x: 30, y: 440, width: view.bounds.width - 60, height: view.bounds.height - 600))
+            let info = UITextView(frame: CGRect(x: 30, y: 440, width: view.bounds.width - 60, height: view.bounds.height - 610))
             info.backgroundColor = .clear
-            info.textColor = .lightGray
-            info.font = UIFont.systemFont(ofSize: 13)
             info.isEditable = false
-            info.text = """
+            info.showsVerticalScrollIndicator = false
+            
+            // 🔴 DESIGN: Formatação Avançada do Prontuário Clínico em Atributos (Inter)
+            let rawInfoText = """
             👤 Paciente: \(self.patientName)
             👓 Lente: \(self.selectedLensType)
             📏 DNP Total: \(self.f(self.dnpTotal)) mm | Ponte: \(self.f(self.noseBridgeWidth)) mm
@@ -141,38 +157,63 @@ extension MeasurementViewController {
             - Comportamento Visual IA:
             \(self.visionBehaviorResult)
             """
+            
+            let infoParagraph = NSMutableParagraphStyle()
+            infoParagraph.lineSpacing = 5
+            
+            let infoAttributed = NSMutableAttributedString(string: rawInfoText, attributes: [
+                .font: UIFont(name: "Inter-Medium", size: 13) ?? UIFont.systemFont(ofSize: 13, weight: .medium),
+                .foregroundColor: slateColor,
+                .paragraphStyle: infoParagraph
+            ])
+            
+            // Destaque de cor no nome do paciente e nos títulos numéricos
+            let nsText = rawInfoText as NSString
+            let highlightRanges = [
+                nsText.range(of: "👤 Paciente: \(self.patientName)"),
+                nsText.range(of: "👓 Lente: \(self.selectedLensType)")
+            ]
+            for range in highlightRanges {
+                if range.location != NSNotFound {
+                    infoAttributed.addAttribute(.foregroundColor, value: offWhite, range: range)
+                    infoAttributed.addAttribute(.font, value: UIFont(name: "Inter-Bold", size: 13) ?? UIFont.boldSystemFont(ofSize: 13), range: range)
+                }
+            }
+            
+            info.attributedText = infoAttributed
             summaryContainer.addSubview(info)
             
             let btnPDF = UIButton()
-            btnPDF.backgroundColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
+            btnPDF.backgroundColor = opticalCyan
             btnPDF.setTitle("Gerar Laudo PDF", for: .normal)
-            btnPDF.setTitleColor(.black, for: .normal)
-            btnPDF.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-            btnPDF.layer.cornerRadius = 12
+            btnPDF.setTitleColor(navyDark, for: .normal)
+            btnPDF.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+            btnPDF.layer.cornerRadius = 16
+            btnPDF.layer.shadowOpacity = 0 // Regra 8 do Brandbook: Sem efeitos tridimensionais ou sombras!
             btnPDF.addTarget(self, action: #selector(executePDFGeneration), for: .touchUpInside)
             
             let btnReset = UIButton()
-            btnReset.backgroundColor = UIColor(white: 0.2, alpha: 0.9)
+            btnReset.backgroundColor = navyMedium.withAlphaComponent(0.4)
             btnReset.setTitle("Refazer", for: .normal)
-            btnReset.setTitleColor(.white, for: .normal)
-            btnReset.titleLabel?.font = UIFont.boldSystemFont(ofSize: 13)
-            btnReset.layer.cornerRadius = 10
+            btnReset.setTitleColor(offWhite, for: .normal)
+            btnReset.titleLabel?.font = UIFont(name: "Inter-Bold", size: 13) ?? UIFont.boldSystemFont(ofSize: 13)
+            btnReset.layer.cornerRadius = 12
             btnReset.addTarget(self, action: #selector(resetToStartMeasure), for: .touchUpInside)
             
             let btnHome = UIButton()
-            btnHome.backgroundColor = UIColor(white: 0.2, alpha: 0.9)
+            btnHome.backgroundColor = navyMedium.withAlphaComponent(0.4)
             btnHome.setTitle("Painel", for: .normal)
-            btnHome.setTitleColor(.white, for: .normal)
-            btnHome.titleLabel?.font = UIFont.boldSystemFont(ofSize: 13)
-            btnHome.layer.cornerRadius = 10
+            btnHome.setTitleColor(offWhite, for: .normal)
+            btnHome.titleLabel?.font = UIFont(name: "Inter-Bold", size: 13) ?? UIFont.boldSystemFont(ofSize: 13)
+            btnHome.layer.cornerRadius = 12
             btnHome.addTarget(self, action: #selector(returnToTriagem), for: .touchUpInside)
             
             let btnExit = UIButton()
-            btnExit.backgroundColor = UIColor(white: 0.2, alpha: 0.9)
+            btnExit.backgroundColor = navyMedium.withAlphaComponent(0.4)
             btnExit.setTitle("Encerrar", for: .normal)
-            btnExit.setTitleColor(.white, for: .normal)
-            btnExit.titleLabel?.font = UIFont.boldSystemFont(ofSize: 13)
-            btnExit.layer.cornerRadius = 10
+            btnExit.setTitleColor(offWhite, for: .normal)
+            btnExit.titleLabel?.font = UIFont(name: "Inter-Bold", size: 13) ?? UIFont.boldSystemFont(ofSize: 13)
+            btnExit.layer.cornerRadius = 12
             btnExit.addTarget(self, action: #selector(exitAppFully), for: .touchUpInside)
             
             let bottomStack = UIStackView(arrangedSubviews: [btnReset, btnHome, btnExit])
@@ -180,13 +221,14 @@ extension MeasurementViewController {
             bottomStack.spacing = 10
             bottomStack.distribution = .fillEqually
             
-            // 🔴 NOVO: BOTÃO DE EXPORTAÇÃO (Substituindo o antigo menu manual)
+            // 🔴 BRANDBOOK: Botão de Exportação 3D em Vibrant Violet com texto Off-White
             let btnExport3D = UIButton()
-            btnExport3D.backgroundColor = UIColor.systemPurple
+            btnExport3D.backgroundColor = vibrantViolet
             btnExport3D.setTitle("📥 Exportar Armação Personalizada", for: .normal)
-            btnExport3D.setTitleColor(.white, for: .normal)
-            btnExport3D.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-            btnExport3D.layer.cornerRadius = 12
+            btnExport3D.setTitleColor(offWhite, for: .normal)
+            btnExport3D.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+            btnExport3D.layer.cornerRadius = 16
+            btnExport3D.layer.shadowOpacity = 0 // Regra 8 do Brandbook: Sem sombras!
             btnExport3D.addTarget(self, action: #selector(exportCustomGlasses), for: .touchUpInside)
             
             let masterStack = UIStackView(arrangedSubviews: [btnExport3D, btnPDF, bottomStack])
@@ -197,6 +239,10 @@ extension MeasurementViewController {
             summaryContainer.addSubview(masterStack)
             
             UIView.animate(withDuration: 0.3) { self.summaryContainer.alpha = 1.0 }
+            
+            // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL (Índice Seguro)
+            let layoutValidation = ["Summary Design Master OK"]
+            let _ = layoutValidation[ 0 ]
         }
     
     // =========================================================================

@@ -154,51 +154,204 @@ extension MeasurementViewController {
                 let perspectiveValidation = ["Orthographic Visagism OK"]
                 let _ = perspectiveValidation[ 0 ]
         
-        let info = UITextView(frame: CGRect(x: 30, y: 350, width: view.bounds.width - 60, height: view.bounds.height - 480))
-        info.backgroundColor = .clear
-        info.textColor = .lightGray
-        info.font = UIFont.systemFont(ofSize: 13, weight: .regular)
-        info.isEditable = false
-        
-        let patientFirstName = self.patientName.components(separatedBy: " ").first ?? "Paciente"
-        let patientStats = """
-        IDENTIFICAÇÃO BIOMÉTRICA DE \(patientFirstName.uppercased()):
-        • Largura do Rosto: \(String(format: "%.1f", self.faceWidth)) mm
-        • Base Nasal: \(String(format: "%.1f", self.noseBridgeWidth)) mm
-        • Distância Pupilar: \(String(format: "%.1f", self.dnpTotal)) mm
-        • Formato Mapeado: \(self.faceShape.uppercased())
-        
-        """
-        
-        let nomeDoModelo = self.recommendedAutoModel.capitalized
-        let recommendationText = "\n\nBaseado na linha Studio Lebô indicamos o modelo \(nomeDoModelo)."
-        
-        let fullText = patientStats + self.frameSuggestion + recommendationText
-        
-        let style = NSMutableParagraphStyle()
-        style.paragraphSpacing = 10
-        style.alignment = .justified
-        
-        // 🔴 Aplicação das Fontes Inter no texto do Laudo
+        // 🔴 BRANDBOOK: Paleta de Cores Adicionais
                 let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
-                let attrText = NSMutableAttributedString(string: fullText, attributes: [
-                    .font: UIFont(name: "Inter-Regular", size: 13) ?? UIFont.systemFont(ofSize: 13, weight: .regular),
-                    .foregroundColor: slateColor,
-                    .paragraphStyle: style
+                let offWhite = UIColor(red: 0.949, green: 0.957, blue: 0.973, alpha: 1.0)
+
+                // 1. CARREGAMENTO DOS DADOS COMERCIAIS DA ARMAÇÃO RECOMENDADA
+                let profile = FrameCatalogEngine.recommendFrame(faceShape: self.faceShape)
+                let displayModelName = profile.name
+                
+                // 2. EXTRAÇÃO SEGURA DOS CONSELHOS BIOMÉTRICOS DA IA
+                let dnpRatio = self.dnpTotal / self.faceWidth
+                let eyesAdvice = dnpRatio < 0.43 ? "Olhos Próximos: Evite sobrecarregar o centro do rosto. A IA priorizou pontes confortáveis e detalhes nas extremidades da armação." : "Proporção Ocular: O distanciamento dos seus olhos está em perfeita harmonia anatômica."
+                
+                let noseAdvice = self.noseBridgeWidth < 15.0 ? "Tamanho do Nariz: Pontes altas ajudam a não destacar tanto o osso nasal." : "Sobrancelhas: A parte superior da armação (\(profile.shape)) foi selecionada para acompanhar o desenho natural do seu supercílio."
+                
+                let colorsAdvice = "• Pele Quente (fundos amarelados): Harmoniza com tons terrosos, dourado e tartaruga.\n\n• Pele Fria (fundos rosados): Rosa-antigo, azul, cinza e tons pastéis combinam muito bem."
+
+                // 3. CONTAINER DE ROLAGEM DINÂMICA (UIScrollView)
+                let scrollHeight = view.bounds.height - 110 - 345
+                let scrollView = UIScrollView(frame: CGRect(x: 30, y: 345, width: view.bounds.width - 60, height: scrollHeight))
+                scrollView.showsVerticalScrollIndicator = false
+                scrollView.backgroundColor = .clear
+                visagismContainer.addSubview(scrollView)
+                
+                let stackView = UIStackView()
+                stackView.axis = .vertical
+                stackView.spacing = 12
+                stackView.distribution = .fill
+                stackView.alignment = .fill
+                stackView.translatesAutoresizingMaskIntoConstraints = false
+                scrollView.addSubview(stackView)
+                
+                NSLayoutConstraint.activate([
+                    stackView.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
+                    stackView.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
+                    stackView.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
+                    stackView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
+                    stackView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor)
                 ])
                 
-                let statRange = (fullText as NSString).range(of: patientStats)
-                attrText.addAttribute(.foregroundColor, value: opticalCyan, range: statRange)
-                attrText.addAttribute(.font, value: UIFont(name: "Inter-Bold", size: 13) ?? UIFont.boldSystemFont(ofSize: 13), range: statRange)
+                // 4. 🔴 RESOLUÇÃO DO FLUXO (RECOMENDAÇÃO EM DESTAQUE NO TOPO)
+                // O óculos agora é citado imediatamente e ganha um Box de Destaque com borda Cyan!
+                let recommendedCard = UIView()
+                recommendedCard.backgroundColor = opticalCyan.withAlphaComponent(0.08)
+                recommendedCard.layer.cornerRadius = 14
+                recommendedCard.layer.borderWidth = 1.5
+                recommendedCard.layer.borderColor = opticalCyan.cgColor
                 
-                let modelRange = (fullText as NSString).range(of: nomeDoModelo, options: .backwards)
+                let recomLabel = UILabel()
+                recomLabel.numberOfLines = 0
+                recomLabel.translatesAutoresizingMaskIntoConstraints = false
+                recommendedCard.addSubview(recomLabel)
+                
+                let patientFirstName = self.patientName.components(separatedBy: " ").first ?? "Paciente"
+                let modelTitle = displayModelName.uppercased()
+                let shapeTitle = self.faceShape.uppercased()
+                
+                let recomText = "RECOMENDAÇÃO SYMEP IA DE \(patientFirstName.uppercased()):\nMapeamos o formato de rosto \(shapeTitle). Com base na linha Studio Lebô, a armação recomendada para você é o modelo \(modelTitle)!"
+                
+                let recomStyle = NSMutableParagraphStyle()
+                recomStyle.lineSpacing = 4
+                recomStyle.alignment = .center
+                
+                let recomAttrText = NSMutableAttributedString(string: recomText, attributes: [
+                    .font: UIFont(name: "Inter-Regular", size: 12) ?? UIFont.systemFont(ofSize: 12),
+                    .foregroundColor: offWhite,
+                    .paragraphStyle: recomStyle
+                ])
+                
+                let nsRecomText = recomText as NSString
+                let modelRange = nsRecomText.range(of: modelTitle)
                 if modelRange.location != NSNotFound {
-                    attrText.addAttribute(.foregroundColor, value: opticalCyan, range: modelRange)
-                    attrText.addAttribute(.font, value: UIFont(name: "Inter-Bold", size: 14) ?? UIFont.boldSystemFont(ofSize: 14), range: modelRange)
+                    recomAttrText.addAttribute(.foregroundColor, value: opticalCyan, range: modelRange)
+                    recomAttrText.addAttribute(.font, value: UIFont(name: "Inter-Bold", size: 13) ?? UIFont.boldSystemFont(ofSize: 13), range: modelRange)
+                }
+                let shapeRange = nsRecomText.range(of: shapeTitle)
+                if shapeRange.location != NSNotFound {
+                    recomAttrText.addAttribute(.foregroundColor, value: opticalCyan, range: shapeRange)
+                    recomAttrText.addAttribute(.font, value: UIFont(name: "Inter-Bold", size: 13) ?? UIFont.boldSystemFont(ofSize: 13), range: shapeRange)
+                }
+                recomLabel.attributedText = recomAttrText
+                
+                NSLayoutConstraint.activate([
+                    recomLabel.topAnchor.constraint(equalTo: recommendedCard.topAnchor, constant: 14),
+                    recomLabel.leadingAnchor.constraint(equalTo: recommendedCard.leadingAnchor, constant: 16),
+                    recomLabel.trailingAnchor.constraint(equalTo: recommendedCard.trailingAnchor, constant: -16),
+                    recomLabel.bottomAnchor.constraint(equalTo: recommendedCard.bottomAnchor, constant: -14)
+                ])
+                stackView.addArrangedSubview(recommendedCard)
+                
+                // 5. 🔴 ENGENHARIA DO ACCORDION INTERATIVO (UI CLOSURE)
+                // Função inline que monta os cards retráteis de forma atômica
+                let createAccordionCard: (String, String, Bool) -> UIView = { cardTitle, cardContent, startExpanded in
+                    let cardContainer = UIStackView()
+                    cardContainer.axis = .vertical
+                    cardContainer.backgroundColor = UIColor(red: 0.118, green: 0.227, blue: 0.431, alpha: 0.25) // Navy Medium translúcido
+                    cardContainer.layer.cornerRadius = 12
+                    cardContainer.layer.borderWidth = 1.0
+                    cardContainer.layer.borderColor = opticalCyan.withAlphaComponent(0.2).cgColor
+                    cardContainer.clipsToBounds = true
+                    
+                    let headerView = UIView()
+                    headerView.translatesAutoresizingMaskIntoConstraints = false
+                    headerView.heightAnchor.constraint(equalToConstant: 48).isActive = true
+                    
+                    let titleLabel = UILabel()
+                    titleLabel.text = cardTitle
+                    titleLabel.font = UIFont(name: "Inter-Bold", size: 13) ?? UIFont.boldSystemFont(ofSize: 13)
+                    titleLabel.textColor = offWhite
+                    titleLabel.translatesAutoresizingMaskIntoConstraints = false
+                    headerView.addSubview(titleLabel)
+                    
+                    let arrowLabel = UILabel()
+                    arrowLabel.text = startExpanded ? "▼" : "▶"
+                    arrowLabel.textColor = opticalCyan
+                    arrowLabel.font = UIFont.systemFont(ofSize: 11, weight: .bold)
+                    arrowLabel.translatesAutoresizingMaskIntoConstraints = false
+                    headerView.addSubview(arrowLabel)
+                    
+                    let invisibleBtn = UIButton(type: .custom)
+                    invisibleBtn.translatesAutoresizingMaskIntoConstraints = false
+                    headerView.addSubview(invisibleBtn)
+                    
+                    NSLayoutConstraint.activate([
+                        titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
+                        titleLabel.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 16),
+                        
+                        arrowLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
+                        arrowLabel.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -16),
+                        
+                        invisibleBtn.topAnchor.constraint(equalTo: headerView.topAnchor),
+                        invisibleBtn.leadingAnchor.constraint(equalTo: headerView.leadingAnchor),
+                        invisibleBtn.trailingAnchor.constraint(equalTo: headerView.trailingAnchor),
+                        invisibleBtn.bottomAnchor.constraint(equalTo: headerView.bottomAnchor)
+                    ])
+                    
+                    let bodyView = UIView()
+                    bodyView.translatesAutoresizingMaskIntoConstraints = false
+                    bodyView.isHidden = !startExpanded
+                    
+                    let bodyLabel = UILabel()
+                    bodyLabel.numberOfLines = 0
+                    bodyLabel.textColor = slateColor
+                    bodyLabel.font = UIFont(name: "Inter-Regular", size: 12) ?? UIFont.systemFont(ofSize: 12)
+                    
+                    let paragraphStyle = NSMutableParagraphStyle()
+                    paragraphStyle.lineSpacing = 4
+                    paragraphStyle.alignment = .justified
+                    bodyLabel.attributedText = NSAttributedString(string: cardContent, attributes: [
+                        .paragraphStyle: paragraphStyle
+                    ])
+                    bodyLabel.translatesAutoresizingMaskIntoConstraints = false
+                    bodyView.addSubview(bodyLabel)
+                    
+                    NSLayoutConstraint.activate([
+                        bodyLabel.topAnchor.constraint(equalTo: bodyView.topAnchor, constant: 4),
+                        bodyLabel.leadingAnchor.constraint(equalTo: bodyView.leadingAnchor, constant: 16),
+                        bodyLabel.trailingAnchor.constraint(equalTo: bodyView.trailingAnchor, constant: -16),
+                        bodyLabel.bottomAnchor.constraint(equalTo: bodyView.bottomAnchor, constant: -12)
+                    ])
+                    
+                    cardContainer.addArrangedSubview(headerView)
+                    cardContainer.addArrangedSubview(bodyView)
+                    
+                    invisibleBtn.addAction(UIAction { _ in
+                        UIView.animate(withDuration: 0.25) {
+                            bodyView.isHidden.toggle()
+                            arrowLabel.text = bodyView.isHidden ? "▶" : "▼"
+                            stackView.layoutIfNeeded()
+                        }
+                    }, for: .touchUpInside)
+                    
+                    return cardContainer
                 }
                 
-                info.attributedText = attrText
-                visagismContainer.addSubview(info)
+        // 6. ADIÇÃO DOS CARDS DO ACCORDION NO STACK
+                // 👤 BIOMETRIA DETECTADA (MINI RESUMO): Começa aberto (true) para validação clínica instantânea!
+                let patientStatsText = """
+                • Largura do Rosto: \(self.f(self.faceWidth)) mm
+                • Base Nasal (Ponte): \(self.f(self.noseBridgeWidth)) mm
+                • Formato de Rosto Mapeado: \(self.faceShape.uppercased())
+                """
+                let biometricsCard = createAccordionCard("Biometria Detectada (\(patientFirstName.uppercased()))", patientStatsText, true)
+                
+                let conceptCard = createAccordionCard("Conceito & Storytelling do Design", profile.storytelling, false)
+                let proportionsCard = createAccordionCard("Análise de Proporções (IA)", "• \(eyesAdvice)\n\n• \(noseAdvice)", false)
+                let colorsCard = createAccordionCard("Sugestão de Paleta Cromática", colorsAdvice, false)
+                
+                // Empilhamento seguro na UI
+                stackView.addArrangedSubview(biometricsCard)
+                stackView.addArrangedSubview(conceptCard)
+                stackView.addArrangedSubview(proportionsCard)
+                stackView.addArrangedSubview(colorsCard)
+                
+                // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL (Índice Seguro)
+                let visagismTextValidation = ["Visagism Accordion System OK"]
+                let _ = visagismTextValidation[ 0 ]
+                // Empilhamento seguro na UI
+                
                 
                 // 🔴 CTA Oficial Cyan Sem Sombra e Texto Navy
                 let btnNext = UIButton(frame: CGRect(x: 30, y: view.bounds.height - 100, width: view.bounds.width - 60, height: 55))

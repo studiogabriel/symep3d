@@ -49,53 +49,59 @@ extension MeasurementViewController {
     }
     
     func updatePhoneHorizonUI(roll: Double, pitch: Double, yaw: Double) {
-        if let calibView = self.view.viewWithTag(9991) as? TripodCalibrationView {
-            calibView.updateSensors(roll: roll, pitch: pitch, yaw: yaw)
-            return
-        }
-        
-        let rollThreshold = 0.02
-        let pitchThreshold = 0.04
-        
-        self.isPhoneLevel = abs(roll) < rollThreshold
-        self.isPhonePitchLevel = abs(pitch) < pitchThreshold
-        
-        let isAligned = self.isPhoneLevel && self.isPhonePitchLevel
-        let isTutorialActive = self.view.viewWithTag(9992) != nil
-        let isLGPDActive = self.lgpdOverlay != nil
-        
-        DispatchQueue.main.async {
-            if let alertBorder = self.view.viewWithTag(881), let calibrateBtn = self.view.viewWithTag(880) as? UIButton {
-                if !isAligned && !self.isFrozen && !isTutorialActive && !isLGPDActive {
-                    self.view.bringSubviewToFront(alertBorder)
-                    self.view.bringSubviewToFront(self.topFeedbackLabel!)
-                    
-                    UIView.animate(withDuration: 0.2) {
-                        alertBorder.alpha = 1.0
-                        calibrateBtn.tintColor = UIColor.systemOrange.withAlphaComponent(0.9)
-                        calibrateBtn.layer.borderColor = UIColor.systemOrange.withAlphaComponent(0.5).cgColor
-                        self.topFeedbackLabel?.backgroundColor = UIColor.systemOrange
-                        self.topFeedbackLabel?.textColor = .white
-                        self.topFeedbackLabel?.text = "Ajuste a inclinação\ndo aparelho"
-                    }
-                } else {
-                    UIView.animate(withDuration: 0.2) {
-                        alertBorder.alpha = 0.0
-                        calibrateBtn.tintColor = .lightGray
-                        calibrateBtn.layer.borderColor = UIColor.lightGray.withAlphaComponent(0.5).cgColor
+            // 1. LIMITES DO BRANDBOOK E PALETA DE CORES
+            let rollThreshold = 0.02
+            let pitchThreshold = 0.04
+            let vibrantViolet = UIColor(red: 0.525, green: 0.353, blue: 0.898, alpha: 1.0)
+            
+            // 2. SINCRONIA CONTÍNUA: Atualiza os estados em tempo real mesmo com a calibração aberta!
+            self.isPhoneLevel = abs(roll) < rollThreshold
+            self.isPhonePitchLevel = abs(pitch) < pitchThreshold
+            
+            let isAligned = self.isPhoneLevel && self.isPhonePitchLevel
+            let isCalibActive = self.view.viewWithTag(9991) != nil
+            let isTutorialActive = self.view.viewWithTag(9992) != nil
+            let isLGPDActive = self.lgpdOverlay != nil
+            
+            // 3. ENVIO DE TELEMETRIA: Atualiza dinamicamente o popup se ele estiver na tela
+            if let calibView = self.view.viewWithTag(9991) as? TripodCalibrationView {
+                calibView.updateSensors(roll: roll, pitch: pitch, yaw: yaw)
+            }
+            
+            DispatchQueue.main.async {
+                if let alertBorder = self.view.viewWithTag(881), let calibrateBtn = self.view.viewWithTag(880) as? UIButton {
+                    // 🔴 SOLUÇÃO: Se a Calibração, o Tutorial ou a LGPD estiverem abertos, ocultamos forçadamente as indicações de fundo!
+                    if !isAligned && !self.isFrozen && !isTutorialActive && !isLGPDActive && !isCalibActive {
+                        self.view.bringSubviewToFront(alertBorder)
+                        self.view.bringSubviewToFront(self.topFeedbackLabel!)
                         
-                        if self.topFeedbackLabel?.backgroundColor == UIColor.systemOrange {
-                            self.topFeedbackLabel?.backgroundColor = UIColor.black.withAlphaComponent(0.75)
-                            self.topFeedbackLabel?.textColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
-                            self.topFeedbackLabel?.text = "Posicione o rosto na marcação"
+                        UIView.animate(withDuration: 0.2) {
+                            alertBorder.alpha = 1.0
+                            // 🔴 BRANDBOOK: Elementos de inclinação pintados com Vibrant Violet
+                            calibrateBtn.tintColor = vibrantViolet.withAlphaComponent(0.9)
+                            calibrateBtn.layer.borderColor = vibrantViolet.withAlphaComponent(0.5).cgColor
+                            self.topFeedbackLabel?.backgroundColor = vibrantViolet
+                            self.topFeedbackLabel?.textColor = .white
+                            self.topFeedbackLabel?.text = "Ajuste a inclinação\ndo aparelho"
+                        }
+                    } else {
+                        // Ocultação suave quando alinhado ou quando houver modal contextual
+                        UIView.animate(withDuration: 0.2) {
+                            alertBorder.alpha = 0.0
+                            calibrateBtn.tintColor = .lightGray
+                            calibrateBtn.layer.borderColor = UIColor.lightGray.withAlphaComponent(0.5).cgColor
+                            
+                            if self.topFeedbackLabel?.backgroundColor == vibrantViolet {
+                                self.topFeedbackLabel?.backgroundColor = UIColor.black.withAlphaComponent(0.75)
+                                self.topFeedbackLabel?.textColor = UIColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0)
+                                self.topFeedbackLabel?.text = "Posicione o rosto na marcação"
+                            }
                         }
                     }
                 }
             }
+            self.updateCentralSyncCore()
         }
-        
-        self.updateCentralSyncCore()
-    }
     
     func updateHeadHorizonUI(roll: Float, pitch: Float, yaw: Float) {
         let rollThresh: Float = 0.08

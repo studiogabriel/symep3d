@@ -1,0 +1,7 @@
+# macOS
+.DS_Store
+*.textClipping
+
+# Xcode user state
+*.xcuserstate
+xcuserdata/
