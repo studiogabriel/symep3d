@@ -179,8 +179,9 @@ extension MeasurementViewController {
                     self.nasalProfile = fg.nasalProfile
                     self.nasalProjection = (self.nasalProjection * (1 - alpha)) + (fg.nasalProjection * alpha)
                     if fg.jawValid { self.jawWidth = (self.jawWidth * (1 - alpha)) + (fg.jawWidth * alpha) }
+                    if fg.cheekboneValid { self.cheekboneWidth = (self.cheekboneWidth * (1 - alpha)) + (fg.cheekboneWidth * alpha) }
 
-                    let visagisme = BiometryEngine.analyzeVisagisme(width: self.faceWidth, height: self.faceHeight, bridge: self.noseBridgeWidth, jaw: self.jawWidth, dnpTotal: self.dnpTotal)
+                    let visagisme = BiometryEngine.analyzeVisagisme(width: self.faceWidth, height: self.faceHeight, bridge: self.noseBridgeWidth, jaw: self.jawWidth, dnpTotal: self.dnpTotal, cheekbone: self.cheekboneWidth, cheekboneValid: fg.cheekboneValid, nasalProjection: self.nasalProjection)
                     self.faceShape = visagisme.faceShape
                     self.frameSuggestion = visagisme.frameSuggestion
                     self.recommendedAutoModel = visagisme.recommendedModel

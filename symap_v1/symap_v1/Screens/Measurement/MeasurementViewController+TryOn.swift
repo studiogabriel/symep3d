@@ -73,7 +73,8 @@ extension MeasurementViewController {
                 faceWidth: self.faceWidth,
                 faceHeight: self.faceHeight,
                 bridgeWidth: self.noseBridgeWidth,
-                nasalProjection: self.nasalProjection
+                nasalProjection: self.nasalProjection,
+                jawWidth: self.jawWidth
             )
 
             if !bypassWarning {
@@ -523,6 +524,7 @@ extension MeasurementViewController {
                     faceHeight: self.faceHeight, // 🔴 INJETANDO A ALTURA
                     bridgeWidth: self.noseBridgeWidth,
             nasalProjection: self.nasalProjection,
+            jawWidth: self.jawWidth,
             faceShape: self.faceShape
         )
         

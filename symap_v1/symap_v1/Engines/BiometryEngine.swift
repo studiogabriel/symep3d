@@ -38,6 +38,8 @@ enum BiometryEngine {
         let nasalProjection: Float
         let jawWidth: Float
         let jawValid: Bool
+        let cheekboneWidth: Float
+        let cheekboneValid: Bool
         let faceHeight: Float
     }
     
@@ -131,31 +133,51 @@ enum BiometryEngine {
         
         return (dnpEsq, dnpDir, dnpTotal, verticalDiff, dnpPertoEsq, dnpPertoDir, dnpPertoTotal)
     }
-    
+
+    // MARK: - Assimetria facial
+    /// A armação hoje só tem ajuste de largura simétrico (Largura_a/Largura_r) — não existe shape
+    /// key esquerda/direita separada. Isso não corrige o encaixe, só avisa quando a diferença lateral
+    /// é grande o bastante pra a armação tender a ficar mais apertada de um lado e girar/escorregar
+    /// pro lado mais largo. Mesmo limiar (1.5mm) já usado em MeasurementRepository.
+    static func facialAsymmetryWarning(faceWidthLeft: Float, faceWidthRight: Float, threshold: Float = 1.5) -> String? {
+        let diff = abs(faceWidthLeft - faceWidthRight)
+        guard diff > threshold else { return nil }
+        let biggerSide = faceWidthLeft > faceWidthRight ? "esquerdo" : "direito"
+        return "Seu rosto tem uma leve assimetria (lado \(biggerSide) \(fmt(diff))mm mais largo) — o ajuste automático é simétrico, pode precisar de um acerto manual fino."
+    }
+
     //  MARK: - Visagismo
         private static func fmt(_ value: Float) -> String { return String(format: "%.1f", value) }
         
-    static func analyzeVisagisme(width: Float, height: Float, bridge: Float, jaw: Float, dnpTotal: Float) -> (faceShape: String, frameSuggestion: String, recommendedModel: String) {
+    static func analyzeVisagisme(width: Float, height: Float, bridge: Float, jaw: Float, dnpTotal: Float, cheekbone: Float = 0, cheekboneValid: Bool = false, nasalProjection: Float = 0) -> (faceShape: String, frameSuggestion: String, recommendedModel: String) {
             let ratio = height / width
             let dnpRatio = dnpTotal / width
             var shape = ""
             var recommendedModel = ""
-            
+
+            // 🔴 Tríade clássica de visagismo (testa/têmpora × maçã do rosto × mandíbula) em vez
+            // de só 2 medidas. `width` já funciona como proxy de testa/têmpora (é amostrado logo
+            // acima da linha dos olhos). O que faltava era a maçã do rosto — sem ela, a checagem
+            // de "queixo estreito" comparava a mandíbula com a testa, que é o ponto anatômico
+            // errado; o correto é comparar com o ponto mais largo real do rosto (a maçã).
+            let widestPoint = (cheekboneValid && cheekbone > jaw) ? cheekbone : width
+            let jawRatio = jaw / widestPoint
+
             // 1. CÁLCULO MATEMÁTICO DO FORMATO DO ROSTO
             if ratio > 1.35 {
                 shape = "Longo / Retangular"
             } else if ratio < 1.15 {
                 shape = "Redondo / Curto"
-            } else if jaw < (width * 0.85) {
+            } else if jawRatio < 0.85 {
                 shape = "Coração / Triangular"
             } else {
                 shape = "Oval"
             }
-            
+
             // 🔴 2. A MÁGICA: A IA agora consulta o seu novo Catálogo de História e Marketing!
             let recommendedProfile = FrameCatalogEngine.recommendFrame(faceShape: shape)
             recommendedModel = recommendedProfile.id
-            
+
             // 3. PROPORÇÃO E DETALHES FACIAIS
             var eyesAdvice = ""
             if dnpRatio < 0.43 {
@@ -163,31 +185,39 @@ enum BiometryEngine {
             } else {
                 eyesAdvice = "Proporção Ocular: O distanciamento dos seus olhos está em perfeita harmonia anatômica."
             }
-            
+
             var noseAdvice = ""
             if bridge < 15.0 {
                 noseAdvice = "Tamanho do Nariz: Pontes altas ajudam a não destacar tanto o osso nasal."
             } else {
                 noseAdvice = "Sobrancelhas: A parte superior da armação (\(recommendedProfile.shape)) foi selecionada para acompanhar o desenho natural do seu supercílio."
             }
-            
+
+            // 🔴 Nota de meio-rosto: quando a maçã do rosto é claramente mais larga que testa e
+            // mandíbula juntas, é um traço que muda o ponto de equilíbrio visual da armação —
+            // vale reportar mesmo sem mudar o balde de formato (só 4 estilos no catálogo hoje).
+            var midfaceAdvice: String? = nil
+            if cheekboneValid && cheekbone > width * 1.05 && cheekbone > jaw * 1.05 {
+                midfaceAdvice = "Meio-Rosto: A maçã do rosto é o ponto mais largo — armações com destaque na parte superior equilibram melhor as proporções."
+            }
+
             let colorsAdvice = "CORES E TOM DE PELE\n• Pele Quente (fundos amarelados): Harmoniza com tons terrosos, dourado e tartaruga.\n• Pele Fria (fundos rosados): Rosa-antigo, azul, cinza e tons pastéis combinam muito bem."
-            
+
             // 🔴 4. MONTAGEM FINAL DO LAUDO (Juntando a Matemática com a sua Poesia)
             let finalSuggestion = """
             1. RESULTADO DO VISAGISMO 3D
             Seu rosto possui o formato predominantemente \(shape.uppercased()).
-            
+
             📖 CONCEITO DO MODELO INDICADO (\(recommendedProfile.name.uppercased())):
             \(recommendedProfile.storytelling)
-            
+
             2. ANÁLISE DE PROPORÇÕES (IA)
             • \(eyesAdvice)
-            • \(noseAdvice)
-            
+            • \(noseAdvice)\(midfaceAdvice != nil ? "\n• \(midfaceAdvice!)" : "")
+
             3. \(colorsAdvice)
             """
-            
+
             return (shape, finalSuggestion, recommendedModel)
         }
     
@@ -201,29 +231,41 @@ enum BiometryEngine {
         var minY: Float = 100;     var maxY: Float = -100
         var minNX: Float = 100;    var maxNX: Float = -100
         var minJawX: Float = 100;  var maxJawX: Float = -100
+        var minCheekX: Float = 100; var maxCheekX: Float = -100
         var maxNoseZ: Float = -100
         let bridgeHeightY = eyeLevelY + 0.000
         let jawLevelY = eyeLevelY - 0.065
-        
+        // 🔴 Terceiro ponto da tríade clássica de visagismo (testa/maçã do rosto/mandíbula).
+        // faceWidth (banda searchYMin..searchYMax, logo acima dos olhos) já funciona como proxy
+        // de testa/têmpora — o que faltava era a maçã do rosto, que fica entre os olhos e a
+        // mandíbula. Offset -0.030 é estimativa inicial (meio caminho até jawLevelY em -0.065);
+        // precisa validar visualmente em captura real antes de confiar 100%.
+        let cheekboneLevelY = eyeLevelY - 0.030
+
         for v in vertices {
             if v.y < minY { minY = v.y };      if v.y > maxY { maxY = v.y }
             if v.z > maxNoseZ { maxNoseZ = v.z }
-            
+
             if v.y >= searchYMin && v.y <= searchYMax {
                 if v.z > maxDepthLimit && abs(v.x) < maxWidthLimit {
                     if v.x < minX { minX = v.x }
                     if v.x > maxX { maxX = v.x }
                 }
             }
-            
+
             if abs(v.y - bridgeHeightY) < 0.002 && abs(v.x) < 0.010 {
                 if v.x < minNX { minNX = v.x }
                 if v.x > maxNX { maxNX = v.x }
             }
-            
+
             if abs(v.y - jawLevelY) < 0.010 && v.z > maxDepthLimit {
                 if v.x < minJawX { minJawX = v.x }
                 if v.x > maxJawX { maxJawX = v.x }
+            }
+
+            if abs(v.y - cheekboneLevelY) < 0.010 && v.z > maxDepthLimit {
+                if v.x < minCheekX { minCheekX = v.x }
+                if v.x > maxCheekX { maxCheekX = v.x }
             }
         }
         
@@ -236,9 +278,11 @@ enum BiometryEngine {
         let nasalProfile = projNasal > VisagismClinicalRules.nasalProminenceThreshold ? "Proeminente" : "Plano"
         let jawValid = minJawX < maxJawX
         let jawWidth = (maxJawX - minJawX) * 1000
+        let cheekboneValid = minCheekX < maxCheekX
+        let cheekboneWidth = (maxCheekX - minCheekX) * 1000
         let faceHeight = (maxY - minY) * 1000
 
-        return FaceGeometryResult(minX: minX, maxX: maxX, minY: minY, maxY: maxY, minNX: minNX, maxNX: maxNX, minJawX: minJawX, maxJawX: maxJawX, maxNoseZ: maxNoseZ, faceWidthLeft: faceWidthLeft, faceWidthRight: faceWidthRight, faceWidth: faceWidth, noseBridgeWidth: noseBridgeWidth, bridgeValid: bridgeValid, nasalProfile: nasalProfile, nasalProjection: projNasal, jawWidth: jawWidth, jawValid: jawValid, faceHeight: faceHeight)
+        return FaceGeometryResult(minX: minX, maxX: maxX, minY: minY, maxY: maxY, minNX: minNX, maxNX: maxNX, minJawX: minJawX, maxJawX: maxJawX, maxNoseZ: maxNoseZ, faceWidthLeft: faceWidthLeft, faceWidthRight: faceWidthRight, faceWidth: faceWidth, noseBridgeWidth: noseBridgeWidth, bridgeValid: bridgeValid, nasalProfile: nasalProfile, nasalProjection: projNasal, jawWidth: jawWidth, jawValid: jawValid, cheekboneWidth: cheekboneWidth, cheekboneValid: cheekboneValid, faceHeight: faceHeight)
     }
     
     // MARK: - Seam de projeção AR

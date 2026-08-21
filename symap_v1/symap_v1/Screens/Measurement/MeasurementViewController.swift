@@ -213,6 +213,7 @@ class MeasurementViewController: UIViewController, ARSCNViewDelegate, PKCanvasVi
     var frameSuggestion: String = "..."
     var patientGender: String = "Prefiro não informar"
     var jawWidth: Float = 0.0
+    var cheekboneWidth: Float = 0.0
     var sessionStartTime: Date?
     var nasalProfile: String = "Plano"
     var nasalProjection: Float = 0.0

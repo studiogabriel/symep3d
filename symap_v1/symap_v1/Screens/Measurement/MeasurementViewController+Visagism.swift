@@ -215,13 +215,22 @@ extension MeasurementViewController {
                     faceWidth: self.faceWidth,
                     faceHeight: self.faceHeight,
                     bridgeWidth: self.noseBridgeWidth,
-                    nasalProjection: self.nasalProjection
+                    nasalProjection: self.nasalProjection,
+                    jawWidth: self.jawWidth
                 )
                 let goodFitNames = goodFitKeys.map { AutoConfiguratorEngine.displayName(forKey: $0) }
                 // Fallback: se nenhum modelo do catálogo encaixa sem saturar, mantém a recomendação por formato.
                 let modelsListText = goodFitNames.isEmpty ? displayModelName.uppercased() : goodFitNames.joined(separator: ", ")
 
-                let recomText = "RECOMENDAÇÃO SYMEP IA DE \(patientFirstName.uppercased()):\nMapeamos o formato de rosto \(shapeTitle). Os modelos que melhor se ajustam ao seu rosto são: \(modelsListText)."
+                // 🔴 Assimetria facial: dado já existia (faceWidthLeft/Right), calculado, mas só
+                // virava log no Firestore — nunca chegava na tela do cliente. A armação só tem
+                // ajuste simétrico, então isso é aviso, não correção automática.
+                let asymmetryWarning = BiometryEngine.facialAsymmetryWarning(faceWidthLeft: self.faceWidthLeft, faceWidthRight: self.faceWidthRight)
+
+                var recomText = "RECOMENDAÇÃO SYMEP IA DE \(patientFirstName.uppercased()):\nMapeamos o formato de rosto \(shapeTitle). Os modelos que melhor se ajustam ao seu rosto são: \(modelsListText)."
+                if let warning = asymmetryWarning {
+                    recomText += "\n\n⚠️ \(warning)"
+                }
 
                 let recomStyle = NSMutableParagraphStyle()
                 recomStyle.lineSpacing = 4
@@ -243,6 +252,12 @@ extension MeasurementViewController {
                 if shapeRange.location != NSNotFound {
                     recomAttrText.addAttribute(.foregroundColor, value: opticalCyan, range: shapeRange)
                     recomAttrText.addAttribute(.font, value: UIFont(name: "Inter-Bold", size: 13) ?? UIFont.boldSystemFont(ofSize: 13), range: shapeRange)
+                }
+                if let warning = asymmetryWarning {
+                    let warningRange = nsRecomText.range(of: "⚠️ \(warning)")
+                    if warningRange.location != NSNotFound {
+                        recomAttrText.addAttribute(.foregroundColor, value: UIColor.systemOrange, range: warningRange)
+                    }
                 }
                 recomLabel.attributedText = recomAttrText
                 

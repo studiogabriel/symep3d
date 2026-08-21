@@ -299,6 +299,7 @@ extension MeasurementViewController {
                     faceHeight: self.faceHeight, // 🔴 INJETANDO A ALTURA
                     bridgeWidth: self.noseBridgeWidth,
                     nasalProjection: self.nasalProjection,
+                    jawWidth: self.jawWidth,
                     faceShape: self.faceShape // 🔴 Motor agora sabe o formato do rosto!
                 )
             

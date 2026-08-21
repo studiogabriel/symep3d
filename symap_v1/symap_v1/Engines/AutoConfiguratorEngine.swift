@@ -74,7 +74,7 @@ enum AutoConfiguratorEngine {
 
     /// Núcleo único de cálculo — usado tanto por calculateMorphWeights (um modelo específico,
     /// busca fuzzy por keyword) quanto por bestFittingModels (varre o catálogo inteiro).
-    private static func computeFit(key: String, spec: ModelSpec, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float) -> FitResult {
+    private static func computeFit(key: String, spec: ModelSpec, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float) -> FitResult {
         let targetWidth = faceWidth + widthClearance(forKey: key)
         let targetBridge = bridgeWidth + VisagismClinicalRules.bridgeClearance
 
@@ -113,9 +113,25 @@ enum AutoConfiguratorEngine {
         // 3. 🔴 APOIO NASAL PROPORCIONAL: quanto mais achatado o nariz (abaixo do limiar
         // clínico), mais forte o apoio — capado pelo teto nasalSupportWeight e pelo
         // limite físico do próprio modelo (spec.limits.nasal), que antes nunca era usado.
-        let flatness = VisagismClinicalRules.nasalProminenceThreshold - nasalProjection
+        // 🔴 Reforço por rosto triangular: mandíbula bem mais estreita que o rosto significa
+        // menos apoio passivo lateral — a armação fica "pendurada" só pela ponte. jawWidth já
+        // era capturado (decide o FORMATO do rosto) mas nunca influenciava uma deformação real.
+        // Soma até 15% do limiar clínico como "achatamento extra" — não é achatamento de verdade,
+        // é compensação por falta de apoio estrutural lateral. Mesmo limiar (0.85) da classificação.
+        let jawSupportBonus: Float = (jawWidth > 0 && jawWidth < faceWidth * 0.85) ? (VisagismClinicalRules.nasalProminenceThreshold * 0.15) : 0
+
+        let flatness = (VisagismClinicalRules.nasalProminenceThreshold - nasalProjection) + jawSupportBonus
         if flatness > 0 && spec.limits.nasal > 0 {
             weights["Nasal"] = min(VisagismClinicalRules.nasalSupportWeight, flatness / spec.limits.nasal)
+        }
+
+        // 3b. 🔴 FERRADURA PROPORCIONAL: quanto mais fino o nariz (abaixo do limiar clínico),
+        // mais reforço na ponte — capado pelo teto keyholeBridgeWeight e pelo limite físico do
+        // modelo (spec.limits.ferradura). Antes o popup/laudo PROMETIA esse reforço pro cliente
+        // sempre que o nariz era fino, mas o peso nunca era calculado em lugar nenhum — bug.
+        let thinness = VisagismClinicalRules.narrowNoseThreshold - bridgeWidth
+        if thinness > 0 && spec.limits.ferradura > 0 {
+            weights["Ferradura"] = min(VisagismClinicalRules.keyholeBridgeWeight, thinness / spec.limits.ferradura)
         }
 
         // 🔴 CÁLCULO VERTICAL ABSOLUTO (Visagismo Suave / Dampening)
@@ -141,34 +157,34 @@ enum AutoConfiguratorEngine {
     }
 
     /// Calcula os pesos (0.0 a 1.0) para as Shape Keys (Morphers) baseados na biometria do paciente
-    static func calculateMorphWeights(keyword: String, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, faceShape: String) -> [String: Float] {
+    static func calculateMorphWeights(keyword: String, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, faceShape: String) -> [String: Float] {
         let safeKeyword = keyword.lowercased().replacingOccurrences(of: " ", with: "_")
         let sortedKeys = specs.keys.sorted(by: { $0.count > $1.count })
 
         guard let key = sortedKeys.first(where: { safeKeyword.contains($0) }),
               let spec = specs[key] else { return [:] }
 
-        return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection).weights
+        return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth).weights
     }
 
     /// Mesma busca fuzzy de calculateMorphWeights, mas devolve só se o modelo cabe sem saturar
     /// nenhum eixo — usado para avisar o cliente ANTES de trocar manualmente de armação no try-on.
     /// nil quando a keyword não bate com nenhum modelo do catálogo.
-    static func isGoodFit(forKeyword keyword: String, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float) -> Bool? {
+    static func isGoodFit(forKeyword keyword: String, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float) -> Bool? {
         let safeKeyword = keyword.lowercased().replacingOccurrences(of: " ", with: "_")
         let sortedKeys = specs.keys.sorted(by: { $0.count > $1.count })
         guard let key = sortedKeys.first(where: { safeKeyword.contains($0) }),
               let spec = specs[key] else { return nil }
-        return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection).isGoodFit
+        return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth).isGoodFit
     }
 
     /// Varre TODO o catálogo (todas as linhas) e retorna as chaves dos modelos que encaixam
     /// sem saturar nenhum eixo físico (ponte/largura/vertical) para a biometria informada —
     /// isto é, óculos que realmente cabem, não só o modelo que combina com o formato do rosto.
-    static func bestFittingModels(faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float) -> [String] {
+    static func bestFittingModels(faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float) -> [String] {
         return specs.keys.filter { key in
             guard let spec = specs[key] else { return false }
-            return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection).isGoodFit
+            return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth).isGoodFit
         }.sorted()
     }
 
