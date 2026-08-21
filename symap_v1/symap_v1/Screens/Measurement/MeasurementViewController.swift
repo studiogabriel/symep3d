@@ -215,6 +215,7 @@ class MeasurementViewController: UIViewController, ARSCNViewDelegate, PKCanvasVi
     var jawWidth: Float = 0.0
     var sessionStartTime: Date?
     var nasalProfile: String = "Plano"
+    var nasalProjection: Float = 0.0
     var patientName: String = "Paciente Não Identificado"
     var patientCPF: String = "000.000.000-00"
     

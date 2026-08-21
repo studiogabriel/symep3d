@@ -35,6 +35,7 @@ enum BiometryEngine {
         let noseBridgeWidth: Float
         let bridgeValid: Bool
         let nasalProfile: String
+        let nasalProjection: Float
         let jawWidth: Float
         let jawValid: Bool
         let faceHeight: Float
@@ -232,12 +233,12 @@ enum BiometryEngine {
         let bridgeValid = minNX < maxNX
         let noseBridgeWidth = (maxNX - minNX) * 1000
         let projNasal = (maxNoseZ - eyeDepthZ) * 1000
-        let nasalProfile = projNasal > 20.0 ? "Proeminente" : "Plano"
+        let nasalProfile = projNasal > VisagismClinicalRules.nasalProminenceThreshold ? "Proeminente" : "Plano"
         let jawValid = minJawX < maxJawX
         let jawWidth = (maxJawX - minJawX) * 1000
         let faceHeight = (maxY - minY) * 1000
-        
-        return FaceGeometryResult(minX: minX, maxX: maxX, minY: minY, maxY: maxY, minNX: minNX, maxNX: maxNX, minJawX: minJawX, maxJawX: maxJawX, maxNoseZ: maxNoseZ, faceWidthLeft: faceWidthLeft, faceWidthRight: faceWidthRight, faceWidth: faceWidth, noseBridgeWidth: noseBridgeWidth, bridgeValid: bridgeValid, nasalProfile: nasalProfile, jawWidth: jawWidth, jawValid: jawValid, faceHeight: faceHeight)
+
+        return FaceGeometryResult(minX: minX, maxX: maxX, minY: minY, maxY: maxY, minNX: minNX, maxNX: maxNX, minJawX: minJawX, maxJawX: maxJawX, maxNoseZ: maxNoseZ, faceWidthLeft: faceWidthLeft, faceWidthRight: faceWidthRight, faceWidth: faceWidth, noseBridgeWidth: noseBridgeWidth, bridgeValid: bridgeValid, nasalProfile: nasalProfile, nasalProjection: projNasal, jawWidth: jawWidth, jawValid: jawValid, faceHeight: faceHeight)
     }
     
     // MARK: - Seam de projeção AR

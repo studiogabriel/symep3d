@@ -287,13 +287,10 @@ extension MeasurementViewController {
 
                 // 🔴 INTELIGÊNCIA ANATÔMICA (3 ESCALAS): Infantil, Feminino e Masculino
                 
-        let isLargeFace = self.faceWidth >= 130.1
-                let isKidsFace = self.faceWidth < 124.0
-                
-                if modelBaseName == "luno" { modelBaseName = isKidsFace ? "sl_luno_infantil" : (isLargeFace ? "sl_luno_masculino" : "sl_luno_feminino") }
-                if modelBaseName == "nunu" { modelBaseName = isKidsFace ? "sl_nunu_infantil" : (isLargeFace ? "sl_nunu_masculino" : "sl_nunu_feminino") }
-                if modelBaseName == "suki" { modelBaseName = isKidsFace ? "sl_suki_infantil" : (isLargeFace ? "sl_suki_masculino" : "sl_suki_feminino") }
-                if modelBaseName == "timbau" { modelBaseName = isKidsFace ? "sl_timbau_infantil" : (isLargeFace ? "sl_timbau_masculino" : "sl_timbau_feminino") }
+        let sizeLine = AutoConfiguratorEngine.sizeLineSuffix(forFaceWidth: self.faceWidth)
+                if ["luno", "nunu", "suki", "timbau"].contains(modelBaseName) {
+                    modelBaseName = "sl_\(modelBaseName)_\(sizeLine)"
+                }
             
         // Solicita as chaves matemáticas ao Motor!
         let edicoesShapeKeys = AutoConfiguratorEngine.calculateMorphWeights(
@@ -301,7 +298,7 @@ extension MeasurementViewController {
                     faceWidth: self.faceWidth,
                     faceHeight: self.faceHeight, // 🔴 INJETANDO A ALTURA
                     bridgeWidth: self.noseBridgeWidth,
-                    nasalProfile: self.nasalProfile,
+                    nasalProjection: self.nasalProjection,
                     faceShape: self.faceShape // 🔴 Motor agora sabe o formato do rosto!
                 )
             
@@ -316,7 +313,10 @@ extension MeasurementViewController {
                 "biometrics": [
                     "bridge": self.noseBridgeWidth,
                     "leftWidth": self.faceWidthLeft,
-                    "rightWidth": self.faceWidthRight
+                    "rightWidth": self.faceWidthRight,
+                    "faceWidth": self.faceWidth,
+                    "faceHeight": self.faceHeight,
+                    "nasalProjection": self.nasalProjection
                 ]
             ]
             

@@ -157,8 +157,7 @@ extension MeasurementViewController {
         let bridgeHeightY = eyeLevelY + 0.000
         
         let fg = BiometryEngine.faceGeometry(vertices: verts, eyeLevelY: eyeLevelY, eyeDepthZ: eyeDepthZ)
-        
-        let faceHeight = fg.faceHeight
+
                 let minX = fg.minX
                 let maxX = fg.maxX
                 let minNX = fg.minNX
@@ -168,15 +167,20 @@ extension MeasurementViewController {
                 // A tela continua viva acompanhando o rosto com o ARKit, mas os números do Laudo ficam blindados.
                 // Assim, o Provador Virtual nunca mais oscilará as medidas no PopUp!
                     if !self.isVisagismCompleted {
-                    self.faceWidthRight = fg.faceWidthRight
-                    self.faceWidthLeft = fg.faceWidthLeft
-                    self.faceHeight = faceHeight // 🔴 NOVA: Salva a Altura do Rosto na memória
-                    self.faceWidth = fg.faceWidth
-                    if fg.bridgeValid { self.noseBridgeWidth = fg.noseBridgeWidth }
+                    // 🔴 Suavização por média móvel exponencial: evita que a medida de um
+                    // único frame (ruído do LiDAR/leve movimento) decida sozinha a linha de
+                    // tamanho (infantil/feminino/masculino) ou os pesos do motor automático.
+                    let alpha = VisagismClinicalRules.biometrySmoothingAlpha
+                    self.faceWidthRight = (self.faceWidthRight * (1 - alpha)) + (fg.faceWidthRight * alpha)
+                    self.faceWidthLeft = (self.faceWidthLeft * (1 - alpha)) + (fg.faceWidthLeft * alpha)
+                    self.faceHeight = (self.faceHeight * (1 - alpha)) + (fg.faceHeight * alpha)
+                    self.faceWidth = (self.faceWidth * (1 - alpha)) + (fg.faceWidth * alpha)
+                    if fg.bridgeValid { self.noseBridgeWidth = (self.noseBridgeWidth * (1 - alpha)) + (fg.noseBridgeWidth * alpha) }
                     self.nasalProfile = fg.nasalProfile
-                    if fg.jawValid { self.jawWidth = fg.jawWidth }
-                    
-                    let visagisme = BiometryEngine.analyzeVisagisme(width: self.faceWidth, height: faceHeight, bridge: self.noseBridgeWidth, jaw: self.jawWidth, dnpTotal: self.dnpTotal)
+                    self.nasalProjection = (self.nasalProjection * (1 - alpha)) + (fg.nasalProjection * alpha)
+                    if fg.jawValid { self.jawWidth = (self.jawWidth * (1 - alpha)) + (fg.jawWidth * alpha) }
+
+                    let visagisme = BiometryEngine.analyzeVisagisme(width: self.faceWidth, height: self.faceHeight, bridge: self.noseBridgeWidth, jaw: self.jawWidth, dnpTotal: self.dnpTotal)
                     self.faceShape = visagisme.faceShape
                     self.frameSuggestion = visagisme.frameSuggestion
                     self.recommendedAutoModel = visagisme.recommendedModel

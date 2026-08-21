@@ -63,31 +63,26 @@ extension MeasurementViewController {
     }
     
     func loadCloudModel(model: CloudGlassModel, showFakeLoading: Bool = true, bypassWarning: Bool = false) {
-            // 🔴 INTELIGÊNCIA ANATÔMICA PREVENTIVA: Valida a proporção antes de carregar
+            // 🔴 INTELIGÊNCIA ANATÔMICA PREVENTIVA: Valida o encaixe físico real antes de carregar
+            // (antes isso era um chute por categoria de tamanho; agora é a mesma conta física
+            // usada em bestFittingModels — inclusive pega o caso de mesma categoria mas modelo
+            // específico saturado, como aconteceu com o Luno feminino).
             let checkName = model.name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
-            let isFaceLarge = self.faceWidth >= 130.1
-            let isFaceKids = self.faceWidth < 124.0
-            
+            let fitsWell = AutoConfiguratorEngine.isGoodFit(
+                forKeyword: checkName,
+                faceWidth: self.faceWidth,
+                faceHeight: self.faceHeight,
+                bridgeWidth: self.noseBridgeWidth,
+                nasalProjection: self.nasalProjection
+            )
+
             if !bypassWarning {
                 var warningMsg: String? = nil
-                
-                if isFaceLarge {
-                    if checkName.contains("infantil") || checkName.contains("feminino") {
-                        warningMsg = "Seu rosto possui proporções maiores (Tamanho G). O modelo selecionado é menor e precisará ser altamente esticado pela IA. Deseja provar mesmo assim?"
-                    }
-                } else if isFaceKids {
-                    if checkName.contains("masculino") || checkName.contains("feminino") {
-                        warningMsg = "Seu rosto possui proporções infantis (Tamanho P). O modelo selecionado é para adultos e precisará ser altamente reduzido pela IA. Deseja provar mesmo assim?"
-                    }
-                } else {
-                    // Rosto Médio (Feminino / Padrão)
-                    if checkName.contains("infantil") {
-                        warningMsg = "Seu rosto possui proporções médias (Tamanho M). O modelo selecionado é infantil e precisará ser esticado pela IA. Deseja provar mesmo assim?"
-                    } else if checkName.contains("masculino") {
-                        warningMsg = "Seu rosto possui proporções médias (Tamanho M). O modelo selecionado é grande (Tamanho G) e precisará ser reduzido pela IA. Deseja provar mesmo assim?"
-                    }
+
+                if fitsWell == false {
+                    warningMsg = "Esse modelo pode ficar apertado ou esticado além do ideal pro seu rosto — a IA vai levar o ajuste ao limite do molde. Deseja provar mesmo assim?"
                 }
-                
+
                 if let msg = warningMsg {
                             // 🔴 BRANDBOOK: Injeção da Paleta Oficial
                             let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
@@ -527,7 +522,7 @@ extension MeasurementViewController {
                     faceWidth: self.faceWidth,
                     faceHeight: self.faceHeight, // 🔴 INJETANDO A ALTURA
                     bridgeWidth: self.noseBridgeWidth,
-            nasalProfile: self.nasalProfile,
+            nasalProjection: self.nasalProjection,
             faceShape: self.faceShape
         )
         

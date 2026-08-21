@@ -207,23 +207,34 @@ extension MeasurementViewController {
                 recommendedCard.addSubview(recomLabel)
                 
                 let patientFirstName = self.patientName.components(separatedBy: " ").first ?? "Paciente"
-                let modelTitle = displayModelName.uppercased()
                 let shapeTitle = self.faceShape.uppercased()
-                
-                let recomText = "RECOMENDAÇÃO SYMEP IA DE \(patientFirstName.uppercased()):\nMapeamos o formato de rosto \(shapeTitle). Com base na linha Studio Lebô, a armação recomendada para você é o modelo \(modelTitle)!"
-                
+
+                // 🔴 Lista de modelos que realmente CABEM (não saturam nenhum eixo físico),
+                // não só o que combina com o formato do rosto — ver AutoConfiguratorEngine.bestFittingModels.
+                let goodFitKeys = AutoConfiguratorEngine.bestFittingModels(
+                    faceWidth: self.faceWidth,
+                    faceHeight: self.faceHeight,
+                    bridgeWidth: self.noseBridgeWidth,
+                    nasalProjection: self.nasalProjection
+                )
+                let goodFitNames = goodFitKeys.map { AutoConfiguratorEngine.displayName(forKey: $0) }
+                // Fallback: se nenhum modelo do catálogo encaixa sem saturar, mantém a recomendação por formato.
+                let modelsListText = goodFitNames.isEmpty ? displayModelName.uppercased() : goodFitNames.joined(separator: ", ")
+
+                let recomText = "RECOMENDAÇÃO SYMEP IA DE \(patientFirstName.uppercased()):\nMapeamos o formato de rosto \(shapeTitle). Os modelos que melhor se ajustam ao seu rosto são: \(modelsListText)."
+
                 let recomStyle = NSMutableParagraphStyle()
                 recomStyle.lineSpacing = 4
                 recomStyle.alignment = .center
-                
+
                 let recomAttrText = NSMutableAttributedString(string: recomText, attributes: [
                     .font: UIFont(name: "Inter-Regular", size: 12) ?? UIFont.systemFont(ofSize: 12),
                     .foregroundColor: offWhite,
                     .paragraphStyle: recomStyle
                 ])
-                
+
                 let nsRecomText = recomText as NSString
-                let modelRange = nsRecomText.range(of: modelTitle)
+                let modelRange = nsRecomText.range(of: modelsListText)
                 if modelRange.location != NSNotFound {
                     recomAttrText.addAttribute(.foregroundColor, value: opticalCyan, range: modelRange)
                     recomAttrText.addAttribute(.font, value: UIFont(name: "Inter-Bold", size: 13) ?? UIFont.boldSystemFont(ofSize: 13), range: modelRange)
@@ -499,13 +510,10 @@ extension MeasurementViewController {
             var modText = ""
             
             var safeKeyword = keyword.lowercased().replacingOccurrences(of: " ", with: "_")
-            let isLargeFace = self.faceWidth >= 130.1
-            let isKidsFace = self.faceWidth < 124.0
-            
-            if safeKeyword == "luno" { safeKeyword = isKidsFace ? "luno_infantil" : (isLargeFace ? "luno_masculino" : "luno_feminino") }
-            if safeKeyword == "nunu" { safeKeyword = isKidsFace ? "nunu_infantil" : (isLargeFace ? "nunu_masculino" : "nunu_feminino") }
-            if safeKeyword == "suki" { safeKeyword = isKidsFace ? "suki_infantil" : (isLargeFace ? "suki_masculino" : "suki_feminino") }
-            if safeKeyword == "timbau" { safeKeyword = isKidsFace ? "timbau_infantil" : (isLargeFace ? "timbau_masculino" : "timbau_feminino") }
+            let sizeLine = AutoConfiguratorEngine.sizeLineSuffix(forFaceWidth: self.faceWidth)
+            if ["luno", "nunu", "suki", "timbau"].contains(safeKeyword) {
+                safeKeyword = "\(safeKeyword)_\(sizeLine)"
+            }
             
             var displayModelName = keyword.capitalized
             
@@ -612,13 +620,10 @@ extension MeasurementViewController {
     func applyRecommendedModel(modelIdOrName: String) {
         // 🔴 1. INTELIGÊNCIA ANATÔMICA GLOBAL (3 ESCALAS)
                 var safeModelName = modelIdOrName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
-        let isLargeFace = self.faceWidth >= 130.1
-                let isKidsFace = self.faceWidth < 124.0
-                
-                if safeModelName == "luno" { safeModelName = isKidsFace ? "luno_infantil" : (isLargeFace ? "luno_masculino" : "luno_feminino") }
-                if safeModelName == "nunu" { safeModelName = isKidsFace ? "nunu_infantil" : (isLargeFace ? "nunu_masculino" : "nunu_feminino") }
-                if safeModelName == "suki" { safeModelName = isKidsFace ? "suki_infantil" : (isLargeFace ? "suki_masculino" : "suki_feminino") }
-                if safeModelName == "timbau" { safeModelName = isKidsFace ? "timbau_infantil" : (isLargeFace ? "timbau_masculino" : "timbau_feminino") }
+        let sizeLine = AutoConfiguratorEngine.sizeLineSuffix(forFaceWidth: self.faceWidth)
+                if ["luno", "nunu", "suki", "timbau"].contains(safeModelName) {
+                    safeModelName = "\(safeModelName)_\(sizeLine)"
+                }
             
             // 🔴 2. BUSCA NA NUVEM (Usando o nome já traduzido com gênero)
             if let cloudModel = CloudManager.shared.availableModels.first(where: {
