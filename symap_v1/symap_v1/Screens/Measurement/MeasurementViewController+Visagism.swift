@@ -646,7 +646,10 @@ extension MeasurementViewController {
                 return cloudNameClean.contains(safeModelName)
             }) {
                 // Se achou o óculos correto na nuvem, veste ele (sem tela de carregamento duplicada)
-                self.loadCloudModel(model: cloudModel, showFakeLoading: false)
+                // 🔴 bypassWarning: true — isso é a recomendação AUTOMÁTICA do sistema, não uma
+                // escolha manual do cliente. O aviso de "pode não caber bem" é só pra quando o
+                // cliente troca de modelo sozinho no try-on (TryOn.swift:48), nunca pro fluxo inicial.
+                self.loadCloudModel(model: cloudModel, showFakeLoading: false, bypassWarning: true)
                 
             } else {
                 // 🔴 3. FALLBACK NATIVO (Se estiver offline, busca no Xcode)
