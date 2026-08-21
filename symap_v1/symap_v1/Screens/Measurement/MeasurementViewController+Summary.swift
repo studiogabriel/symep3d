@@ -90,15 +90,17 @@ extension MeasurementViewController {
                 }
                 
                 // 1. EXTRAÇÃO BLINDADA DO ÓCULOS (Baking de Geometria)
+                // 🔴 REVERTIDO: clone() compartilha a MESMA geometria/morpher que ainda está
+                // "vivo" na cena AR original — renderizar o mesmo morpher simultaneamente em dois
+                // SCNView (sceneView + holoView) causou corrupção visual. flattenedClone() volta
+                // pro modelo base (menos correto), mas é seguro. Ver conversa antes de tentar de
+                // novo — a correção certa precisa assar as posições de vértice já deformadas numa
+                // geometria nova e independente, não reusar o morpher ao vivo.
                 if let customGlasses = originalFace.childNodes.first(where: { $0.name == "customGlasses" }) {
                     let bakedGlasses = customGlasses.flattenedClone()
                     bakedGlasses.name = "customGlasses"
                     bakedGlasses.isHidden = false
                     presentationNode.addChildNode(bakedGlasses)
-                    
-                    // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL (Índice Seguro)
-                    let metalValidation = ["Baked Geometry OK"]
-                    let _ = metalValidation[ 0 ]
                 }
             }
             
