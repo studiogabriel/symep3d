@@ -39,12 +39,20 @@ enum AutoConfiguratorEngine {
             "suki_feminino": ModelSpec(baseBridge: 15.0, baseWidth: 130.0, baseHeight: 52.2, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 1.5, larguraR: 4.0, larguraA: 2.0, verticalR: 2.0, verticalA: 2.0)),
             "timbau_feminino": ModelSpec(baseBridge: 14.5, baseWidth: 135.0, baseHeight: 51.5, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
             
-            // --- COLEÇÃO MASCULINA (Base Larga: 140mm) ---
-            "luno_masculino": ModelSpec(baseBridge: 18.0, baseWidth: 140.0, baseHeight: 53.0, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 2.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
-            "nunu_masculino": ModelSpec(baseBridge: 17.0, baseWidth: 140.0, baseHeight: 48.5, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 2.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
-            "suki_masculino": ModelSpec(baseBridge: 16.0, baseWidth: 140.0, baseHeight: 54.5, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
-            "timbau_masculino": ModelSpec(baseBridge: 16.2, baseWidth: 140.0, baseHeight: 54.0, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
-            
+            // --- COLEÇÃO MASCULINA (Base Larga: ~142mm) ---
+            // 🔴 baseWidth/baseHeight/baseBridge corrigidos com medição direta do molde 3D em
+            // repouso (peso 0), extraída via Claude dentro do Blender — não é estimativa por
+            // impressão/paquímetro como o infantil. baseWidth estava uniformemente 140.0 pros
+            // 4 modelos; a medida real é ~142.0 nos 4 (mesmo desvio consistente, não é ruído).
+            // baseBridge mudou de valores variados por modelo (18.0/17.0/16.0/16.2, da medição
+            // manual antiga e imprecisa) para ~14.20 nos 4 — quase idêntico entre modelos porque
+            // a extração automática mede a mesma região consistentemente, diferente da estimativa
+            // visual anterior.
+            "luno_masculino": ModelSpec(baseBridge: 14.20, baseWidth: 142.00, baseHeight: 53.31, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 2.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
+            "nunu_masculino": ModelSpec(baseBridge: 14.20, baseWidth: 142.00, baseHeight: 48.94, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 2.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
+            "suki_masculino": ModelSpec(baseBridge: 14.20, baseWidth: 142.00, baseHeight: 54.73, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
+            "timbau_masculino": ModelSpec(baseBridge: 14.19, baseWidth: 141.93, baseHeight: 53.99, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
+
             // --- COLEÇÃO INFANTIL (Base M: 120mm) ---
             // 🔴 larguraA corrigido por medição real de prova impressa (peso 1.0/saturado):
             // baseWidth=120.0 confirmado correto no Blender (peso 0) — o shape key Largura_a
