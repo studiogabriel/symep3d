@@ -564,6 +564,19 @@ extension MeasurementViewController {
                 if self.noseBridgeWidth < VisagismClinicalRules.narrowNoseThreshold {
                     modText += "• Estrutura da Ponte: Modo Ferradura (Maior volume e aderência)\n"
                 }
+
+                // 🔴 DIAGNÓSTICO DEV: eixo que bateu no limite físico do molde e ainda precisaria
+                // de mais — não é mostrado ao cliente em produção, só para controle enquanto o
+                // app está em desenvolvimento (pedido explícito: "informar o quanto excedeu").
+                if fit.bridgeOverage > 0.05 {
+                    modText += "⚠️ [DEV] Ponte excede o ideal em \(String(format: "%.2f", fit.bridgeOverage)) mm\n"
+                }
+                if fit.widthOverage > 0.05 {
+                    modText += "⚠️ [DEV] Largura excede o ideal em \(String(format: "%.2f", fit.widthOverage)) mm\n"
+                }
+                if fit.verticalOverage > 0.05 {
+                    modText += "⚠️ [DEV] Vertical excede o ideal em \(String(format: "%.2f", fit.verticalOverage)) mm\n"
+                }
             }
             
             if modText.isEmpty { modText = "• Proporções originais perfeitas para sua face.\n" }

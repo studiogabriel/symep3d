@@ -85,6 +85,12 @@ enum AutoConfiguratorEngine {
         let appliedBridgeDiff: Float
         let appliedWidthDiff: Float
         let appliedVerticalDiff: Float
+        /// Quanto o rosto PRECISARIA além do que o molde físico permite, em mm — 0 quando o
+        /// eixo não saturou. Ex.: precisa de 4.26mm de largura, molde só dá 4.0mm → overage 0.26mm.
+        /// Só para diagnóstico interno (dev), não é o valor mostrado como ajuste ao cliente.
+        let bridgeOverage: Float
+        let widthOverage: Float
+        let verticalOverage: Float
         var isGoodFit: Bool { !bridgeSaturated && !widthSaturated && !verticalSaturated }
     }
 
@@ -111,14 +117,17 @@ enum AutoConfiguratorEngine {
         let rawDiffBridge = targetBridge - spec.baseBridge
         var appliedBridgeDiff: Float = 0.0
         var bridgeSaturated = false
+        var bridgeOverage: Float = 0.0
 
         if rawDiffBridge > 0 {
             bridgeSaturated = rawDiffBridge > spec.limits.bridgePlus
+            bridgeOverage = bridgeSaturated ? rawDiffBridge - spec.limits.bridgePlus : 0
             let weight = min(1.0, rawDiffBridge / spec.limits.bridgePlus)
             weights["Ponte"] = weight
             appliedBridgeDiff = weight * spec.limits.bridgePlus
         } else {
             bridgeSaturated = abs(rawDiffBridge) > spec.limits.bridgeMinus
+            bridgeOverage = bridgeSaturated ? abs(rawDiffBridge) - spec.limits.bridgeMinus : 0
             let weight = min(1.0, abs(rawDiffBridge) / spec.limits.bridgeMinus)
             weights["Ponte_m"] = weight
             appliedBridgeDiff = -(weight * spec.limits.bridgeMinus)
@@ -129,14 +138,17 @@ enum AutoConfiguratorEngine {
         let diffWidth = (targetWidth - spec.baseWidth) - appliedBridgeDiff
         var widthSaturated = false
         var appliedWidthDiff: Float = 0.0
+        var widthOverage: Float = 0.0
 
         if diffWidth > 0 {
             widthSaturated = diffWidth > spec.limits.larguraA
+            widthOverage = widthSaturated ? diffWidth - spec.limits.larguraA : 0
             let weight = min(1.0, diffWidth / spec.limits.larguraA)
             weights["Largura_a"] = weight
             appliedWidthDiff = weight * spec.limits.larguraA
         } else {
             widthSaturated = abs(diffWidth) > spec.limits.larguraR
+            widthOverage = widthSaturated ? abs(diffWidth) - spec.limits.larguraR : 0
             let weight = min(1.0, abs(diffWidth) / spec.limits.larguraR)
             weights["Largura_r"] = weight
             appliedWidthDiff = -(weight * spec.limits.larguraR)
@@ -177,20 +189,23 @@ enum AutoConfiguratorEngine {
         let smoothDiffHeight = rawDiffHeight * VisagismClinicalRules.verticalDampening
         var verticalSaturated = false
         var appliedVerticalDiff: Float = 0.0
+        var verticalOverage: Float = 0.0
 
         if smoothDiffHeight > 0 {
             verticalSaturated = smoothDiffHeight > spec.limits.verticalA
+            verticalOverage = verticalSaturated ? smoothDiffHeight - spec.limits.verticalA : 0
             let weight = min(1.0, smoothDiffHeight / spec.limits.verticalA)
             weights["Vertical_a"] = weight
             appliedVerticalDiff = weight * spec.limits.verticalA
         } else if smoothDiffHeight < 0 {
             verticalSaturated = abs(smoothDiffHeight) > spec.limits.verticalR
+            verticalOverage = verticalSaturated ? abs(smoothDiffHeight) - spec.limits.verticalR : 0
             let weight = min(1.0, abs(smoothDiffHeight) / spec.limits.verticalR)
             weights["Vertical_r"] = weight
             appliedVerticalDiff = -(weight * spec.limits.verticalR)
         }
 
-        return FitResult(weights: weights, bridgeSaturated: bridgeSaturated, widthSaturated: widthSaturated, verticalSaturated: verticalSaturated, appliedBridgeDiff: appliedBridgeDiff, appliedWidthDiff: appliedWidthDiff, appliedVerticalDiff: appliedVerticalDiff)
+        return FitResult(weights: weights, bridgeSaturated: bridgeSaturated, widthSaturated: widthSaturated, verticalSaturated: verticalSaturated, appliedBridgeDiff: appliedBridgeDiff, appliedWidthDiff: appliedWidthDiff, appliedVerticalDiff: appliedVerticalDiff, bridgeOverage: bridgeOverage, widthOverage: widthOverage, verticalOverage: verticalOverage)
     }
 
     /// Calcula os pesos (0.0 a 1.0) para as Shape Keys (Morphers) baseados na biometria do paciente
