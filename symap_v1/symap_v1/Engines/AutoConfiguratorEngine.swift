@@ -107,7 +107,7 @@ enum AutoConfiguratorEngine {
 
     /// Núcleo único de cálculo — usado tanto por calculateMorphWeights (um modelo específico,
     /// busca fuzzy por keyword) quanto por bestFittingModels (varre o catálogo inteiro).
-    private static func computeFit(key: String, spec: ModelSpec, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float) -> FitResult {
+    private static func computeFit(key: String, spec: ModelSpec, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false) -> FitResult {
         let targetWidth = faceWidth + widthClearance(forKey: key)
         let targetBridge = bridgeWidth + bridgeOffset(forKey: key)
 
@@ -186,7 +186,16 @@ enum AutoConfiguratorEngine {
         // 2. 🔴 A MÁGICA DA SUA IDEIA: Fator de Amortecimento Estético (60%)
         // Transforma uma distorção matemática agressiva de 2.0mm em apenas 1.2mm,
         // preservando o design de fábrica da armação!
-        let smoothDiffHeight = rawDiffHeight * VisagismClinicalRules.verticalDampening
+        // 3. 🔴 PRESSÃO POR FOLGA OLHO→BOCHECHA: quando a bochecha da pessoa começa antes do
+        // limiar clínico (cheekClearanceThreshold), a lente corre risco real de encostar nela —
+        // isso empurra o ajuste pra encolher MAIS do que a proporção genérica pediria sozinha
+        // (nunca pra esticar: falta de folga é sempre motivo de reduzir, não de aumentar).
+        // Antes o cálculo vertical não tinha NENHUMA relação com a bochecha, só com a altura
+        // total do rosto — ver eyeToCheekClearance em BiometryEngine.faceGeometry.
+        let cheekShortfall: Float = (eyeToCheekClearanceValid && eyeToCheekClearance < VisagismClinicalRules.cheekClearanceThreshold)
+            ? (VisagismClinicalRules.cheekClearanceThreshold - eyeToCheekClearance)
+            : 0
+        let smoothDiffHeight = (rawDiffHeight * VisagismClinicalRules.verticalDampening) - cheekShortfall
         var verticalSaturated = false
         var appliedVerticalDiff: Float = 0.0
         var verticalOverage: Float = 0.0
@@ -209,45 +218,45 @@ enum AutoConfiguratorEngine {
     }
 
     /// Calcula os pesos (0.0 a 1.0) para as Shape Keys (Morphers) baseados na biometria do paciente
-    static func calculateMorphWeights(keyword: String, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, faceShape: String) -> [String: Float] {
+    static func calculateMorphWeights(keyword: String, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, faceShape: String, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false) -> [String: Float] {
         let safeKeyword = keyword.lowercased().replacingOccurrences(of: " ", with: "_")
         let sortedKeys = specs.keys.sorted(by: { $0.count > $1.count })
 
         guard let key = sortedKeys.first(where: { safeKeyword.contains($0) }),
               let spec = specs[key] else { return [:] }
 
-        return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth).weights
+        return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid).weights
     }
 
     /// Mesma busca fuzzy de calculateMorphWeights, mas devolve o FitResult completo (pesos +
     /// deltas em mm já aplicados/clipados) — fonte única para textos de UI como "Ponte Nasal:
     /// -2.9mm", evitando reimplementar a fórmula do motor em cada tela.
-    static func fitDetails(forKeyword keyword: String, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float) -> FitResult? {
+    static func fitDetails(forKeyword keyword: String, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false) -> FitResult? {
         let safeKeyword = keyword.lowercased().replacingOccurrences(of: " ", with: "_")
         let sortedKeys = specs.keys.sorted(by: { $0.count > $1.count })
         guard let key = sortedKeys.first(where: { safeKeyword.contains($0) }),
               let spec = specs[key] else { return nil }
-        return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth)
+        return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid)
     }
 
     /// Mesma busca fuzzy de calculateMorphWeights, mas devolve só se o modelo cabe sem saturar
     /// nenhum eixo — usado para avisar o cliente ANTES de trocar manualmente de armação no try-on.
     /// nil quando a keyword não bate com nenhum modelo do catálogo.
-    static func isGoodFit(forKeyword keyword: String, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float) -> Bool? {
+    static func isGoodFit(forKeyword keyword: String, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false) -> Bool? {
         let safeKeyword = keyword.lowercased().replacingOccurrences(of: " ", with: "_")
         let sortedKeys = specs.keys.sorted(by: { $0.count > $1.count })
         guard let key = sortedKeys.first(where: { safeKeyword.contains($0) }),
               let spec = specs[key] else { return nil }
-        return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth).isGoodFit
+        return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid).isGoodFit
     }
 
     /// Varre TODO o catálogo (todas as linhas) e retorna as chaves dos modelos que encaixam
     /// sem saturar nenhum eixo físico (ponte/largura/vertical) para a biometria informada —
     /// isto é, óculos que realmente cabem, não só o modelo que combina com o formato do rosto.
-    static func bestFittingModels(faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float) -> [String] {
+    static func bestFittingModels(faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false) -> [String] {
         return specs.keys.filter { key in
             guard let spec = specs[key] else { return false }
-            return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth).isGoodFit
+            return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid).isGoodFit
         }.sorted()
     }
 

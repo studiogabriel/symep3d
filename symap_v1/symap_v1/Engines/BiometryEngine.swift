@@ -41,6 +41,11 @@ enum BiometryEngine {
         let cheekboneWidth: Float
         let cheekboneValid: Bool
         let faceHeight: Float
+        /// Distância vertical (mm) entre a linha do olho e a altura onde a bochecha REALMENTE
+        /// começa a projetar pra frente — medida dinâmica por pessoa, não um offset fixo chutado.
+        /// Ver comentário em faceGeometry para o método (varredura de profundidade por faixa de Y).
+        let eyeToCheekClearance: Float
+        let eyeToCheekClearanceValid: Bool
     }
     
     // MARK: - Equivalente esférico (EE)
@@ -242,6 +247,28 @@ enum BiometryEngine {
         // precisa validar visualmente em captura real antes de confiar 100%.
         let cheekboneLevelY = eyeLevelY - 0.030
 
+        // 🔴 CLEARANCE OLHO→BOCHECHA (dinâmico): antes a única referência vertical pro ajuste
+        // da lente era faceHeight/4 (proporção do rosto inteiro, sem relação com a bochecha) e
+        // cheekboneLevelY (offset fixo de 30mm, chutado igual pra todo mundo). Aqui varremos em
+        // faixas de 2mm da altura do olho até a mandíbula e achamos a primeira altura onde a
+        // malha projeta pra frente o bastante (>6mm à frente da profundidade do olho) pra ser
+        // considerada bochecha, não mais órbita/face plana. Isso dá a folga real de cada pessoa —
+        // é justamente essa distância curta que faz a lente encostar na bochecha (comum em rostos
+        // com região malar mais projetada). O limiar de detecção (6mm) e o de segurança clínico
+        // (VisagismClinicalRules.cheekClearanceThreshold) ainda não têm validação com prova física
+        // real — mesmo status inicial que bridgeClearance tinha antes dos dados do Luno/Suki.
+        let clearanceStepY: Float = 0.002
+        let clearanceScanBottom = jawLevelY
+        let cheekDetectDepthDelta: Float = 0.006
+        // 🔴 Janela de X sob o olho, excluindo o nariz (que projeta mais que a bochecha e ia
+        // disparar a detecção na primeira faixa, zerando a folga de qualquer rosto) e a região
+        // bem na têmpora (que já não é mais bochecha). Faixa lateral bilateral: ~15mm a ~50mm
+        // do centro do rosto.
+        let clearanceXInner: Float = 0.015
+        let clearanceXOuter: Float = 0.050
+        let clearanceBandCount = max(1, Int(((eyeLevelY - clearanceScanBottom) / clearanceStepY).rounded(.up)) + 1)
+        var clearanceBandMaxZ = [Float](repeating: -100, count: clearanceBandCount)
+
         for v in vertices {
             if v.y < minY { minY = v.y };      if v.y > maxY { maxY = v.y }
             if v.z > maxNoseZ { maxNoseZ = v.z }
@@ -267,6 +294,13 @@ enum BiometryEngine {
                 if v.x < minCheekX { minCheekX = v.x }
                 if v.x > maxCheekX { maxCheekX = v.x }
             }
+
+            if v.y <= eyeLevelY && v.y >= clearanceScanBottom && abs(v.x) > clearanceXInner && abs(v.x) < clearanceXOuter {
+                let bandIndex = Int((eyeLevelY - v.y) / clearanceStepY)
+                if bandIndex >= 0 && bandIndex < clearanceBandCount && v.z > clearanceBandMaxZ[bandIndex] {
+                    clearanceBandMaxZ[bandIndex] = v.z
+                }
+            }
         }
         
         let faceWidthRight = (abs(minX) * 1000) * comfortFactor
@@ -282,7 +316,19 @@ enum BiometryEngine {
         let cheekboneWidth = (maxCheekX - minCheekX) * 1000
         let faceHeight = (maxY - minY) * 1000
 
-        return FaceGeometryResult(minX: minX, maxX: maxX, minY: minY, maxY: maxY, minNX: minNX, maxNX: maxNX, minJawX: minJawX, maxJawX: maxJawX, maxNoseZ: maxNoseZ, faceWidthLeft: faceWidthLeft, faceWidthRight: faceWidthRight, faceWidth: faceWidth, noseBridgeWidth: noseBridgeWidth, bridgeValid: bridgeValid, nasalProfile: nasalProfile, nasalProjection: projNasal, jawWidth: jawWidth, jawValid: jawValid, cheekboneWidth: cheekboneWidth, cheekboneValid: cheekboneValid, faceHeight: faceHeight)
+        // Varre de cima (olho) pra baixo (mandíbula) e acha a primeira faixa onde a malha já
+        // projeta o bastante pra ser bochecha — a distância até ali é a folga real da pessoa.
+        var cheekStartBandIndex: Int? = nil
+        for i in 0..<clearanceBandCount {
+            if clearanceBandMaxZ[i] > -100 && (clearanceBandMaxZ[i] - eyeDepthZ) > cheekDetectDepthDelta {
+                cheekStartBandIndex = i
+                break
+            }
+        }
+        let eyeToCheekClearanceValid = cheekStartBandIndex != nil
+        let eyeToCheekClearance = eyeToCheekClearanceValid ? (Float(cheekStartBandIndex!) * clearanceStepY) * 1000 : 0.0
+
+        return FaceGeometryResult(minX: minX, maxX: maxX, minY: minY, maxY: maxY, minNX: minNX, maxNX: maxNX, minJawX: minJawX, maxJawX: maxJawX, maxNoseZ: maxNoseZ, faceWidthLeft: faceWidthLeft, faceWidthRight: faceWidthRight, faceWidth: faceWidth, noseBridgeWidth: noseBridgeWidth, bridgeValid: bridgeValid, nasalProfile: nasalProfile, nasalProjection: projNasal, jawWidth: jawWidth, jawValid: jawValid, cheekboneWidth: cheekboneWidth, cheekboneValid: cheekboneValid, faceHeight: faceHeight, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid)
     }
     
     // MARK: - Seam de projeção AR

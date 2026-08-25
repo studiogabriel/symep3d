@@ -436,7 +436,7 @@ extension MeasurementViewController {
                 
                 if let key = AutoConfiguratorEngine.specs.keys.first(where: { safeModelName.contains($0) }),
                    let spec = AutoConfiguratorEngine.specs[key],
-                   let fit = AutoConfiguratorEngine.fitDetails(forKeyword: safeModelName, faceWidth: self.faceWidth, faceHeight: self.faceHeight, bridgeWidth: self.noseBridgeWidth, nasalProjection: self.nasalProjection, jawWidth: self.jawWidth) {
+                   let fit = AutoConfiguratorEngine.fitDetails(forKeyword: safeModelName, faceWidth: self.faceWidth, faceHeight: self.faceHeight, bridgeWidth: self.noseBridgeWidth, nasalProjection: self.nasalProjection, jawWidth: self.jawWidth, eyeToCheekClearance: self.eyeToCheekClearance, eyeToCheekClearanceValid: self.eyeToCheekClearanceValid) {
 
                     // 🔴 NOVO: Adiciona o tamanho da base em milímetros dinamicamente!
                     displayModelName = "\(displayModelName) \(Int(spec.baseWidth))mm"
@@ -526,7 +526,9 @@ extension MeasurementViewController {
                     bridgeWidth: self.noseBridgeWidth,
             nasalProjection: self.nasalProjection,
             jawWidth: self.jawWidth,
-            faceShape: self.faceShape
+            faceShape: self.faceShape,
+            eyeToCheekClearance: self.eyeToCheekClearance,
+            eyeToCheekClearanceValid: self.eyeToCheekClearanceValid
         )
         
         node.enumerateChildNodes { (child, _) in

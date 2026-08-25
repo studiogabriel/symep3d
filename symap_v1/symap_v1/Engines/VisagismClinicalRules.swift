@@ -50,6 +50,14 @@ struct VisagismClinicalRules {
     // =======================================================
     static let narrowNoseThreshold: Float = 15.0  // Abaixo dessa medida (mm), a IA ativa a Ferradura
 
+    /// Folga mínima (mm) entre a linha do olho e onde a bochecha começa a projetar pra frente
+    /// (ver BiometryEngine.faceGeometry / eyeToCheekClearance). Abaixo disso, a lente corre risco
+    /// de encostar na bochecha — comum em rostos com região malar mais projetada (ex.: traço
+    /// asiático citado na prova física). 18mm é estimativa inicial de anatomia geral, SEM
+    /// validação por prova física ainda — mesmo status que bridgeClearance tinha antes dos dados
+    /// reais do Luno/Suki. Recalibrar assim que houver casos de encaixe com marca na bochecha.
+    static let cheekClearanceThreshold: Float = 18.0
+
     /// Projeção nasal (mm) abaixo da qual o perfil é considerado "Plano" e o apoio nasal entra em ação.
     /// Antes esse número ficava solto dentro do BiometryEngine; agora é calibrável aqui, junto dos outros.
     static let nasalProminenceThreshold: Float = 20.0

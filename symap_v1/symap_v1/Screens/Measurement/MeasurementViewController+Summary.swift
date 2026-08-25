@@ -302,7 +302,9 @@ extension MeasurementViewController {
                     bridgeWidth: self.noseBridgeWidth,
                     nasalProjection: self.nasalProjection,
                     jawWidth: self.jawWidth,
-                    faceShape: self.faceShape // 🔴 Motor agora sabe o formato do rosto!
+                    faceShape: self.faceShape, // 🔴 Motor agora sabe o formato do rosto!
+                    eyeToCheekClearance: self.eyeToCheekClearance,
+                    eyeToCheekClearanceValid: self.eyeToCheekClearanceValid
                 )
             
             let data: [String: Any] = [

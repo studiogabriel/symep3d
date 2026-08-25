@@ -216,7 +216,9 @@ extension MeasurementViewController {
                     faceHeight: self.faceHeight,
                     bridgeWidth: self.noseBridgeWidth,
                     nasalProjection: self.nasalProjection,
-                    jawWidth: self.jawWidth
+                    jawWidth: self.jawWidth,
+                    eyeToCheekClearance: self.eyeToCheekClearance,
+                    eyeToCheekClearanceValid: self.eyeToCheekClearanceValid
                 )
                 let goodFitNames = goodFitKeys.map { AutoConfiguratorEngine.displayName(forKey: $0) }
                 // Fallback: se nenhum modelo do catálogo encaixa sem saturar, mantém a recomendação por formato.
@@ -534,7 +536,7 @@ extension MeasurementViewController {
             
             if let key = AutoConfiguratorEngine.specs.keys.first(where: { safeKeyword.contains($0) }),
                let spec = AutoConfiguratorEngine.specs[key],
-               let fit = AutoConfiguratorEngine.fitDetails(forKeyword: safeKeyword, faceWidth: self.faceWidth, faceHeight: self.faceHeight, bridgeWidth: self.noseBridgeWidth, nasalProjection: self.nasalProjection, jawWidth: self.jawWidth) {
+               let fit = AutoConfiguratorEngine.fitDetails(forKeyword: safeKeyword, faceWidth: self.faceWidth, faceHeight: self.faceHeight, bridgeWidth: self.noseBridgeWidth, nasalProjection: self.nasalProjection, jawWidth: self.jawWidth, eyeToCheekClearance: self.eyeToCheekClearance, eyeToCheekClearanceValid: self.eyeToCheekClearanceValid) {
 
                 displayModelName = "\(keyword.capitalized) \(Int(spec.baseWidth))mm"
 
