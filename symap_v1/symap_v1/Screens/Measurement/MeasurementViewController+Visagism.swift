@@ -533,47 +533,34 @@ extension MeasurementViewController {
             var displayModelName = keyword.capitalized
             
             if let key = AutoConfiguratorEngine.specs.keys.first(where: { safeKeyword.contains($0) }),
-               let spec = AutoConfiguratorEngine.specs[key] {
-                
+               let spec = AutoConfiguratorEngine.specs[key],
+               let fit = AutoConfiguratorEngine.fitDetails(forKeyword: safeKeyword, faceWidth: self.faceWidth, faceHeight: self.faceHeight, bridgeWidth: self.noseBridgeWidth, nasalProjection: self.nasalProjection, jawWidth: self.jawWidth) {
+
                 displayModelName = "\(keyword.capitalized) \(Int(spec.baseWidth))mm"
-                
-                let rawDiffBridge = (self.noseBridgeWidth + VisagismClinicalRules.bridgeClearance) - spec.baseBridge
-                let finalDiffBridge = rawDiffBridge > 0 ? min(rawDiffBridge, spec.limits.bridgePlus) : max(rawDiffBridge, -spec.limits.bridgeMinus)
-                
-                let rawTargetWidth = self.faceWidth + VisagismClinicalRules.temporalClearance
-                let compensatedDiffWidth = (rawTargetWidth - spec.baseWidth) - finalDiffBridge
-                let finalDiffWidth = compensatedDiffWidth > 0 ? min(compensatedDiffWidth, spec.limits.larguraA) : max(compensatedDiffWidth, -spec.limits.larguraR)
-                
-                if abs(finalDiffWidth) > 0.1 {
-                    let sign = finalDiffWidth > 0 ? "+" : ""
-                    modText += "• Largura Temporal: \(sign)\(String(format: "%.1f", finalDiffWidth)) mm\n"
+
+                // 🔴 Deltas em mm vêm direto do motor (AutoConfiguratorEngine.fitDetails) — antes
+                // essa conta era reimplementada aqui em paralelo e ficou desatualizada (regra de
+                // ponte antiga, amortecimento vertical de 0.05 em vez de 0.6). Ver FitResult.
+                if abs(fit.appliedWidthDiff) > 0.1 {
+                    let sign = fit.appliedWidthDiff > 0 ? "+" : ""
+                    modText += "• Largura Temporal: \(sign)\(String(format: "%.1f", fit.appliedWidthDiff)) mm\n"
                 }
-                
-                if abs(finalDiffBridge) > 0.1 {
-                    let sign = finalDiffBridge > 0 ? "+" : ""
-                    modText += "• Ponte Nasal: \(sign)\(String(format: "%.1f", finalDiffBridge)) mm\n"
+
+                if abs(fit.appliedBridgeDiff) > 0.1 {
+                    let sign = fit.appliedBridgeDiff > 0 ? "+" : ""
+                    modText += "• Ponte Nasal: \(sign)\(String(format: "%.1f", fit.appliedBridgeDiff)) mm\n"
                 }
-                
+
                 if self.nasalProfile == "Plano" {
                     modText += "• Apoio Nasal: Expandido (Perfil Plano)\n"
                 }
-                
-                // 🔴 IDENTIDADE DA MARCA: Cálculo Exato Vertical (Visagismo Suave)
-                        let dynamicSafetyCheck = ["Vertical mm UI Calculation"]
-                        let _ = dynamicSafetyCheck[ 0 ]
-                        
-                        // 🔴 CORREÇÃO DO POPUP: Espelhando o amortecimento de 60% do Motor
-                        let targetHeight = self.faceHeight / 4.0
-                        let rawDiffVertical = (targetHeight - spec.baseHeight) * 0.05
-                
-                            let finalDiffVertical = rawDiffVertical > 0 ? min(rawDiffVertical, spec.limits.verticalA) : max(rawDiffVertical, -spec.limits.verticalR)
-                            
-                            if abs(finalDiffVertical) > 0.1 {
-                                let sign = finalDiffVertical > 0 ? "+" : ""
-                                let explanation = finalDiffVertical > 0 ? "Alongamento visual" : "Estética compacta"
-                                modText += "• Design Vertical: \(sign)\(String(format: "%.1f", finalDiffVertical)) mm (\(explanation))\n"
-                            }
-                
+
+                if abs(fit.appliedVerticalDiff) > 0.1 {
+                    let sign = fit.appliedVerticalDiff > 0 ? "+" : ""
+                    let explanation = fit.appliedVerticalDiff > 0 ? "Alongamento visual" : "Estética compacta"
+                    modText += "• Design Vertical: \(sign)\(String(format: "%.1f", fit.appliedVerticalDiff)) mm (\(explanation))\n"
+                }
+
                 if self.noseBridgeWidth < VisagismClinicalRules.narrowNoseThreshold {
                     modText += "• Estrutura da Ponte: Modo Ferradura (Maior volume e aderência)\n"
                 }

@@ -77,6 +77,14 @@ enum AutoConfiguratorEngine {
         let bridgeSaturated: Bool
         let widthSaturated: Bool
         let verticalSaturated: Bool
+        /// Deltas em mm REALMENTE aplicados (já com clipping físico do molde) — fonte única
+        /// para qualquer texto de UI que mostre "Ponte Nasal: -2.9mm" etc. Antes as telas de
+        /// resumo/try-on reimplementavam essa conta em paralelo (comentário "LÓGICA ESPELHADA
+        /// DO MOTOR"), e a cópia ficou desatualizada (regra de ponte antiga, amortecimento
+        /// vertical de 0.05 em vez de 0.6) — ver VisagismClinicalRules.verticalDampening.
+        let appliedBridgeDiff: Float
+        let appliedWidthDiff: Float
+        let appliedVerticalDiff: Float
         var isGoodFit: Bool { !bridgeSaturated && !widthSaturated && !verticalSaturated }
     }
 
@@ -120,13 +128,18 @@ enum AutoConfiguratorEngine {
         // Se a ponte expandiu 4.7mm, o óculos já cresceu 4.7mm. Subtraímos isso da meta temporal!
         let diffWidth = (targetWidth - spec.baseWidth) - appliedBridgeDiff
         var widthSaturated = false
+        var appliedWidthDiff: Float = 0.0
 
         if diffWidth > 0 {
             widthSaturated = diffWidth > spec.limits.larguraA
-            weights["Largura_a"] = min(1.0, diffWidth / spec.limits.larguraA)
+            let weight = min(1.0, diffWidth / spec.limits.larguraA)
+            weights["Largura_a"] = weight
+            appliedWidthDiff = weight * spec.limits.larguraA
         } else {
             widthSaturated = abs(diffWidth) > spec.limits.larguraR
-            weights["Largura_r"] = min(1.0, abs(diffWidth) / spec.limits.larguraR)
+            let weight = min(1.0, abs(diffWidth) / spec.limits.larguraR)
+            weights["Largura_r"] = weight
+            appliedWidthDiff = -(weight * spec.limits.larguraR)
         }
 
         // 3. 🔴 APOIO NASAL PROPORCIONAL: quanto mais achatado o nariz (abaixo do limiar
@@ -163,16 +176,21 @@ enum AutoConfiguratorEngine {
         // preservando o design de fábrica da armação!
         let smoothDiffHeight = rawDiffHeight * VisagismClinicalRules.verticalDampening
         var verticalSaturated = false
+        var appliedVerticalDiff: Float = 0.0
 
         if smoothDiffHeight > 0 {
             verticalSaturated = smoothDiffHeight > spec.limits.verticalA
-            weights["Vertical_a"] = min(1.0, smoothDiffHeight / spec.limits.verticalA)
+            let weight = min(1.0, smoothDiffHeight / spec.limits.verticalA)
+            weights["Vertical_a"] = weight
+            appliedVerticalDiff = weight * spec.limits.verticalA
         } else if smoothDiffHeight < 0 {
             verticalSaturated = abs(smoothDiffHeight) > spec.limits.verticalR
-            weights["Vertical_r"] = min(1.0, abs(smoothDiffHeight) / spec.limits.verticalR)
+            let weight = min(1.0, abs(smoothDiffHeight) / spec.limits.verticalR)
+            weights["Vertical_r"] = weight
+            appliedVerticalDiff = -(weight * spec.limits.verticalR)
         }
 
-        return FitResult(weights: weights, bridgeSaturated: bridgeSaturated, widthSaturated: widthSaturated, verticalSaturated: verticalSaturated)
+        return FitResult(weights: weights, bridgeSaturated: bridgeSaturated, widthSaturated: widthSaturated, verticalSaturated: verticalSaturated, appliedBridgeDiff: appliedBridgeDiff, appliedWidthDiff: appliedWidthDiff, appliedVerticalDiff: appliedVerticalDiff)
     }
 
     /// Calcula os pesos (0.0 a 1.0) para as Shape Keys (Morphers) baseados na biometria do paciente
@@ -184,6 +202,17 @@ enum AutoConfiguratorEngine {
               let spec = specs[key] else { return [:] }
 
         return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth).weights
+    }
+
+    /// Mesma busca fuzzy de calculateMorphWeights, mas devolve o FitResult completo (pesos +
+    /// deltas em mm já aplicados/clipados) — fonte única para textos de UI como "Ponte Nasal:
+    /// -2.9mm", evitando reimplementar a fórmula do motor em cada tela.
+    static func fitDetails(forKeyword keyword: String, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float) -> FitResult? {
+        let safeKeyword = keyword.lowercased().replacingOccurrences(of: " ", with: "_")
+        let sortedKeys = specs.keys.sorted(by: { $0.count > $1.count })
+        guard let key = sortedKeys.first(where: { safeKeyword.contains($0) }),
+              let spec = specs[key] else { return nil }
+        return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth)
     }
 
     /// Mesma busca fuzzy de calculateMorphWeights, mas devolve só se o modelo cabe sem saturar
