@@ -567,15 +567,20 @@ extension MeasurementViewController {
 
                 // 🔴 DIAGNÓSTICO DEV: eixo que bateu no limite físico do molde e ainda precisaria
                 // de mais — não é mostrado ao cliente em produção, só para controle enquanto o
-                // app está em desenvolvimento (pedido explícito: "informar o quanto excedeu").
+                // app está em desenvolvimento. A mensagem diz a DIREÇÃO do excedente (maior/menor,
+                // esticar/encolher) porque só o número não diz o que de fato aconteceu.
                 if fit.bridgeOverage > 0.05 {
-                    modText += "⚠️ [DEV] Ponte excede o ideal em \(String(format: "%.2f", fit.bridgeOverage)) mm\n"
+                    let dir = fit.appliedBridgeDiff > 0 ? "mais larga" : "mais estreita"
+                    modText += "⚠️ [DEV] Ponte do rosto é \(dir) que o limite de ajuste em \(String(format: "%.2f", fit.bridgeOverage)) mm\n"
                 }
                 if fit.widthOverage > 0.05 {
-                    modText += "⚠️ [DEV] Largura excede o ideal em \(String(format: "%.2f", fit.widthOverage)) mm\n"
+                    let dir = fit.appliedWidthDiff > 0 ? "maior" : "menor"
+                    modText += "⚠️ [DEV] Largura do rosto é \(dir) que o limite de ajuste em \(String(format: "%.2f", fit.widthOverage)) mm\n"
                 }
                 if fit.verticalOverage > 0.05 {
-                    modText += "⚠️ [DEV] Vertical excede o ideal em \(String(format: "%.2f", fit.verticalOverage)) mm\n"
+                    let verb = fit.appliedVerticalDiff > 0 ? "esticar" : "encolher"
+                    let context = fit.appliedVerticalDiff > 0 ? "rosto mais alongado" : "rosto mais compacto"
+                    modText += "⚠️ [DEV] Altura da lente precisa \(verb) mais que o limite de ajuste em \(String(format: "%.2f", fit.verticalOverage)) mm (\(context))\n"
                 }
             }
             
