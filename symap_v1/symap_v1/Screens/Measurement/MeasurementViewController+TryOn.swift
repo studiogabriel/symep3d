@@ -63,25 +63,23 @@ extension MeasurementViewController {
     }
     
     func loadCloudModel(model: CloudGlassModel, showFakeLoading: Bool = true, bypassWarning: Bool = false) {
-            // 🔴 INTELIGÊNCIA ANATÔMICA PREVENTIVA: Valida o encaixe físico real antes de carregar
-            // (antes isso era um chute por categoria de tamanho; agora é a mesma conta física
-            // usada em bestFittingModels — inclusive pega o caso de mesma categoria mas modelo
-            // específico saturado, como aconteceu com o Luno feminino).
+            // 🔴 AVISO SÓ POR LINHA DE TAMANHO ERRADA: antes o aviso disparava se o modelo
+            // específico saturasse qualquer eixo (isGoodFit), o que incluía trocar de modelo
+            // DENTRO da própria linha correta (ex.: rosto masculino, Luno → Nunu masculino).
+            // Isso não deveria alarmar o cliente — dentro da linha certa a diferença entre
+            // Luno/Nunu/Suki/Timbau é estética, não uma incompatibilidade de proporção. Só
+            // avisa quando a linha escolhida manualmente (infantil/feminino/masculino) é
+            // diferente da linha indicada pra largura do rosto do cliente.
             let checkName = model.name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
-            let fitsWell = AutoConfiguratorEngine.isGoodFit(
-                forKeyword: checkName,
-                faceWidth: self.faceWidth,
-                faceHeight: self.faceHeight,
-                bridgeWidth: self.noseBridgeWidth,
-                nasalProjection: self.nasalProjection,
-                jawWidth: self.jawWidth
-            )
+            let recommendedLine = AutoConfiguratorEngine.sizeLineSuffix(forFaceWidth: self.faceWidth)
+            let selectedLine = ["infantil", "feminino", "masculino"].first(where: { checkName.hasSuffix("_\($0)") })
+            let lineMismatch = selectedLine != nil && selectedLine != recommendedLine
 
             if !bypassWarning {
                 var warningMsg: String? = nil
 
-                if fitsWell == false {
-                    warningMsg = "Esse modelo pode ficar apertado ou esticado além do ideal pro seu rosto — a IA vai levar o ajuste ao limite do molde. Deseja provar mesmo assim?"
+                if lineMismatch {
+                    warningMsg = "Esse modelo é de uma linha de tamanho diferente da indicada pro seu rosto — pode ficar apertado ou esticado além do ideal. Deseja provar mesmo assim?"
                 }
 
                 if let msg = warningMsg {
