@@ -18,6 +18,15 @@ struct VisagismClinicalRules {
     /// -0.40 = média(17.4) - narizDela(17.8). Baseado em n=2 (Luno/Suki); revalidar com mais provas.
     static let bridgeClearance: Float = -0.40
 
+    /// 🔴 NOVA REGRA (linha masculina): a partir da remedição via Blender com metodologia
+    /// consistente (Pronte ~23.8mm nos 4 modelos, vs. ~14.2mm da estimativa manual anterior),
+    /// a meta de ponte deixa de ser calibrada por tentativa/erro e passa a ser uma regra fixa
+    /// de engenharia: ponte alvo = ponte medida do paciente + 2mm de folga sobre o osso nasal.
+    /// Só se aplica à linha masculina por enquanto — infantil/feminino ainda usam bridgeClearance
+    /// (-0.40), calibrado com prova física real na metodologia antiga de medição da ponte.
+    /// Trocar para essa regra quando essas linhas também forem remedidas no Blender.
+    static let bridgeOffsetMasculino: Float = 2.0
+
     /// Folga temporal específica da linha feminino. Caso real (rosto 120.2mm / ponte 17.8mm):
     /// com a folga padrão de 10mm, o Suki feminino não saturava o limite de encolhimento (usava
     /// 3.35mm de um teto de 4.0mm) mas ainda assim foi sentido como apertado na prova — ou seja,

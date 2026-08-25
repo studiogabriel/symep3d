@@ -40,18 +40,23 @@ enum AutoConfiguratorEngine {
             "timbau_feminino": ModelSpec(baseBridge: 14.5, baseWidth: 135.0, baseHeight: 51.5, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
             
             // --- COLEÇÃO MASCULINA (Base Larga: ~142mm) ---
-            // 🔴 baseWidth/baseHeight/baseBridge corrigidos com medição direta do molde 3D em
-            // repouso (peso 0), extraída via Claude dentro do Blender — não é estimativa por
+            // 🔴 baseWidth/baseHeight corrigidos com medição direta do molde 3D em repouso
+            // (peso 0), extraída via Claude dentro do Blender — não é estimativa por
             // impressão/paquímetro como o infantil. baseWidth estava uniformemente 140.0 pros
             // 4 modelos; a medida real é ~142.0 nos 4 (mesmo desvio consistente, não é ruído).
-            // baseBridge mudou de valores variados por modelo (18.0/17.0/16.0/16.2, da medição
-            // manual antiga e imprecisa) para ~14.20 nos 4 — quase idêntico entre modelos porque
-            // a extração automática mede a mesma região consistentemente, diferente da estimativa
-            // visual anterior.
-            "luno_masculino": ModelSpec(baseBridge: 14.20, baseWidth: 142.00, baseHeight: 53.31, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 2.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
-            "nunu_masculino": ModelSpec(baseBridge: 14.20, baseWidth: 142.00, baseHeight: 48.94, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 2.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
-            "suki_masculino": ModelSpec(baseBridge: 14.20, baseWidth: 142.00, baseHeight: 54.73, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
-            "timbau_masculino": ModelSpec(baseBridge: 14.19, baseWidth: 141.93, baseHeight: 53.99, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
+            // 🔴 baseBridge: 2ª remedição via Blender com metodologia consistente de "Ponte"
+            // (23.86/23.80/23.81/23.78) substitui a 1ª leitura (14.20/14.20/14.20/14.19) — a
+            // 1ª usava uma região diferente da ponte; Altura/Largura bateram igual nas duas
+            // medições, então só a leitura da ponte mudou de metodologia. Ver bridgeOffsetMasculino
+            // em VisagismClinicalRules: a meta de ponte pra essa linha agora é regra fixa
+            // (ponte do paciente + 2mm), não mais bridgeClearance calibrado por tentativa.
+            // 🔴 limits.bridgePlus/bridgeMinus: 1ª medição real de capacidade (peso 1.0 no Blender,
+            // não mais estimativa de 4.0/4.0 uniforme). larguraA/larguraR/verticalA/verticalR
+            // conferidas contra a mesma planilha e já batiam com os valores existentes — não mudaram.
+            "luno_masculino": ModelSpec(baseBridge: 23.86, baseWidth: 142.00, baseHeight: 53.31, limits: ModelLimits(bridgePlus: 6.11, bridgeMinus: 3.98, nasal: 2.0, ferradura: 2.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
+            "nunu_masculino": ModelSpec(baseBridge: 23.80, baseWidth: 142.00, baseHeight: 48.94, limits: ModelLimits(bridgePlus: 4.67, bridgeMinus: 3.33, nasal: 2.0, ferradura: 2.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
+            "suki_masculino": ModelSpec(baseBridge: 23.81, baseWidth: 142.00, baseHeight: 54.73, limits: ModelLimits(bridgePlus: 3.75, bridgeMinus: 3.95, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
+            "timbau_masculino": ModelSpec(baseBridge: 23.78, baseWidth: 141.93, baseHeight: 53.99, limits: ModelLimits(bridgePlus: 4.39, bridgeMinus: 3.33, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
 
             // --- COLEÇÃO INFANTIL (Base M: 120mm) ---
             // 🔴 larguraA corrigido por medição real de prova impressa (peso 1.0/saturado):
@@ -80,11 +85,17 @@ enum AutoConfiguratorEngine {
         return key.hasSuffix("_feminino") ? VisagismClinicalRules.temporalClearanceFeminino : VisagismClinicalRules.temporalClearance
     }
 
+    /// Meta de ponte por linha — masculino usa a regra fixa nova (ponte do paciente + 2mm),
+    /// infantil/feminino ainda usam bridgeClearance (calibração antiga por prova física real).
+    private static func bridgeOffset(forKey key: String) -> Float {
+        return key.hasSuffix("_masculino") ? VisagismClinicalRules.bridgeOffsetMasculino : VisagismClinicalRules.bridgeClearance
+    }
+
     /// Núcleo único de cálculo — usado tanto por calculateMorphWeights (um modelo específico,
     /// busca fuzzy por keyword) quanto por bestFittingModels (varre o catálogo inteiro).
     private static func computeFit(key: String, spec: ModelSpec, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float) -> FitResult {
         let targetWidth = faceWidth + widthClearance(forKey: key)
-        let targetBridge = bridgeWidth + VisagismClinicalRules.bridgeClearance
+        let targetBridge = bridgeWidth + bridgeOffset(forKey: key)
 
         var weights: [String: Float] = [:]
 
