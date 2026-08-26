@@ -208,10 +208,7 @@ enum AutoConfiguratorEngine {
         let targetHeight = faceHeight / 4.0
         let rawDiffHeight = targetHeight - spec.baseHeight
 
-        // 2. 🔴 A MÁGICA DA SUA IDEIA: Fator de Amortecimento Estético (60%)
-        // Transforma uma distorção matemática agressiva de 2.0mm em apenas 1.2mm,
-        // preservando o design de fábrica da armação!
-        // 3. 🔴 PRESSÃO POR FOLGA OLHO→BOCHECHA: quando a bochecha da pessoa começa antes do
+        // 2. 🔴 PRESSÃO POR FOLGA OLHO→BOCHECHA: quando a bochecha da pessoa começa antes do
         // limiar clínico (cheekClearanceThreshold), a lente corre risco real de encostar nela —
         // isso empurra o ajuste pra encolher MAIS do que a proporção genérica pediria sozinha
         // (nunca pra esticar: falta de folga é sempre motivo de reduzir, não de aumentar).
@@ -220,7 +217,16 @@ enum AutoConfiguratorEngine {
         let cheekShortfall: Float = (eyeToCheekClearanceValid && eyeToCheekClearance < VisagismClinicalRules.cheekClearanceThreshold)
             ? (VisagismClinicalRules.cheekClearanceThreshold - eyeToCheekClearance)
             : 0
-        let smoothDiffHeight = (rawDiffHeight * VisagismClinicalRules.verticalDampening) - cheekShortfall
+
+        // 3. 🔴 A MÁGICA DA SUA IDEIA: Fator de Amortecimento Estético (60%)
+        // Transforma uma distorção matemática agressiva de 2.0mm em apenas 1.2mm, preservando
+        // o design de fábrica da armação! 🔴 CORREÇÃO: antes o amortecimento só entrava na
+        // proporção geral (rawDiffHeight) — a pressão da bochecha (cheekShortfall) somava por
+        // cima crua, sem freio nenhum. Prova física real (Luno masculino, 2026-08) mostrou
+        // encolhimento excessivo (saturava no teto do molde e ainda "faltava" 0.5-0.8mm) — a
+        // pressão sem amortecimento provavelmente era a maior responsável. Agora os dois termos
+        // são somados ANTES do amortecimento, então a bochecha também é suavizada.
+        let smoothDiffHeight = (rawDiffHeight - cheekShortfall) * VisagismClinicalRules.verticalDampening
         var verticalSaturated = false
         var appliedVerticalDiff: Float = 0.0
         var verticalOverage: Float = 0.0
