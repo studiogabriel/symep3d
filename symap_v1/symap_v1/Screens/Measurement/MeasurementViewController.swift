@@ -21,7 +21,12 @@ class MeasurementViewController: UIViewController, ARSCNViewDelegate, PKCanvasVi
     var glassesYOffset: Float = 0.02
     
     var isVisagismCompleted: Bool = false
+    /// Modelo mais otimizado pelo ranking físico (AutoConfiguratorEngine.bestOptimizedModels) —
+    /// é o que de fato é aplicado no try-on automático.
     var recommendedAutoModel: String = ""
+    /// Modelo indicado pelo formato/estilo do rosto (BiometryEngine.analyzeVisagisme →
+    /// FrameCatalogEngine) — puramente estético, pode ou não ser o mesmo do encaixe físico.
+    var visagismStyleModel: String = ""
     
     // --- SISTEMA DE DESENHO (PencilKit) ---
     var canvasView: PKCanvasView!

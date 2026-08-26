@@ -186,7 +186,25 @@ extension MeasurementViewController {
                     let visagisme = BiometryEngine.analyzeVisagisme(width: self.faceWidth, height: self.faceHeight, bridge: self.noseBridgeWidth, jaw: self.jawWidth, dnpTotal: self.dnpTotal, cheekbone: self.cheekboneWidth, cheekboneValid: fg.cheekboneValid, nasalProjection: self.nasalProjection)
                     self.faceShape = visagisme.faceShape
                     self.frameSuggestion = visagisme.frameSuggestion
-                    self.recommendedAutoModel = visagisme.recommendedModel
+                    self.visagismStyleModel = visagisme.recommendedModel.capitalized
+
+                    // 🔴 CORREÇÃO: antes o modelo REALMENTE aplicado no try-on vinha só do
+                    // formato do rosto (analyzeVisagisme → FrameCatalogEngine, escolha estética,
+                    // sem olhar nenhuma medida física), enquanto a lista "melhor encaixe" da tela
+                    // de visagismo já usava bestOptimizedModels (ranking físico) — dois motores
+                    // desconectados que podiam discordar (caso real: lista dizia "Nunu", o
+                    // try-on vestia "Luno"). Agora o modelo auto-aplicado usa o mesmo ranking
+                    // físico; só extrai o nome base ("nunu_masculino" → "Nunu") pra manter o
+                    // formato que o resto do app já espera em recommendedAutoModel.
+                    if let bestKey = AutoConfiguratorEngine.mostOptimizedModel(
+                        faceWidth: self.faceWidth, faceHeight: self.faceHeight, bridgeWidth: self.noseBridgeWidth,
+                        nasalProjection: self.nasalProjection, jawWidth: self.jawWidth,
+                        eyeToCheekClearance: self.eyeToCheekClearance, eyeToCheekClearanceValid: self.eyeToCheekClearanceValid
+                    ), let baseName = bestKey.split(separator: "_").first {
+                        self.recommendedAutoModel = String(baseName).capitalized
+                    } else {
+                        self.recommendedAutoModel = visagisme.recommendedModel
+                    }
                 }
         
         let currentBridgeY = bridgeHeightY

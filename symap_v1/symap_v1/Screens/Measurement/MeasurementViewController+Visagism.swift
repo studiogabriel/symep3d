@@ -239,7 +239,24 @@ extension MeasurementViewController {
                 // ajuste simétrico, então isso é aviso, não correção automática.
                 let asymmetryWarning = BiometryEngine.facialAsymmetryWarning(faceWidthLeft: self.faceWidthLeft, faceWidthRight: self.faceWidthRight)
 
-                var recomText = "RECOMENDAÇÃO SYMEP IA DE \(patientFirstName.uppercased()):\nMapeamos o formato de rosto \(shapeTitle). Em ordem de melhor encaixe pro seu rosto: \(modelsListText)."
+                // 🔴 DUAS RECOMENDAÇÕES, NÃO UMA SÓ: o encaixe físico (bestOptimizedModels) e o
+                // estilo/visagismo (analyzeVisagisme → FrameCatalogEngine) são motores diferentes
+                // e podem discordar — antes só um deles chegava na tela, escondendo a divergência
+                // do paciente. Agora mostramos as duas opções e deixamos ele decidir; quando as
+                // duas baterem no mesmo modelo, vira um "match" (mensagem mais celebrativa).
+                let sizeLine = AutoConfiguratorEngine.sizeLineSuffix(forFaceWidth: self.faceWidth)
+                let bestFitKey = ranked.first?.key
+                let bestFitBaseName = bestFitKey?.split(separator: "_").first.map { String($0) } ?? ""
+                let bestFitDisplayName = bestFitKey.map { AutoConfiguratorEngine.displayName(forKey: $0) } ?? displayModelName.uppercased()
+                let styleDisplayName = AutoConfiguratorEngine.displayName(forKey: "\(self.visagismStyleModel.lowercased())_\(sizeLine)")
+                let isMatch = !bestFitBaseName.isEmpty && bestFitBaseName.lowercased() == self.visagismStyleModel.lowercased()
+
+                var recomText: String
+                if isMatch {
+                    recomText = "RECOMENDAÇÃO SYMEP IA DE \(patientFirstName.uppercased()):\n🎉 Incrível! Seu rosto deu match — \(bestFitDisplayName) é, ao mesmo tempo, o modelo que melhor se encaixa fisicamente no seu rosto E o que mais combina com o seu estilo \(shapeTitle).\n\nEm ordem de melhor encaixe: \(modelsListText)."
+                } else {
+                    recomText = "RECOMENDAÇÃO SYMEP IA DE \(patientFirstName.uppercased()):\nMapeamos o formato de rosto \(shapeTitle). Em ordem de melhor encaixe pro seu rosto: \(modelsListText).\n\n\(bestFitDisplayName) seria a escolha personalizada correta pro seu rosto. Já baseado em visagismo, o modelo que pode seguir melhor o estilo do seu rosto é \(styleDisplayName)."
+                }
                 if let warning = asymmetryWarning {
                     recomText += "\n\n⚠️ \(warning)"
                 }
@@ -264,6 +281,16 @@ extension MeasurementViewController {
                 if shapeRange.location != NSNotFound {
                     recomAttrText.addAttribute(.foregroundColor, value: opticalCyan, range: shapeRange)
                     recomAttrText.addAttribute(.font, value: UIFont(name: "Inter-Bold", size: 13) ?? UIFont.boldSystemFont(ofSize: 13), range: shapeRange)
+                }
+                if !isMatch {
+                    // 🔴 Destaca o nome do modelo de estilo com uma cor diferente (laranja) da
+                    // ponte física (cyan) — deixa visualmente claro que são duas recomendações
+                    // de natureza diferente, não uma continuação da mesma lista.
+                    let styleRange = nsRecomText.range(of: styleDisplayName, options: .backwards)
+                    if styleRange.location != NSNotFound {
+                        recomAttrText.addAttribute(.foregroundColor, value: UIColor.systemOrange, range: styleRange)
+                        recomAttrText.addAttribute(.font, value: UIFont(name: "Inter-Bold", size: 13) ?? UIFont.boldSystemFont(ofSize: 13), range: styleRange)
+                    }
                 }
                 if let warning = asymmetryWarning {
                     let warningRange = nsRecomText.range(of: "⚠️ \(warning)")
