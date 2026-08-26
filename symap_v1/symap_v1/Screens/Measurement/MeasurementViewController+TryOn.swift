@@ -372,55 +372,12 @@ extension MeasurementViewController {
                 let navyDark = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
                 let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
                 let navyMedium = UIColor(red: 0.118, green: 0.227, blue: 0.431, alpha: 1.0)
-                
-                let popupOverlay = UIView(frame: self.view.bounds)
-                popupOverlay.backgroundColor = UIColor.black.withAlphaComponent(0.8)
-                popupOverlay.alpha = 0.0
-                self.view.addSubview(popupOverlay)
-        
-        // 🔴 BRANDBOOK: Card Modular Bi-color (Fundo Branco com Cabeçalho Navy)
                 let boxW: CGFloat = 340
-                let boxH: CGFloat = 350 // Aumentado para dar respiro
-                let box = UIView(frame: CGRect(x: (self.view.bounds.width - boxW)/2, y: (self.view.bounds.height - boxH)/2, width: boxW, height: boxH))
-                box.backgroundColor = .white
-                box.layer.cornerRadius = 24
-                box.clipsToBounds = true // Blinda o vazamento de cor nas quinas
-                popupOverlay.addSubview(box)
-                
-                // Cabeçalho Navy (Terço superior)
                 let headerH: CGFloat = 90
-                let headerView = UIView(frame: CGRect(x: 0, y: 0, width: boxW, height: headerH))
-                headerView.backgroundColor = navyDark
-                box.addSubview(headerView)
-                
-                // Pega apenas o primeiro nome do paciente
-                let patientFirstName = self.patientName.components(separatedBy: " ").first ?? "Paciente"
-                
-                let titleLabel = UILabel(frame: CGRect(x: 24, y: 20, width: boxW - 90, height: 28))
-                titleLabel.text = patientFirstName.uppercased()
-                titleLabel.textColor = .white
-                titleLabel.font = UIFont(name: "Inter-Bold", size: 22) ?? UIFont.boldSystemFont(ofSize: 22)
-                headerView.addSubview(titleLabel)
-                
-                let subtitleLabel = UILabel(frame: CGRect(x: 24, y: 50, width: boxW - 90, height: 20))
-                subtitleLabel.text = "Ajustes Aplicados"
-                subtitleLabel.textColor = .white
-                subtitleLabel.font = UIFont(name: "Inter-Medium", size: 14) ?? UIFont.systemFont(ofSize: 14, weight: .medium)
-                headerView.addSubview(subtitleLabel)
-                
-                // 🔴 BRANDBOOK: Ícone Ico_10 vazado e pintado de Optical Cyan
-                let iconView = UIImageView(frame: CGRect(x: boxW - 65, y: 25, width: 40, height: 40))
-                if let iconImg = UIImage(named: "Ico_10")?.withRenderingMode(.alwaysTemplate) {
-                    iconView.image = iconImg
-                }
-                iconView.tintColor = opticalCyan
-                iconView.contentMode = .scaleAspectFit
-                headerView.addSubview(iconView)
-                
-                // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
-                let splitValidation = ["Try-On Split UI OK"]
-                let _ = splitValidation[ 0 ]
-        
+
+        // 🔴 CORREÇÃO: o texto (modText) precisa ser calculado ANTES de montar o popup — a
+        // altura do label e da caixa se ajustam ao conteúdo real (pode ter até ~8 linhas com
+        // os avisos [DEV]), em vez de um valor fixo (140pt) que cortava o texto silenciosamente.
         var modText = ""
                 
                 // 🔴 CORREÇÃO: Converte espaços em underscores para o PopUp conseguir achar a chave no Motor!
@@ -484,17 +441,72 @@ extension MeasurementViewController {
                 }
                 
                 if modText.isEmpty { modText = "• Proporções originais perfeitas para sua face.\n" }
-                
-        // Reposicionamos o texto abaixo do cabeçalho
-                let infoLabel = UILabel(frame: CGRect(x: 24, y: headerH + 15, width: boxW - 48, height: 140))
+
+                let infoFont = UIFont(name: "Inter-Medium", size: 13) ?? UIFont.systemFont(ofSize: 13, weight: .medium)
+                let fullInfoText = "O modelo (\(displayModelName)) foi recriado milimetricamente para você:\n\n" + modText
+                let labelWidth = boxW - 48
+
+                // 🔴 Mede a altura REAL necessária pro texto em vez de um valor fixo (140pt) que
+                // cortava o conteúdo quando sobravam linhas de aviso [DEV]. Cap em 420pt.
+                let measuredHeight = (fullInfoText as NSString).boundingRect(
+                    with: CGSize(width: labelWidth, height: .greatestFiniteMagnitude),
+                    options: [.usesLineFragmentOrigin, .usesFontLeading],
+                    attributes: [.font: infoFont],
+                    context: nil
+                ).height
+                let labelHeight = min(max(140, ceil(measuredHeight) + 4), 420)
+
+                let bottomChrome: CGFloat = 105
+                var boxH = headerH + 15 + labelHeight + bottomChrome
+                boxH = min(boxH, self.view.bounds.height - 80)
+
+                // 🔴 Caixa e overlay só são montados AGORA, com a altura já ajustada ao conteúdo.
+                let popupOverlay = UIView(frame: self.view.bounds)
+                popupOverlay.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+                popupOverlay.alpha = 0.0
+                self.view.addSubview(popupOverlay)
+
+                let box = UIView(frame: CGRect(x: (self.view.bounds.width - boxW)/2, y: (self.view.bounds.height - boxH)/2, width: boxW, height: boxH))
+                box.backgroundColor = .white
+                box.layer.cornerRadius = 24
+                box.clipsToBounds = true
+                popupOverlay.addSubview(box)
+
+                let headerView = UIView(frame: CGRect(x: 0, y: 0, width: boxW, height: headerH))
+                headerView.backgroundColor = navyDark
+                box.addSubview(headerView)
+
+                let patientFirstName = self.patientName.components(separatedBy: " ").first ?? "Paciente"
+
+                let titleLabel = UILabel(frame: CGRect(x: 24, y: 20, width: boxW - 90, height: 28))
+                titleLabel.text = patientFirstName.uppercased()
+                titleLabel.textColor = .white
+                titleLabel.font = UIFont(name: "Inter-Bold", size: 22) ?? UIFont.boldSystemFont(ofSize: 22)
+                headerView.addSubview(titleLabel)
+
+                let subtitleLabel = UILabel(frame: CGRect(x: 24, y: 50, width: boxW - 90, height: 20))
+                subtitleLabel.text = "Ajustes Aplicados"
+                subtitleLabel.textColor = .white
+                subtitleLabel.font = UIFont(name: "Inter-Medium", size: 14) ?? UIFont.systemFont(ofSize: 14, weight: .medium)
+                headerView.addSubview(subtitleLabel)
+
+                let iconView = UIImageView(frame: CGRect(x: boxW - 65, y: 25, width: 40, height: 40))
+                if let iconImg = UIImage(named: "Ico_10")?.withRenderingMode(.alwaysTemplate) {
+                    iconView.image = iconImg
+                }
+                iconView.tintColor = opticalCyan
+                iconView.contentMode = .scaleAspectFit
+                headerView.addSubview(iconView)
+
+                let infoLabel = UILabel(frame: CGRect(x: 24, y: headerH + 15, width: labelWidth, height: labelHeight))
                 infoLabel.numberOfLines = 0
-                infoLabel.text = "O modelo (\(displayModelName)) foi recriado milimetricamente para você:\n\n" + modText
-                
+                infoLabel.text = fullInfoText
+
                 // 🔴 BRANDBOOK: Tom escuro para leitura no fundo branco
                 infoLabel.textColor = navyMedium
-                infoLabel.font = UIFont(name: "Inter-Medium", size: 13) ?? UIFont.systemFont(ofSize: 13, weight: .medium)
+                infoLabel.font = infoFont
                 box.addSubview(infoLabel)
-                
+
                 let btnOk = UIButton(frame: CGRect(x: 24, y: boxH - 70, width: boxW - 48, height: 46))
                 btnOk.backgroundColor = opticalCyan
                 btnOk.setTitle("Vestir Armação", for: .normal)

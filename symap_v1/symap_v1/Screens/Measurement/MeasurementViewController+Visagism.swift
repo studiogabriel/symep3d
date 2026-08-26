@@ -511,56 +511,14 @@ extension MeasurementViewController {
                     let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
                     let navyDark = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
                     let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
-                    
-                    let popupOverlay = UIView(frame: self.view.bounds)
-                    popupOverlay.backgroundColor = UIColor.black.withAlphaComponent(0.8)
-                    popupOverlay.alpha = 0.0
-                    self.view.addSubview(popupOverlay)
-            
-            // 🔴 BRANDBOOK: Card Modular Bi-color (Fundo Branco com Cabeçalho Navy)
-            // 🔴 BRANDBOOK: Card Modular Bi-color (Fundo Branco com Cabeçalho Navy)
                     let boxW: CGFloat = 340
-                    let boxH: CGFloat = 350 // Aumentamos um pouco para dar respiro ao design split
-                    let box = UIView(frame: CGRect(x: (self.view.bounds.width - boxW)/2, y: (self.view.bounds.height - boxH)/2, width: boxW, height: boxH))
-                    box.backgroundColor = .white // O corpo do card de leitura é branco
-                    box.layer.cornerRadius = 24
-                    box.clipsToBounds = true // Essencial para o cabeçalho não vazar nas quinas arredondadas
-                    popupOverlay.addSubview(box)
-                    
-                    // Cabeçalho Navy (Terço superior)
                     let headerH: CGFloat = 90
-                    let headerView = UIView(frame: CGRect(x: 0, y: 0, width: boxW, height: headerH))
-                    headerView.backgroundColor = navyDark
-                    box.addSubview(headerView)
-                    
-                    // Pega apenas o primeiro nome do paciente
-                    let patientFirstName = self.patientName.components(separatedBy: " ").first ?? "Paciente"
-                    
-                    let titleLabel = UILabel(frame: CGRect(x: 24, y: 20, width: boxW - 90, height: 28))
-                    titleLabel.text = patientFirstName.uppercased()
-                    titleLabel.textColor = .white
-                    titleLabel.font = UIFont(name: "Inter-Bold", size: 22) ?? UIFont.boldSystemFont(ofSize: 22)
-                    headerView.addSubview(titleLabel)
-                    
-                    let subtitleLabel = UILabel(frame: CGRect(x: 24, y: 50, width: boxW - 90, height: 20))
-                    subtitleLabel.text = "Ajustes da armação"
-                    subtitleLabel.textColor = .white
-                    subtitleLabel.font = UIFont(name: "Inter-Medium", size: 14) ?? UIFont.systemFont(ofSize: 14, weight: .medium)
-                    headerView.addSubview(subtitleLabel)
-                    
-                    // Ícone Ico_10 vazado e pintado de Optical Cyan
-                    let iconView = UIImageView(frame: CGRect(x: boxW - 65, y: 25, width: 40, height: 40))
-                    if let iconImg = UIImage(named: "Ico_10")?.withRenderingMode(.alwaysTemplate) {
-                        iconView.image = iconImg
-                    }
-                    iconView.tintColor = opticalCyan
-                    iconView.contentMode = .scaleAspectFit
-                    headerView.addSubview(iconView)
-                    
-                    // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
-                    let splitValidation = ["Split UI OK"]
-                    let _ = splitValidation[ 0 ]
-            
+
+            // 🔴 CORREÇÃO: o texto (modText) precisa ser calculado ANTES de montar o popup,
+            // porque agora ele pode ter várias linhas (largura/ponte/vertical/ferradura + até
+            // 3 avisos [DEV]) — a altura do label e da caixa precisam se ajustar ao conteúdo
+            // real, não um valor fixo (140pt) que cortava o texto silenciosamente quando
+            // sobravam muitas linhas ("o texto foi cortado pela caixa").
             let keyword = self.recommendedAutoModel
             var modText = ""
             
@@ -625,28 +583,86 @@ extension MeasurementViewController {
             }
             
             if modText.isEmpty { modText = "• Proporções originais perfeitas para sua face.\n" }
-            
-            // 🔴 CORREÇÃO UX: Altura do label aumentada de 100 para 130
-            // Reposicionamos o texto abaixo do cabeçalho
-                    let infoLabel = UILabel(frame: CGRect(x: 24, y: headerH + 15, width: boxW - 48, height: 140))
-                    infoLabel.numberOfLines = 0
-                    infoLabel.text = "Modificações Aplicadas no Modelo (\(displayModelName)):\n\n" + modText
-                    
-                    // 🔴 BRANDBOOK: Tom escuro sofisticado para brilhar e ter contraste no Fundo Branco
-                    let navyMedium = UIColor(red: 0.118, green: 0.227, blue: 0.431, alpha: 1.0)
-                    infoLabel.textColor = navyMedium
-                    infoLabel.font = UIFont(name: "Inter-Medium", size: 13) ?? UIFont.systemFont(ofSize: 13, weight: .medium)
-                    box.addSubview(infoLabel)
-                    
-                    let btnOk = UIButton(frame: CGRect(x: 24, y: boxH - 70, width: boxW - 48, height: 46))
-                    btnOk.backgroundColor = opticalCyan
-                    btnOk.setTitle("OK, Iniciar Medições", for: .normal)
-                    btnOk.setTitleColor(navyDark, for: .normal)
-                    btnOk.layer.cornerRadius = 14
-                    btnOk.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
-                    btnOk.addTarget(self, action: #selector(dismissModificationsPopup(_:)), for: .touchUpInside)
-                    box.addSubview(btnOk)
-            
+
+            let infoFont = UIFont(name: "Inter-Medium", size: 13) ?? UIFont.systemFont(ofSize: 13, weight: .medium)
+            let fullInfoText = "Modificações Aplicadas no Modelo (\(displayModelName)):\n\n" + modText
+            let labelWidth = boxW - 48
+
+            // 🔴 Mede a altura REAL necessária pro texto (pode ter até ~8 linhas + título agora,
+            // com os avisos [DEV]) em vez de um valor fixo que cortava o conteúdo. Cap em 420pt
+            // pra não deixar a caixa absurdamente alta em telas pequenas — nesse caso o texto
+            // ainda seria melhor que os 140pt fixos de antes, mesmo se cortar um pouco no limite.
+            let measuredHeight = (fullInfoText as NSString).boundingRect(
+                with: CGSize(width: labelWidth, height: .greatestFiniteMagnitude),
+                options: [.usesLineFragmentOrigin, .usesFontLeading],
+                attributes: [.font: infoFont],
+                context: nil
+            ).height
+            let labelHeight = min(max(140, ceil(measuredHeight) + 4), 420)
+
+            // 🔴 Caixa e overlay só são montados AGORA, com a altura já ajustada ao conteúdo —
+            // mesmo espaçamento de "chrome" abaixo do texto que o design original tinha
+            // (35pt de respiro + botão de 46pt + 24pt de margem inferior = 105pt).
+            let bottomChrome: CGFloat = 105
+            var boxH = headerH + 15 + labelHeight + bottomChrome
+            boxH = min(boxH, self.view.bounds.height - 80)
+
+            let popupOverlay = UIView(frame: self.view.bounds)
+            popupOverlay.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+            popupOverlay.alpha = 0.0
+            self.view.addSubview(popupOverlay)
+
+            let box = UIView(frame: CGRect(x: (self.view.bounds.width - boxW)/2, y: (self.view.bounds.height - boxH)/2, width: boxW, height: boxH))
+            box.backgroundColor = .white
+            box.layer.cornerRadius = 24
+            box.clipsToBounds = true
+            popupOverlay.addSubview(box)
+
+            let headerView = UIView(frame: CGRect(x: 0, y: 0, width: boxW, height: headerH))
+            headerView.backgroundColor = navyDark
+            box.addSubview(headerView)
+
+            let patientFirstName = self.patientName.components(separatedBy: " ").first ?? "Paciente"
+
+            let titleLabel = UILabel(frame: CGRect(x: 24, y: 20, width: boxW - 90, height: 28))
+            titleLabel.text = patientFirstName.uppercased()
+            titleLabel.textColor = .white
+            titleLabel.font = UIFont(name: "Inter-Bold", size: 22) ?? UIFont.boldSystemFont(ofSize: 22)
+            headerView.addSubview(titleLabel)
+
+            let subtitleLabel = UILabel(frame: CGRect(x: 24, y: 50, width: boxW - 90, height: 20))
+            subtitleLabel.text = "Ajustes da armação"
+            subtitleLabel.textColor = .white
+            subtitleLabel.font = UIFont(name: "Inter-Medium", size: 14) ?? UIFont.systemFont(ofSize: 14, weight: .medium)
+            headerView.addSubview(subtitleLabel)
+
+            let iconView = UIImageView(frame: CGRect(x: boxW - 65, y: 25, width: 40, height: 40))
+            if let iconImg = UIImage(named: "Ico_10")?.withRenderingMode(.alwaysTemplate) {
+                iconView.image = iconImg
+            }
+            iconView.tintColor = opticalCyan
+            iconView.contentMode = .scaleAspectFit
+            headerView.addSubview(iconView)
+
+            let infoLabel = UILabel(frame: CGRect(x: 24, y: headerH + 15, width: labelWidth, height: labelHeight))
+            infoLabel.numberOfLines = 0
+            infoLabel.text = fullInfoText
+
+            // 🔴 BRANDBOOK: Tom escuro sofisticado para brilhar e ter contraste no Fundo Branco
+            let navyMedium = UIColor(red: 0.118, green: 0.227, blue: 0.431, alpha: 1.0)
+            infoLabel.textColor = navyMedium
+            infoLabel.font = infoFont
+            box.addSubview(infoLabel)
+
+            let btnOk = UIButton(frame: CGRect(x: 24, y: boxH - 70, width: boxW - 48, height: 46))
+            btnOk.backgroundColor = opticalCyan
+            btnOk.setTitle("OK, Iniciar Medições", for: .normal)
+            btnOk.setTitleColor(navyDark, for: .normal)
+            btnOk.layer.cornerRadius = 14
+            btnOk.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+            btnOk.addTarget(self, action: #selector(dismissModificationsPopup(_:)), for: .touchUpInside)
+            box.addSubview(btnOk)
+
             UIView.animate(withDuration: 0.3) { popupOverlay.alpha = 1.0 }
         }
     
