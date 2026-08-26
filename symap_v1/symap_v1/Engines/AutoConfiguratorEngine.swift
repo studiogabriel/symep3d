@@ -291,6 +291,49 @@ enum AutoConfiguratorEngine {
         }.sorted()
     }
 
+    /// Resultado de avaliar um modelo específico contra a biometria do paciente, com métricas
+    /// pra RANQUEAR (não só filtrar) — usado por bestOptimizedModels pra escolher o modelo que
+    /// exige o MENOR esforço de deformação, não só "cabe/não cabe" feito bestFittingModels.
+    struct FitScore {
+        let key: String
+        let fit: FitResult
+        /// Soma do quanto cada eixo saturado passou do limite físico, em mm — 0 quando nenhum
+        /// eixo saturou (encaixe perfeito dentro da capacidade real do molde).
+        let totalOverage: Float
+        /// Soma dos pesos (0.0-1.0) realmente usados nos 3 eixos — quanto menor, menos a
+        /// armação precisou se afastar do desenho original de fábrica pra caber nesse rosto.
+        let totalEffort: Float
+    }
+
+    /// Escaneia o catálogo INTEIRO (as 3 linhas — masculino/feminino/infantil — não só a
+    /// indicada pela largura do rosto) e ranqueia cada modelo pelo menor esforço de deformação
+    /// necessário. Diferente de bestFittingModels (booleano "cabe ou não cabe"), aqui todo
+    /// modelo entra na lista, ordenado do encaixe mais preciso pro menos preciso — prioriza
+    /// sempre não saturar (totalOverage=0), e entre modelos empatados nisso desempata pelo que
+    /// exige menos deformação total (totalEffort), preservando ao máximo o desenho de fábrica.
+    /// Pedido explícito do Gabriel: sempre indicar o modelo mais otimizado do catálogo inteiro,
+    /// aceitando que às vezes vai estourar um pouco em vez de nunca conseguir recomendar nada.
+    static func bestOptimizedModels(faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false) -> [FitScore] {
+        return specs.keys.compactMap { key -> FitScore? in
+            guard let spec = specs[key] else { return nil }
+            let fit = computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid)
+            let totalOverage = fit.bridgeOverage + fit.widthOverage + fit.verticalOverage
+            let totalEffort = (fit.weights["Ponte"] ?? fit.weights["Ponte_m"] ?? 0)
+                + (fit.weights["Largura_a"] ?? fit.weights["Largura_r"] ?? 0)
+                + (fit.weights["Vertical_a"] ?? fit.weights["Vertical_r"] ?? 0)
+            return FitScore(key: key, fit: fit, totalOverage: totalOverage, totalEffort: totalEffort)
+        }.sorted { a, b in
+            if a.totalOverage != b.totalOverage { return a.totalOverage < b.totalOverage }
+            return a.totalEffort < b.totalEffort
+        }
+    }
+
+    /// Só a chave do modelo mais otimizado do catálogo inteiro (primeiro colocado do ranking
+    /// acima) — nil apenas se specs estiver vazio.
+    static func mostOptimizedModel(faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false) -> String? {
+        return bestOptimizedModels(faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid).first?.key
+    }
+
     /// "luno_infantil" → "Luno (Infantil)" — nome de exibição a partir da chave do banco de specs.
     static func displayName(forKey key: String) -> String {
         let parts = key.split(separator: "_")

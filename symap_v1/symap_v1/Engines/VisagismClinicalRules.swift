@@ -7,7 +7,9 @@ struct VisagismClinicalRules {
     // =======================================================
     // 🔴 1. FOLGAS ANATÔMICAS GERAIS (em milímetros)
     // =======================================================
-    static let temporalClearance: Float = 10 // 5mm de cada lado — usado por infantil e masculino
+    /// Ajustado de 10mm para 15mm por decisão do Gabriel (2026-08) — aceita que isso pode
+    /// saturar o limite físico de largura em alguns modelos/rostos (ver widthOverage/[DEV]).
+    static let temporalClearance: Float = 15 // 7.5mm de cada lado — usado por infantil e masculino
 
     /// 🔴 REGRA DE ENGENHARIA (as 3 linhas): desde a remedição via Blender com metodologia
     /// consistente, a meta de ponte deixou de ser calibrada por tentativa/erro (antigo
@@ -55,6 +57,13 @@ struct VisagismClinicalRules {
     /// Projeção nasal (mm) abaixo da qual o perfil é considerado "Plano" e o apoio nasal entra em ação.
     /// Antes esse número ficava solto dentro do BiometryEngine; agora é calibrável aqui, junto dos outros.
     static let nasalProminenceThreshold: Float = 20.0
+
+    /// Excedente total aceitável (soma dos 3 eixos, mm) ao ranquear o modelo mais otimizado do
+    /// catálogo inteiro (AutoConfiguratorEngine.bestOptimizedModels). Pedido explícito do
+    /// Gabriel: sempre indicar o melhor encaixe possível entre TODAS as linhas, aceitando que
+    /// às vezes vai estourar "uma pequena quantidade" em vez de nunca recomendar nada. Sem
+    /// validação por prova física ainda.
+    static let acceptableOverageTolerance: Float = 2.0
 
     // =======================================================
     // 🔴 4. LINHA DE TAMANHO (Infantil / Feminino / Masculino)

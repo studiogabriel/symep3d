@@ -12,6 +12,7 @@ struct PDFLaudoBuilder {
     let dnpPertoEsq: Float
     let dnpPertoTotal: Float
     let faceWidth: Float
+    let faceHeight: Float
     let noseBridgeWidth: Float
     let pupillaryHeight: Float
     let verticalPupilDiff: Float
@@ -52,7 +53,7 @@ struct PDFLaudoBuilder {
     init(measurement m: Measurement, image: UIImage) {
         self.dnpDir = m.dnpDir;  self.dnpEsq = m.dnpEsq;  self.dnpTotal = m.dnpTotal
         self.dnpPertoDir = m.dnpPertoDir;  self.dnpPertoEsq = m.dnpPertoEsq;  self.dnpPertoTotal = m.dnpPertoTotal
-        self.faceWidth = m.faceWidth;  self.noseBridgeWidth = m.noseBridgeWidth;  self.pupillaryHeight = m.pupillaryHeight
+        self.faceWidth = m.faceWidth;  self.faceHeight = m.faceHeight;  self.noseBridgeWidth = m.noseBridgeWidth;  self.pupillaryHeight = m.pupillaryHeight
         self.verticalPupilDiff = m.verticalPupilDiff;  self.manualFrameHeight = m.manualFrameHeight
         self.manualFrameWidth = m.manualFrameWidth;  self.manualFrameDiagonal = m.manualFrameDiagonal
         self.headMoveScore = m.headMoveScore;  self.eyeMoveScore = m.eyeMoveScore
@@ -173,6 +174,7 @@ struct PDFLaudoBuilder {
                 drawMetric(label: "DISPARIDADE VERTICAL", value: diffVal, x: col2X, y: localY)
                 localY += rowH
                 drawMetric(label: "FORMATO DETECTADO", value: self.faceShape, x: col1X, y: localY)
+                drawMetric(label: "ALTURA ROSTO", value: "\(self.f(self.faceHeight)) mm", x: col2X, y: localY)
             }
 
             if self.manualFrameHeight > 0 || self.manualFrameWidth > 0 || self.manualFrameDiagonal > 0 {

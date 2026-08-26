@@ -30,6 +30,7 @@ extension MeasurementViewController {
             dnpTotal: dnpTotal, dnpEsq: dnpEsq, dnpDir: dnpDir,
             dnpPertoTotal: dnpPertoTotal, dnpPertoEsq: dnpPertoEsq, dnpPertoDir: dnpPertoDir,
             faceWidth: faceWidth, faceWidthLeft: faceWidthLeft, faceWidthRight: faceWidthRight,
+            faceHeight: faceHeight,
             noseBridgeWidth: noseBridgeWidth, jawWidth: jawWidth, pupillaryHeight: pupillaryHeight,
             verticalPupilDiff: verticalPupilDiff, nasalProfile: nasalProfile, faceShape: faceShape,
             frameSuggestion: frameSuggestion, manualFrameHeight: manualFrameHeight,

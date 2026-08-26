@@ -149,7 +149,7 @@ extension MeasurementViewController {
             👤 Paciente: \(self.patientName)
             👓 Lente: \(self.selectedLensType)
             📏 DNP Total: \(self.f(self.dnpTotal)) mm | Ponte: \(self.f(self.noseBridgeWidth)) mm
-            📏 Largura do Rosto: \(self.f(self.faceWidth)) mm
+            📏 Largura do Rosto: \(self.f(self.faceWidth)) mm | Altura: \(self.f(self.faceHeight)) mm
             - Altura de Montagem (H): \(self.f(self.pupillaryHeight)) mm
             - Lente Horizontal: \(self.f(self.manualFrameWidth)) mm
             - Lente Vertical: \(self.f(self.manualFrameHeight)) mm

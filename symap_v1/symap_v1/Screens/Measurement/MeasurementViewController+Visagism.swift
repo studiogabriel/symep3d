@@ -209,9 +209,12 @@ extension MeasurementViewController {
                 let patientFirstName = self.patientName.components(separatedBy: " ").first ?? "Paciente"
                 let shapeTitle = self.faceShape.uppercased()
 
-                // 🔴 Lista de modelos que realmente CABEM (não saturam nenhum eixo físico),
-                // não só o que combina com o formato do rosto — ver AutoConfiguratorEngine.bestFittingModels.
-                let goodFitKeys = AutoConfiguratorEngine.bestFittingModels(
+                // 🔴 Lista dos modelos MAIS OTIMIZADOS do catálogo inteiro (as 3 linhas, não só a
+                // indicada pela largura do rosto) — ranqueados pelo menor esforço de deformação,
+                // não só "cabe/não cabe" como o antigo bestFittingModels. Pedido explícito do
+                // Gabriel: sempre indicar o melhor encaixe possível, aceitando um pequeno
+                // excedente (acceptableOverageTolerance) quando nenhum modelo encaixa perfeito.
+                let ranked = AutoConfiguratorEngine.bestOptimizedModels(
                     faceWidth: self.faceWidth,
                     faceHeight: self.faceHeight,
                     bridgeWidth: self.noseBridgeWidth,
@@ -220,16 +223,23 @@ extension MeasurementViewController {
                     eyeToCheekClearance: self.eyeToCheekClearance,
                     eyeToCheekClearanceValid: self.eyeToCheekClearanceValid
                 )
+                let goodFitKeys = ranked.filter { $0.totalOverage <= VisagismClinicalRules.acceptableOverageTolerance }.prefix(4).map { $0.key }
                 let goodFitNames = goodFitKeys.map { AutoConfiguratorEngine.displayName(forKey: $0) }
-                // Fallback: se nenhum modelo do catálogo encaixa sem saturar, mantém a recomendação por formato.
-                let modelsListText = goodFitNames.isEmpty ? displayModelName.uppercased() : goodFitNames.joined(separator: ", ")
+                // Fallback: se nem o mais bem ranqueado passar da tolerância, mostra ele mesmo
+                // assim — é o menor excedente possível no catálogo inteiro, melhor do que cair
+                // de volta pra recomendação só por formato.
+                // 🔴 Numeração explícita (1º, 2º...) pra deixar claro pro paciente que a ordem
+                // importa — não é uma lista qualquer, é o ranking de melhor encaixe.
+                let modelsListText = !goodFitNames.isEmpty
+                    ? goodFitNames.enumerated().map { "\($0.offset + 1)º \($0.element)" }.joined(separator: ", ")
+                    : (ranked.first.map { "1º \(AutoConfiguratorEngine.displayName(forKey: $0.key))" } ?? displayModelName.uppercased())
 
                 // 🔴 Assimetria facial: dado já existia (faceWidthLeft/Right), calculado, mas só
                 // virava log no Firestore — nunca chegava na tela do cliente. A armação só tem
                 // ajuste simétrico, então isso é aviso, não correção automática.
                 let asymmetryWarning = BiometryEngine.facialAsymmetryWarning(faceWidthLeft: self.faceWidthLeft, faceWidthRight: self.faceWidthRight)
 
-                var recomText = "RECOMENDAÇÃO SYMEP IA DE \(patientFirstName.uppercased()):\nMapeamos o formato de rosto \(shapeTitle). Os modelos que melhor se ajustam ao seu rosto são: \(modelsListText)."
+                var recomText = "RECOMENDAÇÃO SYMEP IA DE \(patientFirstName.uppercased()):\nMapeamos o formato de rosto \(shapeTitle). Em ordem de melhor encaixe pro seu rosto: \(modelsListText)."
                 if let warning = asymmetryWarning {
                     recomText += "\n\n⚠️ \(warning)"
                 }
@@ -360,6 +370,7 @@ extension MeasurementViewController {
                 // 👤 BIOMETRIA DETECTADA (MINI RESUMO): Começa aberto (true) para validação clínica instantânea!
                 let patientStatsText = """
                 • Largura do Rosto: \(self.f(self.faceWidth)) mm
+                • Altura do Rosto: \(self.f(self.faceHeight)) mm
                 • Base Nasal (Ponte): \(self.f(self.noseBridgeWidth)) mm
                 • Formato de Rosto Mapeado: \(self.faceShape.uppercased())
                 """

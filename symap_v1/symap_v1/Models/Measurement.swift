@@ -13,6 +13,7 @@ struct Measurement {
     let faceWidth: Float
     let faceWidthLeft: Float
     let faceWidthRight: Float
+    let faceHeight: Float
     let noseBridgeWidth: Float
     let jawWidth: Float
     let pupillaryHeight: Float

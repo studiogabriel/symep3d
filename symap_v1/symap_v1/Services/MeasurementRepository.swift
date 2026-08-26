@@ -37,6 +37,7 @@ struct MeasurementRepository {
             "dnpPertoLeft": m.dnpPertoEsq,
             "dnpPertoRight": m.dnpPertoDir,
             "faceWidth": m.faceWidth,
+            "faceHeight": m.faceHeight,
             "bridgeWidth": m.noseBridgeWidth,
             "pupilHeight": m.pupillaryHeight,
             "verticalDiff": m.verticalPupilDiff,
