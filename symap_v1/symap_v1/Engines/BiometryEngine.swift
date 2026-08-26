@@ -316,13 +316,25 @@ enum BiometryEngine {
         let cheekboneWidth = (maxCheekX - minCheekX) * 1000
         let faceHeight = (maxY - minY) * 1000
 
-        // Varre de cima (olho) pra baixo (mandíbula) e acha a primeira faixa onde a malha já
-        // projeta o bastante pra ser bochecha — a distância até ali é a folga real da pessoa.
+        // 🔴 CORREÇÃO: comparar com eyeDepthZ (profundidade da PUPILA) fazia a bochecha "disparar"
+        // já na primeira faixa pra quase todo mundo — o globo ocular fica naturalmente recuado
+        // dentro da órbita, então a pálpebra inferior/canto do olho ao lado já parece "mais pra
+        // frente" que a pupila, sem ter nada a ver com bochecha de verdade. A referência certa é
+        // uma linha de base local, tirada das primeiras faixas do próprio scan (logo abaixo do
+        // olho, ainda órbita/rosto plano) — e só então procurar onde a malha sobe em relação a
+        // ELA, não em relação à pupila.
+        var baselineZ: Float = -100
+        for i in 0..<min(2, clearanceBandCount) {
+            if clearanceBandMaxZ[i] > baselineZ { baselineZ = clearanceBandMaxZ[i] }
+        }
+
         var cheekStartBandIndex: Int? = nil
-        for i in 0..<clearanceBandCount {
-            if clearanceBandMaxZ[i] > -100 && (clearanceBandMaxZ[i] - eyeDepthZ) > cheekDetectDepthDelta {
-                cheekStartBandIndex = i
-                break
+        if baselineZ > -100 && clearanceBandCount > 2 {
+            for i in 2..<clearanceBandCount {
+                if clearanceBandMaxZ[i] > -100 && (clearanceBandMaxZ[i] - baselineZ) > cheekDetectDepthDelta {
+                    cheekStartBandIndex = i
+                    break
+                }
             }
         }
         let eyeToCheekClearanceValid = cheekStartBandIndex != nil
