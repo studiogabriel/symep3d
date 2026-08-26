@@ -33,11 +33,18 @@ enum AutoConfiguratorEngine {
     
     // BANCO DE DADOS ESCALÁVEL
         static let specs: [String: ModelSpec] = [
-            // --- COLEÇÃO FEMININA (Base Média: 130mm) ---
-            "luno_feminino": ModelSpec(baseBridge: 15.0, baseWidth: 130.0, baseHeight: 51.0, limits: ModelLimits(bridgePlus: 5.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 2.0, larguraR: 2.0, larguraA: 2.5, verticalR: 1.0, verticalA: 2.0)),
-            "nunu_feminino": ModelSpec(baseBridge: 16.0, baseWidth: 128.0, baseHeight: 47.0, limits: ModelLimits(bridgePlus: 5.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 1.5, larguraR: 4.0, larguraA: 2.0, verticalR: 2.0, verticalA: 2.0)),
-            "suki_feminino": ModelSpec(baseBridge: 15.0, baseWidth: 130.0, baseHeight: 52.2, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 1.5, larguraR: 4.0, larguraA: 2.0, verticalR: 2.0, verticalA: 2.0)),
-            "timbau_feminino": ModelSpec(baseBridge: 14.5, baseWidth: 135.0, baseHeight: 51.5, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
+            // --- COLEÇÃO FEMININA (Base Larga: ~136.3mm) ---
+            // 🔴 baseWidth/baseHeight/baseBridge corrigidos com medição direta do molde 3D em
+            // repouso (peso 0) via Blender — os 4 modelos convergem pra ~136.3mm de largura
+            // (não 128-135mm variados como a estimativa manual anterior) e ~20mm de ponte (não
+            // 14.5-16.0mm). limits.bridgePlus/bridgeMinus/larguraA/larguraR/verticalA/verticalR:
+            // 1ª medição real de capacidade (peso 1.0 no Blender). larguraA/larguraR convergem
+            // pra ~3.84mm nos 4 modelos — coerente com a correção de acoplamento ponte→largura
+            // (bridgeWidthCoupling), já que aqui a largura muda a mesma coisa em ambas direções.
+            "luno_feminino": ModelSpec(baseBridge: 19.96, baseWidth: 136.26, baseHeight: 51.14, limits: ModelLimits(bridgePlus: 5.11, bridgeMinus: 3.33, nasal: 2.0, ferradura: 2.0, larguraR: 3.84, larguraA: 3.84, verticalR: 1.93, verticalA: 1.91)),
+            "nunu_feminino": ModelSpec(baseBridge: 19.79, baseWidth: 136.35, baseHeight: 47.09, limits: ModelLimits(bridgePlus: 3.88, bridgeMinus: 2.77, nasal: 2.0, ferradura: 1.5, larguraR: 3.84, larguraA: 3.84, verticalR: 1.93, verticalA: 1.91)),
+            "suki_feminino": ModelSpec(baseBridge: 20.05, baseWidth: 136.27, baseHeight: 52.34, limits: ModelLimits(bridgePlus: 3.16, bridgeMinus: 3.33, nasal: 2.0, ferradura: 1.5, larguraR: 3.85, larguraA: 3.83, verticalR: 1.91, verticalA: 1.91)),
+            "timbau_feminino": ModelSpec(baseBridge: 20.22, baseWidth: 136.27, baseHeight: 51.85, limits: ModelLimits(bridgePlus: 3.73, bridgeMinus: 2.83, nasal: 2.0, ferradura: 0.0, larguraR: 3.84, larguraA: 3.84, verticalR: 1.92, verticalA: 1.92)),
             
             // --- COLEÇÃO MASCULINA (Base Larga: ~142mm) ---
             // 🔴 baseWidth/baseHeight corrigidos com medição direta do molde 3D em repouso
@@ -58,15 +65,22 @@ enum AutoConfiguratorEngine {
             "suki_masculino": ModelSpec(baseBridge: 23.81, baseWidth: 142.00, baseHeight: 54.73, limits: ModelLimits(bridgePlus: 3.75, bridgeMinus: 3.95, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
             "timbau_masculino": ModelSpec(baseBridge: 23.78, baseWidth: 141.93, baseHeight: 53.99, limits: ModelLimits(bridgePlus: 4.39, bridgeMinus: 3.33, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
 
-            // --- COLEÇÃO INFANTIL (Base M: 120mm) ---
-            // 🔴 larguraA corrigido por medição real de prova impressa (peso 1.0/saturado):
-            // baseWidth=120.0 confirmado correto no Blender (peso 0) — o shape key Largura_a
-            // é que entregava mais do que os 8.0mm creditados. Medido: Luno 130.1mm, Nunu 130.1mm,
-            // Suki 130.6mm, Timbau 130.4mm → larguraA real = medido - 120.0, por modelo.
-            "luno_infantil": ModelSpec(baseBridge: 17.0, baseWidth: 120.0, baseHeight: 42.0, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 1.5, larguraR: 5.0, larguraA: 10.1, verticalR: 2.0, verticalA: 2.0)),
-            "nunu_infantil": ModelSpec(baseBridge: 17.0, baseWidth: 120.0, baseHeight: 38.0, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 1.5, larguraR: 5.0, larguraA: 10.1, verticalR: 2.0, verticalA: 2.0)),
-            "suki_infantil": ModelSpec(baseBridge: 17.0, baseWidth: 120.0, baseHeight: 42.5, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 5.0, larguraA: 10.6, verticalR: 2.0, verticalA: 2.0)),
-            "timbau_infantil": ModelSpec(baseBridge: 17.0, baseWidth: 120.0, baseHeight: 41.5, limits: ModelLimits(bridgePlus: 4.0, bridgeMinus: 4.0, nasal: 2.0, ferradura: 0.0, larguraR: 5.0, larguraA: 10.4, verticalR: 2.0, verticalA: 2.0))
+            // --- COLEÇÃO INFANTIL (Base M: ~120.2mm) ---
+            // 🔴 baseWidth/baseHeight/baseBridge corrigidos com medição direta do molde 3D em
+            // repouso (peso 0) via Blender. baseWidth confirmado ~120.21 nos 4 (bate com o valor
+            // antigo). baseBridge sai de 17.0 fixo pra 18.70-20.04 (varia por modelo, medição
+            // precisa). limits.bridgePlus/bridgeMinus/verticalA/verticalR: 1ª medição real de
+            // capacidade (peso 1.0 no Blender). larguraR confirmado em 5.0 nos 4 (bate com o
+            // valor existente).
+            // 🔴 larguraA: substituído de 10.1/10.1/10.6/10.4 (medição de prova impressa) para
+            // 8.00mm nos 4 modelos — dado do Blender (peso 1.0), mais confiável porque reflete
+            // exatamente o que a malha digital faz na tela (a impressão física tinha uma variável
+            // de material/impressora que inflava a medida além do que a malha realmente permite).
+            // Decisão confirmada em 2026-08-26.
+            "luno_infantil": ModelSpec(baseBridge: 19.02, baseWidth: 120.21, baseHeight: 42.06, limits: ModelLimits(bridgePlus: 5.58, bridgeMinus: 4.11, nasal: 2.0, ferradura: 1.5, larguraR: 5.0, larguraA: 8.00, verticalR: 2.0, verticalA: 2.0)),
+            "nunu_infantil": ModelSpec(baseBridge: 20.02, baseWidth: 120.21, baseHeight: 38.28, limits: ModelLimits(bridgePlus: 4.11, bridgeMinus: 4.00, nasal: 2.0, ferradura: 1.5, larguraR: 5.0, larguraA: 8.00, verticalR: 2.0, verticalA: 2.0)),
+            "suki_infantil": ModelSpec(baseBridge: 18.70, baseWidth: 120.21, baseHeight: 42.67, limits: ModelLimits(bridgePlus: 4.07, bridgeMinus: 3.93, nasal: 2.0, ferradura: 0.0, larguraR: 5.0, larguraA: 8.00, verticalR: 2.0, verticalA: 2.0)),
+            "timbau_infantil": ModelSpec(baseBridge: 20.04, baseWidth: 120.21, baseHeight: 41.82, limits: ModelLimits(bridgePlus: 3.95, bridgeMinus: 4.05, nasal: 2.0, ferradura: 0.0, larguraR: 5.0, larguraA: 8.00, verticalR: 2.0, verticalA: 2.0))
         ]
     
     /// Resultado completo de uma avaliação de encaixe: os pesos das Shape Keys E se algum
@@ -99,10 +113,12 @@ enum AutoConfiguratorEngine {
         return key.hasSuffix("_feminino") ? VisagismClinicalRules.temporalClearanceFeminino : VisagismClinicalRules.temporalClearance
     }
 
-    /// Meta de ponte por linha — masculino usa a regra fixa nova (ponte do paciente + 2mm),
-    /// infantil/feminino ainda usam bridgeClearance (calibração antiga por prova física real).
+    /// Meta de ponte por linha — regra fixa de engenharia (ponte do paciente + folga), com
+    /// folga própria por linha. Ver VisagismClinicalRules.bridgeOffsetMasculino/Feminino/Infantil.
     private static func bridgeOffset(forKey key: String) -> Float {
-        return key.hasSuffix("_masculino") ? VisagismClinicalRules.bridgeOffsetMasculino : VisagismClinicalRules.bridgeClearance
+        if key.hasSuffix("_masculino") { return VisagismClinicalRules.bridgeOffsetMasculino }
+        if key.hasSuffix("_feminino") { return VisagismClinicalRules.bridgeOffsetFeminino }
+        return VisagismClinicalRules.bridgeOffsetInfantil
     }
 
     /// Núcleo único de cálculo — usado tanto por calculateMorphWeights (um modelo específico,

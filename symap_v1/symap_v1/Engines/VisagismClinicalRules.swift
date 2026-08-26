@@ -9,25 +9,17 @@ struct VisagismClinicalRules {
     // =======================================================
     static let temporalClearance: Float = 10 // 5mm de cada lado — usado por infantil e masculino
 
-    /// Meta da ponte nasal: NEGATIVO, não folga. Calibrado com prova impressa real (rosto
-    /// 120.2mm / ponte 17.8mm): os dois moldes que ficaram firmes e não escorregaram (Luno
-    /// 17.5mm, Suki 17.3mm — média 17.4mm) imprimiram a ponte um pouco MENOR que a ponte real
-    /// dela, não maior. Os que ficaram soltos e caindo (Nunu/Timbau, 20.0mm) imprimiram bem
-    /// mais largos que a ponte real. Ou seja, sustentação vem de abraçar o osso nasal, não de
-    /// dar folga — o antigo +0.75mm ia na direção clinicamente errada.
-    /// -0.40 = média(17.4) - narizDela(17.8). Baseado em n=2 (Luno/Suki); revalidar com mais provas.
-    static let bridgeClearance: Float = -0.40
-
-    /// 🔴 NOVA REGRA (linha masculina): a partir da remedição via Blender com metodologia
-    /// consistente (Pronte ~23.8mm nos 4 modelos, vs. ~14.2mm da estimativa manual anterior),
-    /// a meta de ponte deixa de ser calibrada por tentativa/erro e passa a ser uma regra fixa
-    /// de engenharia: ponte alvo = ponte medida do paciente + folga sobre o osso nasal.
-    /// Ajustado de 2mm para 4.5mm após prova física real (2026-08) — 2mm deixou a ponte curta
-    /// demais no rosto do próprio Gabriel.
-    /// Só se aplica à linha masculina por enquanto — infantil/feminino ainda usam bridgeClearance
-    /// (-0.40), calibrado com prova física real na metodologia antiga de medição da ponte.
-    /// Trocar para essa regra quando essas linhas também forem remedidas no Blender.
+    /// 🔴 REGRA DE ENGENHARIA (as 3 linhas): desde a remedição via Blender com metodologia
+    /// consistente, a meta de ponte deixou de ser calibrada por tentativa/erro (antigo
+    /// bridgeClearance -0.40, pensado pra medição manual imprecisa da ponte) e passou a ser uma
+    /// regra fixa por linha: ponte alvo = ponte medida do paciente + folga sobre o osso nasal.
+    /// Masculino: ajustado de 2mm para 4.5mm após prova física real (2026-08) — 2mm deixou a
+    /// ponte curta demais no rosto do próprio Gabriel. Feminino e infantil ainda SEM prova física
+    /// própria — os valores abaixo (4.5mm/2.5mm) são o ponto de partida definido em conjunto com
+    /// o Gabriel ao aplicar a remedição Blender dessas linhas; revalidar assim que houver prova.
     static let bridgeOffsetMasculino: Float = 4.5
+    static let bridgeOffsetFeminino: Float = 4.5
+    static let bridgeOffsetInfantil: Float = 2.5
 
     /// Folga temporal específica da linha feminino. Caso real (rosto 120.2mm / ponte 17.8mm):
     /// com a folga padrão de 10mm, o Suki feminino não saturava o limite de encolhimento (usava
@@ -56,8 +48,8 @@ struct VisagismClinicalRules {
     /// (ver BiometryEngine.faceGeometry / eyeToCheekClearance). Abaixo disso, a lente corre risco
     /// de encostar na bochecha — comum em rostos com região malar mais projetada (ex.: traço
     /// asiático citado na prova física). 18mm é estimativa inicial de anatomia geral, SEM
-    /// validação por prova física ainda — mesmo status que bridgeClearance tinha antes dos dados
-    /// reais do Luno/Suki. Recalibrar assim que houver casos de encaixe com marca na bochecha.
+    /// validação por prova física ainda — mesmo status que bridgeOffsetMasculino tinha antes da
+    /// prova real de 2026-08. Recalibrar assim que houver casos de encaixe com marca na bochecha.
     static let cheekClearanceThreshold: Float = 18.0
 
     /// Projeção nasal (mm) abaixo da qual o perfil é considerado "Plano" e o apoio nasal entra em ação.
