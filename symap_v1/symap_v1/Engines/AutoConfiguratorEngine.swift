@@ -116,6 +116,7 @@ enum AutoConfiguratorEngine {
         // 🔴 1. CÁLCULO DA PONTE (Vem primeiro porque afasta as lentes e expande a armação)
         let rawDiffBridge = targetBridge - spec.baseBridge
         var appliedBridgeDiff: Float = 0.0
+        var bridgeWidthCoupling: Float = 0.0
         var bridgeSaturated = false
         var bridgeOverage: Float = 0.0
 
@@ -125,17 +126,25 @@ enum AutoConfiguratorEngine {
             let weight = min(1.0, rawDiffBridge / spec.limits.bridgePlus)
             weights["Ponte"] = weight
             appliedBridgeDiff = weight * spec.limits.bridgePlus
+            bridgeWidthCoupling = weight * spec.limits.larguraA
         } else {
             bridgeSaturated = abs(rawDiffBridge) > spec.limits.bridgeMinus
             bridgeOverage = bridgeSaturated ? abs(rawDiffBridge) - spec.limits.bridgeMinus : 0
             let weight = min(1.0, abs(rawDiffBridge) / spec.limits.bridgeMinus)
             weights["Ponte_m"] = weight
             appliedBridgeDiff = -(weight * spec.limits.bridgeMinus)
+            bridgeWidthCoupling = -(weight * spec.limits.larguraR)
         }
 
         // 🔴 2. CÁLCULO DE LARGURA COMPENSADA (Mágica Paramétrica)
-        // Se a ponte expandiu 4.7mm, o óculos já cresceu 4.7mm. Subtraímos isso da meta temporal!
-        let diffWidth = (targetWidth - spec.baseWidth) - appliedBridgeDiff
+        // Antes subtraíamos appliedBridgeDiff (mm de MOVIMENTO da ponte) da meta de largura,
+        // assumindo 1mm de ponte = 1mm de largura já ganha. Dado real do Blender (peso 1.0)
+        // mostra que isso é falso: no Luno, a ponte abre 6.11mm no total mas a largura só
+        // acompanha 4.00mm — não é 1:1. O que acopla largura↔ponte de verdade é o PESO do shape
+        // key: nos 4 modelos masculinos, ponte no peso 1.0 (pra qualquer lado) sempre move a
+        // largura em exatamente a capacidade de larguraA/larguraR já cadastrada. Por isso usamos
+        // bridgeWidthCoupling (peso × largura) em vez de appliedBridgeDiff (mm de ponte).
+        let diffWidth = (targetWidth - spec.baseWidth) - bridgeWidthCoupling
         var widthSaturated = false
         var appliedWidthDiff: Float = 0.0
         var widthOverage: Float = 0.0

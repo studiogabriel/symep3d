@@ -21,11 +21,13 @@ struct VisagismClinicalRules {
     /// 🔴 NOVA REGRA (linha masculina): a partir da remedição via Blender com metodologia
     /// consistente (Pronte ~23.8mm nos 4 modelos, vs. ~14.2mm da estimativa manual anterior),
     /// a meta de ponte deixa de ser calibrada por tentativa/erro e passa a ser uma regra fixa
-    /// de engenharia: ponte alvo = ponte medida do paciente + 2mm de folga sobre o osso nasal.
+    /// de engenharia: ponte alvo = ponte medida do paciente + folga sobre o osso nasal.
+    /// Ajustado de 2mm para 4.5mm após prova física real (2026-08) — 2mm deixou a ponte curta
+    /// demais no rosto do próprio Gabriel.
     /// Só se aplica à linha masculina por enquanto — infantil/feminino ainda usam bridgeClearance
     /// (-0.40), calibrado com prova física real na metodologia antiga de medição da ponte.
     /// Trocar para essa regra quando essas linhas também forem remedidas no Blender.
-    static let bridgeOffsetMasculino: Float = 2.0
+    static let bridgeOffsetMasculino: Float = 4.5
 
     /// Folga temporal específica da linha feminino. Caso real (rosto 120.2mm / ponte 17.8mm):
     /// com a folga padrão de 10mm, o Suki feminino não saturava o limite de encolhimento (usava
