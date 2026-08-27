@@ -63,16 +63,20 @@ struct VisagismClinicalRules {
     static let longFaceRatioThreshold: Float = 1.35
     static let shortFaceRatioThreshold: Float = 1.15
 
-    /// 🔴 NOVO (2026-08-27): magnitude (mm) do empurrão vertical extra por formato de rosto —
-    /// rostos longos/retangulares puxam a lente mais pra baixo (verticalStretchWeight), rostos
-    /// redondos/curtos achatam mais (verticalSquashWeight). Antes essas 2 constantes existiam mas
-    /// nunca eram usadas no cálculo real — o ajuste vertical era cego ao formato do rosto, só via
-    /// proporção genérica (faceHeight/4.0). Prova física real (2026-08-27, rosto longo/retangular
-    /// 186.3mm) mostrou o oposto do esperado: cálculo dava só -0.3mm de encolhimento (quase
-    /// neutro) enquanto o paciente sentiu precisar de MAIS vertical, "vendo a base da armação".
-    /// Valor inicial SEM validação por prova física — mesmo status que cheekClearanceThreshold
-    /// tinha antes; recalibrar assim que tivermos mais casos.
-    static let verticalShapeBoostMm: Float = 2.0
+    /// Magnitude (mm) do empurrão vertical extra por formato de rosto — rostos longos/retangulares
+    /// puxam a lente mais pra baixo (verticalStretchWeight), rostos redondos/curtos achatam mais
+    /// (verticalSquashWeight). Antes essas 2 constantes existiam mas nunca eram usadas no cálculo
+    /// real — o ajuste vertical era cego ao formato do rosto, só via proporção genérica
+    /// (faceHeight/4.0).
+    /// 🔴 Ajustado de 2.0 para 4.0 (2026-08-27) após 3 provas físicas reais seguidas pedindo mais
+    /// vertical: (1) rosto longo 186.3mm, cálculo dava só -0.3mm de encolhimento (quase neutro)
+    /// e mesmo assim sentido como pequeno; (2) segundo caso relatou "extremamente pequeno" nos
+    /// dois eixos; (3) rosto 170.9mm/124.6mm (razão 1.37, Nunu feminino) — com o boost de 2.0 já
+    /// ativo o encolhimento caiu de -2.6mm (que saturaria o molde) pra -1.7mm, mas ainda foi
+    /// sentido como pequeno. 3 casos consistentes no mesmo sentido: não é mais só "borda de rosto
+    /// longo", é sinal forte o suficiente pra dobrar a força agora. Ainda sem validação que feche
+    /// o número exato — pode passar do necessário pra algum caso; recalibrar com mais provas.
+    static let verticalShapeBoostMm: Float = 4.0
     
     // =======================================================
     // 🔴 3. LIMITES CLÍNICOS DE GATILHO
