@@ -385,7 +385,7 @@ extension MeasurementViewController {
                 
                 if let key = AutoConfiguratorEngine.specs.keys.first(where: { safeModelName.contains($0) }),
                    let spec = AutoConfiguratorEngine.specs[key],
-                   let fit = AutoConfiguratorEngine.fitDetails(forKeyword: safeModelName, faceWidth: self.faceWidth, faceHeight: self.faceHeight, bridgeWidth: self.noseBridgeWidth, nasalProjection: self.nasalProjection, jawWidth: self.jawWidth, eyeToCheekClearance: self.eyeToCheekClearance, eyeToCheekClearanceValid: self.eyeToCheekClearanceValid) {
+                   let fit = AutoConfiguratorEngine.fitDetails(forKeyword: safeModelName, faceWidth: self.faceWidth, faceHeight: self.faceHeight, bridgeWidth: self.noseBridgeWidth, nasalProjection: self.nasalProjection, jawWidth: self.jawWidth, eyeToCheekClearance: self.eyeToCheekClearance, eyeToCheekClearanceValid: self.eyeToCheekClearanceValid, currentGlassesLensWidth: self.currentGlassesLensWidth, currentGlassesBridge: self.currentGlassesBridge) {
 
                     // 🔴 NOVO: Adiciona o tamanho da base em milímetros dinamicamente!
                     displayModelName = "\(displayModelName) \(Int(spec.baseWidth))mm"
@@ -532,9 +532,11 @@ extension MeasurementViewController {
             jawWidth: self.jawWidth,
             faceShape: self.faceShape,
             eyeToCheekClearance: self.eyeToCheekClearance,
-            eyeToCheekClearanceValid: self.eyeToCheekClearanceValid
+            eyeToCheekClearanceValid: self.eyeToCheekClearanceValid,
+            currentGlassesLensWidth: self.currentGlassesLensWidth,
+            currentGlassesBridge: self.currentGlassesBridge
         )
-        
+
         node.enumerateChildNodes { (child, _) in
             if let morpher = child.morpher {
                 for (key, value) in weights {

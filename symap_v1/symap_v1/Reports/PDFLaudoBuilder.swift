@@ -19,6 +19,9 @@ struct PDFLaudoBuilder {
     let manualFrameHeight: Float
     let manualFrameWidth: Float
     let manualFrameDiagonal: Float
+    let currentGlassesLensWidth: Float
+    let currentGlassesBridge: Float
+    let currentGlassesHaste: Float
     let headMoveScore: Float
     let eyeMoveScore: Float
 
@@ -56,6 +59,8 @@ struct PDFLaudoBuilder {
         self.faceWidth = m.faceWidth;  self.faceHeight = m.faceHeight;  self.noseBridgeWidth = m.noseBridgeWidth;  self.pupillaryHeight = m.pupillaryHeight
         self.verticalPupilDiff = m.verticalPupilDiff;  self.manualFrameHeight = m.manualFrameHeight
         self.manualFrameWidth = m.manualFrameWidth;  self.manualFrameDiagonal = m.manualFrameDiagonal
+        self.currentGlassesLensWidth = m.currentGlassesLensWidth;  self.currentGlassesBridge = m.currentGlassesBridge
+        self.currentGlassesHaste = m.currentGlassesHaste
         self.headMoveScore = m.headMoveScore;  self.eyeMoveScore = m.eyeMoveScore
         self.rxEsfOD = m.rxEsfOD;  self.rxCilOD = m.rxCilOD;  self.rxEixoOD = m.rxEixoOD
         self.rxEsfOE = m.rxEsfOE;  self.rxCilOE = m.rxCilOE;  self.rxEixoOE = m.rxEixoOE
@@ -184,6 +189,16 @@ struct PDFLaudoBuilder {
                     if self.manualFrameHeight > 0 { "ALT. LENTE (H): \(self.f(self.manualFrameHeight))mm".draw(at: CGPoint(x: colX + 15, y: manualY), withAttributes: [.font: attrFont, .foregroundColor: techTextMain]); manualY += 15 }
                     if self.manualFrameWidth > 0 { "LARG. LENTE (W): \(self.f(self.manualFrameWidth))mm".draw(at: CGPoint(x: colX + 15, y: manualY), withAttributes: [.font: attrFont, .foregroundColor: techTextMain]); manualY += 15 }
                     if self.manualFrameDiagonal > 0 { "DIAGONAL (Ø): \(self.f(self.manualFrameDiagonal))mm".draw(at: CGPoint(x: colX + 15, y: manualY), withAttributes: [.font: attrFont, .foregroundColor: techTextMain]); manualY += 15 }
+                }
+            }
+
+            if self.currentGlassesLensWidth > 0 || self.currentGlassesBridge > 0 || self.currentGlassesHaste > 0 {
+                drawTechBox(title: "Armação Atual do Paciente (Gravada)", height: 75) {
+                    var glassesY = cy + 22
+                    let attrFont = UIFont(name: "Courier", size: 11) ?? UIFont.boldSystemFont(ofSize: 14)
+                    if self.currentGlassesLensWidth > 0 { "ARO: \(self.f(self.currentGlassesLensWidth))mm".draw(at: CGPoint(x: colX + 15, y: glassesY), withAttributes: [.font: attrFont, .foregroundColor: techTextMain]); glassesY += 15 }
+                    if self.currentGlassesBridge > 0 { "PONTE: \(self.f(self.currentGlassesBridge))mm".draw(at: CGPoint(x: colX + 15, y: glassesY), withAttributes: [.font: attrFont, .foregroundColor: techTextMain]); glassesY += 15 }
+                    if self.currentGlassesHaste > 0 { "HASTE: \(self.f(self.currentGlassesHaste))mm".draw(at: CGPoint(x: colX + 15, y: glassesY), withAttributes: [.font: attrFont, .foregroundColor: techTextMain]); glassesY += 15 }
                 }
             }
 

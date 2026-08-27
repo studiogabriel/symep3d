@@ -304,7 +304,9 @@ extension MeasurementViewController {
                     jawWidth: self.jawWidth,
                     faceShape: self.faceShape, // 🔴 Motor agora sabe o formato do rosto!
                     eyeToCheekClearance: self.eyeToCheekClearance,
-                    eyeToCheekClearanceValid: self.eyeToCheekClearanceValid
+                    eyeToCheekClearanceValid: self.eyeToCheekClearanceValid,
+                    currentGlassesLensWidth: self.currentGlassesLensWidth,
+                    currentGlassesBridge: self.currentGlassesBridge
                 )
             
             let data: [String: Any] = [
@@ -431,6 +433,9 @@ extension MeasurementViewController {
             self.manualFrameHeight = 0.0
             self.manualFrameDiagonal = 0.0
             self.pupillaryHeight = 0.0
+            self.currentGlassesLensWidth = nil
+            self.currentGlassesBridge = nil
+            self.currentGlassesHaste = nil
             self.updateSegmentTitles()
             self.isFrozen = true
             self.toggleFreeze()

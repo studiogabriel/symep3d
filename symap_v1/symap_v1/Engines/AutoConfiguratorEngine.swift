@@ -123,8 +123,16 @@ enum AutoConfiguratorEngine {
 
     /// Núcleo único de cálculo — usado tanto por calculateMorphWeights (um modelo específico,
     /// busca fuzzy por keyword) quanto por bestFittingModels (varre o catálogo inteiro).
-    private static func computeFit(key: String, spec: ModelSpec, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false) -> FitResult {
-        let targetWidth = faceWidth + widthClearance(forKey: key)
+    private static func computeFit(key: String, spec: ModelSpec, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false, currentGlassesLensWidth: Float? = nil, currentGlassesBridge: Float? = nil) -> FitResult {
+        // 🔴 PISO DE SEGURANÇA (armação atual do paciente): quando o paciente informa aro+ponte
+        // da armação que já usa e tolera, nunca miramos abaixo disso — só o cálculo biométrico
+        // pode pedir MAIS largura, nunca menos do que o que a pessoa já usa fisicamente. Ver
+        // VisagismClinicalRules.currentGlassesRimAllowance.
+        var targetWidth = faceWidth + widthClearance(forKey: key)
+        if let lensWidth = currentGlassesLensWidth, let currentBridge = currentGlassesBridge {
+            let currentGlassesTotalWidth = (2 * lensWidth) + currentBridge + VisagismClinicalRules.currentGlassesRimAllowance
+            targetWidth = max(targetWidth, currentGlassesTotalWidth)
+        }
         let targetBridge = bridgeWidth + bridgeOffset(forKey: key)
 
         var weights: [String: Float] = [:]
@@ -218,6 +226,20 @@ enum AutoConfiguratorEngine {
             ? (VisagismClinicalRules.cheekClearanceThreshold - eyeToCheekClearance)
             : 0
 
+        // 2b. 🔴 BOOST DE VISAGISMO POR FORMATO DO ROSTO: rosto longo/retangular pede lente MAIS
+        // alta (quebra a proporção alongada), rosto redondo/curto pede lente mais achatada — regra
+        // clássica de visagismo que antes não existia aqui (verticalStretchWeight/verticalSquashWeight
+        // ficavam declaradas mas nunca eram usadas). Mesmo limiar de classificação de
+        // BiometryEngine.analyzeVisagisme (ver VisagismClinicalRules.longFaceRatioThreshold/
+        // shortFaceRatioThreshold), pra não ter 2 leituras divergentes do mesmo rosto.
+        let heightWidthRatio: Float = faceWidth > 0 ? faceHeight / faceWidth : 0
+        var shapeBoost: Float = 0
+        if heightWidthRatio > VisagismClinicalRules.longFaceRatioThreshold {
+            shapeBoost = VisagismClinicalRules.verticalShapeBoostMm * VisagismClinicalRules.verticalStretchWeight
+        } else if heightWidthRatio > 0 && heightWidthRatio < VisagismClinicalRules.shortFaceRatioThreshold {
+            shapeBoost = -(VisagismClinicalRules.verticalShapeBoostMm * VisagismClinicalRules.verticalSquashWeight)
+        }
+
         // 3. 🔴 A MÁGICA DA SUA IDEIA: Fator de Amortecimento Estético (60%)
         // Transforma uma distorção matemática agressiva de 2.0mm em apenas 1.2mm, preservando
         // o design de fábrica da armação! 🔴 CORREÇÃO: antes o amortecimento só entrava na
@@ -225,8 +247,9 @@ enum AutoConfiguratorEngine {
         // cima crua, sem freio nenhum. Prova física real (Luno masculino, 2026-08) mostrou
         // encolhimento excessivo (saturava no teto do molde e ainda "faltava" 0.5-0.8mm) — a
         // pressão sem amortecimento provavelmente era a maior responsável. Agora os dois termos
-        // são somados ANTES do amortecimento, então a bochecha também é suavizada.
-        let smoothDiffHeight = (rawDiffHeight - cheekShortfall) * VisagismClinicalRules.verticalDampening
+        // são somados ANTES do amortecimento, então a bochecha também é suavizada — o boost de
+        // formato entra na mesma soma, pelo mesmo motivo.
+        let smoothDiffHeight = (rawDiffHeight + shapeBoost - cheekShortfall) * VisagismClinicalRules.verticalDampening
         var verticalSaturated = false
         var appliedVerticalDiff: Float = 0.0
         var verticalOverage: Float = 0.0
@@ -249,45 +272,45 @@ enum AutoConfiguratorEngine {
     }
 
     /// Calcula os pesos (0.0 a 1.0) para as Shape Keys (Morphers) baseados na biometria do paciente
-    static func calculateMorphWeights(keyword: String, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, faceShape: String, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false) -> [String: Float] {
+    static func calculateMorphWeights(keyword: String, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, faceShape: String, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false, currentGlassesLensWidth: Float? = nil, currentGlassesBridge: Float? = nil) -> [String: Float] {
         let safeKeyword = keyword.lowercased().replacingOccurrences(of: " ", with: "_")
         let sortedKeys = specs.keys.sorted(by: { $0.count > $1.count })
 
         guard let key = sortedKeys.first(where: { safeKeyword.contains($0) }),
               let spec = specs[key] else { return [:] }
 
-        return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid).weights
+        return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid, currentGlassesLensWidth: currentGlassesLensWidth, currentGlassesBridge: currentGlassesBridge).weights
     }
 
     /// Mesma busca fuzzy de calculateMorphWeights, mas devolve o FitResult completo (pesos +
     /// deltas em mm já aplicados/clipados) — fonte única para textos de UI como "Ponte Nasal:
     /// -2.9mm", evitando reimplementar a fórmula do motor em cada tela.
-    static func fitDetails(forKeyword keyword: String, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false) -> FitResult? {
+    static func fitDetails(forKeyword keyword: String, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false, currentGlassesLensWidth: Float? = nil, currentGlassesBridge: Float? = nil) -> FitResult? {
         let safeKeyword = keyword.lowercased().replacingOccurrences(of: " ", with: "_")
         let sortedKeys = specs.keys.sorted(by: { $0.count > $1.count })
         guard let key = sortedKeys.first(where: { safeKeyword.contains($0) }),
               let spec = specs[key] else { return nil }
-        return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid)
+        return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid, currentGlassesLensWidth: currentGlassesLensWidth, currentGlassesBridge: currentGlassesBridge)
     }
 
     /// Mesma busca fuzzy de calculateMorphWeights, mas devolve só se o modelo cabe sem saturar
     /// nenhum eixo — usado para avisar o cliente ANTES de trocar manualmente de armação no try-on.
     /// nil quando a keyword não bate com nenhum modelo do catálogo.
-    static func isGoodFit(forKeyword keyword: String, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false) -> Bool? {
+    static func isGoodFit(forKeyword keyword: String, faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false, currentGlassesLensWidth: Float? = nil, currentGlassesBridge: Float? = nil) -> Bool? {
         let safeKeyword = keyword.lowercased().replacingOccurrences(of: " ", with: "_")
         let sortedKeys = specs.keys.sorted(by: { $0.count > $1.count })
         guard let key = sortedKeys.first(where: { safeKeyword.contains($0) }),
               let spec = specs[key] else { return nil }
-        return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid).isGoodFit
+        return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid, currentGlassesLensWidth: currentGlassesLensWidth, currentGlassesBridge: currentGlassesBridge).isGoodFit
     }
 
     /// Varre TODO o catálogo (todas as linhas) e retorna as chaves dos modelos que encaixam
     /// sem saturar nenhum eixo físico (ponte/largura/vertical) para a biometria informada —
     /// isto é, óculos que realmente cabem, não só o modelo que combina com o formato do rosto.
-    static func bestFittingModels(faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false) -> [String] {
+    static func bestFittingModels(faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false, currentGlassesLensWidth: Float? = nil, currentGlassesBridge: Float? = nil) -> [String] {
         return specs.keys.filter { key in
             guard let spec = specs[key] else { return false }
-            return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid).isGoodFit
+            return computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid, currentGlassesLensWidth: currentGlassesLensWidth, currentGlassesBridge: currentGlassesBridge).isGoodFit
         }.sorted()
     }
 
@@ -313,10 +336,10 @@ enum AutoConfiguratorEngine {
     /// exige menos deformação total (totalEffort), preservando ao máximo o desenho de fábrica.
     /// Pedido explícito do Gabriel: sempre indicar o modelo mais otimizado do catálogo inteiro,
     /// aceitando que às vezes vai estourar um pouco em vez de nunca conseguir recomendar nada.
-    static func bestOptimizedModels(faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false) -> [FitScore] {
+    static func bestOptimizedModels(faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false, currentGlassesLensWidth: Float? = nil, currentGlassesBridge: Float? = nil) -> [FitScore] {
         return specs.keys.compactMap { key -> FitScore? in
             guard let spec = specs[key] else { return nil }
-            let fit = computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid)
+            let fit = computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid, currentGlassesLensWidth: currentGlassesLensWidth, currentGlassesBridge: currentGlassesBridge)
             let totalOverage = fit.bridgeOverage + fit.widthOverage + fit.verticalOverage
             let totalEffort = (fit.weights["Ponte"] ?? fit.weights["Ponte_m"] ?? 0)
                 + (fit.weights["Largura_a"] ?? fit.weights["Largura_r"] ?? 0)
@@ -330,8 +353,8 @@ enum AutoConfiguratorEngine {
 
     /// Só a chave do modelo mais otimizado do catálogo inteiro (primeiro colocado do ranking
     /// acima) — nil apenas se specs estiver vazio.
-    static func mostOptimizedModel(faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false) -> String? {
-        return bestOptimizedModels(faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid).first?.key
+    static func mostOptimizedModel(faceWidth: Float, faceHeight: Float, bridgeWidth: Float, nasalProjection: Float, jawWidth: Float, eyeToCheekClearance: Float = 0, eyeToCheekClearanceValid: Bool = false, currentGlassesLensWidth: Float? = nil, currentGlassesBridge: Float? = nil) -> String? {
+        return bestOptimizedModels(faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid, currentGlassesLensWidth: currentGlassesLensWidth, currentGlassesBridge: currentGlassesBridge).first?.key
     }
 
     /// "luno_infantil" → "Luno (Infantil)" — nome de exibição a partir da chave do banco de specs.

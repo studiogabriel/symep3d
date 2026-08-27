@@ -35,6 +35,8 @@ extension MeasurementViewController {
             verticalPupilDiff: verticalPupilDiff, nasalProfile: nasalProfile, faceShape: faceShape,
             frameSuggestion: frameSuggestion, manualFrameHeight: manualFrameHeight,
             manualFrameWidth: manualFrameWidth, manualFrameDiagonal: manualFrameDiagonal,
+            currentGlassesLensWidth: currentGlassesLensWidth ?? 0, currentGlassesBridge: currentGlassesBridge ?? 0,
+            currentGlassesHaste: currentGlassesHaste ?? 0,
             selectedLensType: selectedLensType, patientName: patientName, patientCPF: patientCPF,
             patientGender: patientGender,
             rxEsfOD: rxEsfOD, rxCilOD: rxCilOD, rxEixoOD: rxEixoOD,

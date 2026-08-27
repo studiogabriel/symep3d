@@ -29,7 +29,20 @@ struct VisagismClinicalRules {
     /// o teto do molde não era o problema, a meta calculada é que pedia pouco. Com 14mm, o mesmo
     /// caso passa a pedir um leve esticamento (~33% do teto) em vez de quase saturar o encolhimento.
     /// Não aplicado a infantil (já saturado, piorar a meta não ajuda) nem a masculino (sem dado real ainda).
-    static let temporalClearanceFeminino: Float = 14
+    /// 🔴 Ajustado de 14 para 18mm (2026-08-27) após 2 provas físicas reais: caso do rosto
+    /// 124.4mm (Nunu feminino) ainda ficou "no limite, sem folga" com 14mm; segundo caso relatou
+    /// a armação "extremamente pequena" horizontalmente, com pedido explícito de ajuste "grande e
+    /// perceptível" — não incremental. Ainda sem dado que feche o número exato, revisar com mais provas.
+    static let temporalClearanceFeminino: Float = 18
+
+    /// Piso mínimo de largura frontal derivado da armação atual do paciente (quando informada):
+    /// nunca recomendamos algo menor do que o que a pessoa já usa e tolera fisicamente, mesmo que
+    /// o cálculo biométrico sozinho pedisse menos. Ver AutoConfiguratorEngine.computeFit
+    /// (currentGlassesLensWidth/currentGlassesBridge). Cobre a borda de material entre a lente e
+    /// a dobradiça, que não aparece nos 2 números gravados na armação (aro + ponte). Estimativa
+    /// inicial SEM validação por prova física — mesmo status que cheekClearanceThreshold tinha
+    /// antes da prova real; recalibrar assim que tivermos casos comparando armação atual x conforto.
+    static let currentGlassesRimAllowance: Float = 4.0
     
     // =======================================================
     // 🔴 2. INTENSIDADE DAS DEFORMAÇÕES (Pesos de 0.0 a 1.0)
@@ -40,6 +53,26 @@ struct VisagismClinicalRules {
     static let verticalStretchWeight: Float = 0.8 // Aumento da lente para baixo (Rostos Longos)
     static let verticalSquashWeight: Float = 0.8  // Achatamento da lente (Rostos Redondos)
     static let keyholeBridgeWeight: Float = 0.9   // Engrossamento em ferradura (Nariz Fino)
+
+    /// Limiares de proporção altura/largura que classificam o formato do rosto — mesmos números
+    /// usados em BiometryEngine.analyzeVisagisme (ratio > 1.35 = Longo/Retangular, ratio < 1.15 =
+    /// Redondo/Curto). Centralizados aqui pra AutoConfiguratorEngine.computeFit usar exatamente o
+    /// mesmo corte na hora de aplicar o boost vertical por formato — evita 2 classificações
+    /// divergentes do mesmo rosto em lugares diferentes do código (like já aconteceu antes com
+    /// recommendedAutoModel vs visagismStyleModel).
+    static let longFaceRatioThreshold: Float = 1.35
+    static let shortFaceRatioThreshold: Float = 1.15
+
+    /// 🔴 NOVO (2026-08-27): magnitude (mm) do empurrão vertical extra por formato de rosto —
+    /// rostos longos/retangulares puxam a lente mais pra baixo (verticalStretchWeight), rostos
+    /// redondos/curtos achatam mais (verticalSquashWeight). Antes essas 2 constantes existiam mas
+    /// nunca eram usadas no cálculo real — o ajuste vertical era cego ao formato do rosto, só via
+    /// proporção genérica (faceHeight/4.0). Prova física real (2026-08-27, rosto longo/retangular
+    /// 186.3mm) mostrou o oposto do esperado: cálculo dava só -0.3mm de encolhimento (quase
+    /// neutro) enquanto o paciente sentiu precisar de MAIS vertical, "vendo a base da armação".
+    /// Valor inicial SEM validação por prova física — mesmo status que cheekClearanceThreshold
+    /// tinha antes; recalibrar assim que tivermos mais casos.
+    static let verticalShapeBoostMm: Float = 2.0
     
     // =======================================================
     // 🔴 3. LIMITES CLÍNICOS DE GATILHO

@@ -224,6 +224,13 @@ class MeasurementViewController: UIViewController, ARSCNViewDelegate, PKCanvasVi
     var nasalProjection: Float = 0.0
     var eyeToCheekClearance: Float = 0.0
     var eyeToCheekClearanceValid: Bool = false
+    /// Medidas gravadas na armação atual do paciente (aro horizontal / ponte / haste), informadas
+    /// manualmente na tela pós-visagismo — nil quando o paciente não usa óculos ou pulou a etapa.
+    /// aro/ponte viram piso de segurança de largura no motor (ver VisagismClinicalRules.
+    /// currentGlassesRimAllowance); haste só é capturada/guardada, sem cálculo associado ainda.
+    var currentGlassesLensWidth: Float? = nil
+    var currentGlassesBridge: Float? = nil
+    var currentGlassesHaste: Float? = nil
     var patientName: String = "Paciente Não Identificado"
     var patientCPF: String = "000.000.000-00"
     

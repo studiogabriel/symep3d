@@ -199,7 +199,8 @@ extension MeasurementViewController {
                     if let bestKey = AutoConfiguratorEngine.mostOptimizedModel(
                         faceWidth: self.faceWidth, faceHeight: self.faceHeight, bridgeWidth: self.noseBridgeWidth,
                         nasalProjection: self.nasalProjection, jawWidth: self.jawWidth,
-                        eyeToCheekClearance: self.eyeToCheekClearance, eyeToCheekClearanceValid: self.eyeToCheekClearanceValid
+                        eyeToCheekClearance: self.eyeToCheekClearance, eyeToCheekClearanceValid: self.eyeToCheekClearanceValid,
+                        currentGlassesLensWidth: self.currentGlassesLensWidth, currentGlassesBridge: self.currentGlassesBridge
                     ), let baseName = bestKey.split(separator: "_").first {
                         self.recommendedAutoModel = String(baseName).capitalized
                     } else {

@@ -27,6 +27,11 @@ struct Measurement {
     let manualFrameWidth: Float
     let manualFrameDiagonal: Float
 
+    // Armação atual do paciente (gravada no óculos que já usa, se houver) — 0 quando não informada
+    let currentGlassesLensWidth: Float
+    let currentGlassesBridge: Float
+    let currentGlassesHaste: Float
+
     // Lente
     let selectedLensType: String
 

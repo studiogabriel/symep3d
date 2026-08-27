@@ -221,7 +221,9 @@ extension MeasurementViewController {
                     nasalProjection: self.nasalProjection,
                     jawWidth: self.jawWidth,
                     eyeToCheekClearance: self.eyeToCheekClearance,
-                    eyeToCheekClearanceValid: self.eyeToCheekClearanceValid
+                    eyeToCheekClearanceValid: self.eyeToCheekClearanceValid,
+                    currentGlassesLensWidth: self.currentGlassesLensWidth,
+                    currentGlassesBridge: self.currentGlassesBridge
                 )
                 let goodFitKeys = ranked.filter { $0.totalOverage <= VisagismClinicalRules.acceptableOverageTolerance }.prefix(4).map { $0.key }
                 let goodFitNames = goodFitKeys.map { AutoConfiguratorEngine.displayName(forKey: $0) }
@@ -426,21 +428,191 @@ extension MeasurementViewController {
                 btnNext.setTitleColor(navyDark, for: .normal)
                 btnNext.layer.cornerRadius = 16
                 btnNext.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
-                btnNext.addTarget(self, action: #selector(finishVisagismAndStartMeasurement), for: .touchUpInside)
+                btnNext.addTarget(self, action: #selector(showCurrentGlassesPrompt), for: .touchUpInside)
                 visagismContainer.addSubview(btnNext)
-                
+
                 UIView.animate(withDuration: 0.3) { visagismContainer.alpha = 1.0 }
     }
-    
-    @objc func finishVisagismAndStartMeasurement() {
-        guard let visagismView = self.view.viewWithTag(8888) else { return }
-        self.isVisagismCompleted = true
-        
+
+    // =======================================================
+    // 🔴 NOVO: TELA "ARMAÇÃO ATUAL" (pós-visagismo, pré-medição técnica)
+    // =======================================================
+    /// Pergunta se o paciente já usa óculos e, se sim, captura as 3 medidas gravadas na armação
+    /// (aro horizontal □ ponte - haste, mesmo formato impresso em qualquer óculos comercial).
+    /// Usado como piso de segurança de largura no motor (VisagismClinicalRules.
+    /// currentGlassesRimAllowance) — nunca recomendar algo menor do que o que o paciente já usa
+    /// e tolera fisicamente. Pedido do Gabriel após 2ª prova física relatar armação "extremamente
+    /// pequena": pacientes sem óculos atual (a maioria dos primeiros testes) simplesmente pulam.
+    @objc func showCurrentGlassesPrompt() {
+        guard let visagismView = self.view.viewWithTag(8888) else {
+            finishVisagismAndStartMeasurement()
+            return
+        }
+
+        let opticalCyan = UIColor(red: 0.000, green: 0.765, blue: 0.851, alpha: 1.0)
+        let navyDark = UIColor(red: 0.039, green: 0.102, blue: 0.227, alpha: 1.0)
+        let navyMedium = UIColor(red: 0.078, green: 0.157, blue: 0.286, alpha: 1.0)
+        let slateColor = UIColor(red: 0.541, green: 0.608, blue: 0.710, alpha: 1.0)
+
         UIView.animate(withDuration: 0.3, animations: { visagismView.alpha = 0.0 }) { _ in
             visagismView.removeFromSuperview()
+
+            let container = UIView(frame: self.view.bounds)
+            container.backgroundColor = navyDark
+            container.tag = 8889
+            container.alpha = 0.0
+            self.view.addSubview(container)
+
+            let icon = UILabel(frame: CGRect(x: 30, y: 70, width: self.view.bounds.width - 60, height: 50))
+            icon.text = "👓"
+            icon.font = UIFont.systemFont(ofSize: 40)
+            icon.textAlignment = .center
+            container.addSubview(icon)
+
+            let title = UILabel(frame: CGRect(x: 30, y: 130, width: self.view.bounds.width - 60, height: 30))
+            title.text = "Você já usa óculos?"
+            title.textAlignment = .center
+            title.textColor = .white
+            title.font = UIFont(name: "Inter-Black", size: 20) ?? UIFont.systemFont(ofSize: 20, weight: .black)
+            container.addSubview(title)
+
+            let subtitle = UILabel(frame: CGRect(x: 30, y: 165, width: self.view.bounds.width - 60, height: 55))
+            subtitle.text = "Se tiver as medidas gravadas na armação atual, elas nos ajudam a não deixar a armação nova menor do que a que você já usa e já se acostumou."
+            subtitle.textAlignment = .center
+            subtitle.numberOfLines = 0
+            subtitle.textColor = slateColor
+            subtitle.font = UIFont(name: "Inter-Medium", size: 13) ?? UIFont.systemFont(ofSize: 13, weight: .medium)
+            container.addSubview(subtitle)
+
+            // --- FASE 1: Sim / Não ---
+            let choiceStack = UIView(frame: CGRect(x: 30, y: 240, width: self.view.bounds.width - 60, height: 55))
+            container.addSubview(choiceStack)
+
+            let btnNo = UIButton(frame: CGRect(x: 0, y: 0, width: (choiceStack.bounds.width - 12) / 2, height: 55))
+            btnNo.backgroundColor = navyMedium.withAlphaComponent(0.5)
+            btnNo.setTitle("Não uso / Não sei", for: .normal)
+            btnNo.setTitleColor(.white, for: .normal)
+            btnNo.layer.cornerRadius = 14
+            btnNo.titleLabel?.font = UIFont(name: "Inter-Bold", size: 14) ?? UIFont.boldSystemFont(ofSize: 14)
+            choiceStack.addSubview(btnNo)
+
+            let btnYes = UIButton(frame: CGRect(x: choiceStack.bounds.width - ((choiceStack.bounds.width - 12) / 2), y: 0, width: (choiceStack.bounds.width - 12) / 2, height: 55))
+            btnYes.backgroundColor = opticalCyan
+            btnYes.setTitle("Sim, já uso", for: .normal)
+            btnYes.setTitleColor(navyDark, for: .normal)
+            btnYes.layer.cornerRadius = 14
+            btnYes.titleLabel?.font = UIFont(name: "Inter-Bold", size: 14) ?? UIFont.boldSystemFont(ofSize: 14)
+            choiceStack.addSubview(btnYes)
+
+            // --- FASE 2: Formulário (escondido até "Sim") ---
+            let formContainer = UIView(frame: CGRect(x: 30, y: 240, width: self.view.bounds.width - 60, height: 220))
+            formContainer.isHidden = true
+            container.addSubview(formContainer)
+
+            let formLabel = UILabel(frame: CGRect(x: 0, y: 0, width: formContainer.bounds.width, height: 40))
+            formLabel.text = "Digite os números gravados na armação\n(formato padrão: aro □ ponte - haste)"
+            formLabel.numberOfLines = 2
+            formLabel.textAlignment = .center
+            formLabel.textColor = slateColor
+            formLabel.font = UIFont(name: "Inter-SemiBold", size: 12) ?? UIFont.systemFont(ofSize: 12, weight: .semibold)
+            formContainer.addSubview(formLabel)
+
+            let separatorW: CGFloat = 26
+            let fieldW = (formContainer.bounds.width - (separatorW * 2)) / 3
+            let fieldY: CGFloat = 55
+
+            func makeField(x: CGFloat, placeholder: String) -> UITextField {
+                let tf = UITextField(frame: CGRect(x: x, y: fieldY, width: fieldW, height: 46))
+                tf.backgroundColor = UIColor(white: 1.0, alpha: 0.05)
+                tf.textColor = .white
+                tf.layer.cornerRadius = 12
+                tf.layer.borderWidth = 1
+                tf.layer.borderColor = UIColor(white: 1.0, alpha: 0.1).cgColor
+                tf.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+                tf.textAlignment = .center
+                tf.keyboardType = .decimalPad
+                tf.delegate = self
+                tf.attributedPlaceholder = NSAttributedString(string: placeholder, attributes: [.foregroundColor: slateColor.withAlphaComponent(0.6), .font: UIFont(name: "Inter-Regular", size: 12) ?? UIFont.systemFont(ofSize: 12)])
+                formContainer.addSubview(tf)
+                return tf
+            }
+
+            func makeSeparator(x: CGFloat, symbol: String) -> UILabel {
+                let lbl = UILabel(frame: CGRect(x: x, y: fieldY, width: separatorW, height: 46))
+                lbl.text = symbol
+                lbl.textAlignment = .center
+                lbl.textColor = slateColor
+                lbl.font = UIFont(name: "Inter-Black", size: 18) ?? UIFont.systemFont(ofSize: 18, weight: .black)
+                formContainer.addSubview(lbl)
+                return lbl
+            }
+
+            let fieldLens = makeField(x: 0, placeholder: "Aro")
+            _ = makeSeparator(x: fieldW, symbol: "□")
+            let fieldBridge = makeField(x: fieldW + separatorW, placeholder: "Ponte")
+            _ = makeSeparator(x: (fieldW * 2) + separatorW, symbol: "-")
+            let fieldHaste = makeField(x: (fieldW * 2) + (separatorW * 2), placeholder: "Haste")
+
+            let hintLabel = UILabel(frame: CGRect(x: 0, y: fieldY + 55, width: formContainer.bounds.width, height: 16))
+            hintLabel.text = "Aro/Ponte/Haste em mm"
+            hintLabel.textAlignment = .center
+            hintLabel.textColor = slateColor.withAlphaComponent(0.6)
+            hintLabel.font = UIFont(name: "Inter-Regular", size: 10) ?? UIFont.systemFont(ofSize: 10)
+            formContainer.addSubview(hintLabel)
+
+            let btnContinue = UIButton(frame: CGRect(x: 0, y: fieldY + 80, width: formContainer.bounds.width, height: 55))
+            btnContinue.backgroundColor = opticalCyan
+            btnContinue.setTitle("Continuar", for: .normal)
+            btnContinue.setTitleColor(navyDark, for: .normal)
+            btnContinue.layer.cornerRadius = 14
+            btnContinue.titleLabel?.font = UIFont(name: "Inter-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+            formContainer.addSubview(btnContinue)
+
+            btnYes.addAction(UIAction { _ in
+                UIView.animate(withDuration: 0.25) {
+                    choiceStack.isHidden = true
+                    formContainer.isHidden = false
+                }
+            }, for: .touchUpInside)
+
+            btnNo.addAction(UIAction { _ in
+                self.view.endEditing(true)
+                UIView.animate(withDuration: 0.3, animations: { container.alpha = 0.0 }) { _ in
+                    container.removeFromSuperview()
+                    self.finishVisagismAndStartMeasurement()
+                }
+            }, for: .touchUpInside)
+
+            btnContinue.addAction(UIAction { _ in
+                self.view.endEditing(true)
+                let parse: (String?) -> Float? = { text in
+                    guard let t = text?.replacingOccurrences(of: ",", with: "."), !t.isEmpty, let v = Float(t), v > 0 else { return nil }
+                    return v
+                }
+                self.currentGlassesLensWidth = parse(fieldLens.text)
+                self.currentGlassesBridge = parse(fieldBridge.text)
+                self.currentGlassesHaste = parse(fieldHaste.text)
+                UIView.animate(withDuration: 0.3, animations: { container.alpha = 0.0 }) { _ in
+                    container.removeFromSuperview()
+                    self.finishVisagismAndStartMeasurement()
+                }
+            }, for: .touchUpInside)
+
+            UIView.animate(withDuration: 0.3) { container.alpha = 1.0 }
+        }
+    }
+
+    @objc func finishVisagismAndStartMeasurement() {
+        // 🔴 Chamado depois da tela "Armação Atual" (tag 8889), que já se remove antes de chegar
+        // aqui — por isso não depende mais de achar a tag 8888 (tela de visagismo) pra prosseguir,
+        // senão o fluxo travava silenciosamente (guard falhava, return antes de tudo abaixo).
+        self.isVisagismCompleted = true
+        self.view.viewWithTag(8888)?.removeFromSuperview()
+
+        UIView.animate(withDuration: 0.01, animations: { }) { _ in
             self.safeFaceCache?.removeFromParentNode()
             self.safeFaceCache = nil
-            
+
             // =======================================================
                     // 3. EXPERIÊNCIA UX: FAKE LOADING DA MODELAGEM 3D
                     // =======================================================
@@ -532,7 +704,7 @@ extension MeasurementViewController {
             
             if let key = AutoConfiguratorEngine.specs.keys.first(where: { safeKeyword.contains($0) }),
                let spec = AutoConfiguratorEngine.specs[key],
-               let fit = AutoConfiguratorEngine.fitDetails(forKeyword: safeKeyword, faceWidth: self.faceWidth, faceHeight: self.faceHeight, bridgeWidth: self.noseBridgeWidth, nasalProjection: self.nasalProjection, jawWidth: self.jawWidth, eyeToCheekClearance: self.eyeToCheekClearance, eyeToCheekClearanceValid: self.eyeToCheekClearanceValid) {
+               let fit = AutoConfiguratorEngine.fitDetails(forKeyword: safeKeyword, faceWidth: self.faceWidth, faceHeight: self.faceHeight, bridgeWidth: self.noseBridgeWidth, nasalProjection: self.nasalProjection, jawWidth: self.jawWidth, eyeToCheekClearance: self.eyeToCheekClearance, eyeToCheekClearanceValid: self.eyeToCheekClearanceValid, currentGlassesLensWidth: self.currentGlassesLensWidth, currentGlassesBridge: self.currentGlassesBridge) {
 
                 displayModelName = "\(keyword.capitalized) \(Int(spec.baseWidth))mm"
 
