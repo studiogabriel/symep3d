@@ -296,7 +296,11 @@ extension MeasurementViewController {
                 if !alreadyHasLine, ["luno", "nunu", "suki", "timbau"].contains(modelBaseName) {
                     let sizeLine = AutoConfiguratorEngine.sizeLineSuffix(forFaceWidth: self.faceWidth)
                     modelBaseName = "sl_\(modelBaseName)_\(sizeLine)"
-                } else if alreadyHasLine {
+                } else if alreadyHasLine, !modelBaseName.hasPrefix("sl_") {
+                    // Só prefixa se ainda não tiver — currentCloudModel?.name (ex.: "SL Nunu
+                    // Masculino") já vem com "sl_" embutido; só recommendedAutoModelKey (ex.:
+                    // "nunu_masculino") não tem. Prefixar de novo aqui duplicava pra
+                    // "sl_sl_nunu_masculino", que a Cloud Function não acha no Storage.
                     modelBaseName = "sl_\(modelBaseName)"
                 }
             
