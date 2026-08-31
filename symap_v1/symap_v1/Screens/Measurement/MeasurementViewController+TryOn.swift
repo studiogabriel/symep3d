@@ -537,10 +537,22 @@ extension MeasurementViewController {
             currentGlassesBridge: self.currentGlassesBridge
         )
 
+        // 🔴 APELIDO TEMPORÁRIO: sl_luno_infantil.usdc tem a shape key de encolhimento vertical
+        // nomeada "Vertical_m" em vez do padrão "Vertical_r" usado pelos outros 11 modelos do
+        // catálogo — setWeight(forTargetNamed:) com o nome errado não dá erro, só não faz nada
+        // silenciosamente, então o ajuste calculado nunca chegava a ser aplicado nesse modelo
+        // específico. Envia pros dois nomes; setWeight num alvo inexistente é inofensivo (no-op)
+        // nos outros 11 modelos que já têm "Vertical_r" certo. Remover quando o Luno infantil for
+        // reexportado com o nome padronizado.
+        let shapeKeyAliases: [String: [String]] = ["Vertical_r": ["Vertical_m"]]
+
         node.enumerateChildNodes { (child, _) in
             if let morpher = child.morpher {
                 for (key, value) in weights {
                     morpher.setWeight(CGFloat(value), forTargetNamed: key)
+                    for alias in shapeKeyAliases[key] ?? [] {
+                        morpher.setWeight(CGFloat(value), forTargetNamed: alias)
+                    }
                 }
             }
         }
