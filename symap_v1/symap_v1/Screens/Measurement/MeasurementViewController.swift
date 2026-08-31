@@ -24,6 +24,12 @@ class MeasurementViewController: UIViewController, ARSCNViewDelegate, PKCanvasVi
     /// Modelo mais otimizado pelo ranking físico (AutoConfiguratorEngine.bestOptimizedModels) —
     /// é o que de fato é aplicado no try-on automático.
     var recommendedAutoModel: String = ""
+    /// Chave completa do modelo mais otimizado (ex.: "nunu_masculino") — fonte de verdade da
+    /// LINHA escolhida pelo ranking físico. recommendedAutoModel guarda só o nome base ("Nunu")
+    /// pra exibição; usar esta propriedade sempre que for preciso reaplicar/recalcular o encaixe
+    /// do modelo recomendado, nunca reconstruir a linha via sizeLineSuffix(forFaceWidth:) — isso
+    /// jogaria fora a linha que o ranking realmente escolheu.
+    var recommendedAutoModelKey: String = ""
     /// Modelo indicado pelo formato/estilo do rosto (BiometryEngine.analyzeVisagisme →
     /// FrameCatalogEngine) — puramente estético, pode ou não ser o mesmo do encaixe físico.
     var visagismStyleModel: String = ""

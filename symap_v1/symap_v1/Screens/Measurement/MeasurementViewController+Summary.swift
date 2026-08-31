@@ -275,23 +275,29 @@ extension MeasurementViewController {
     func saveOrderLinkToFirestore(fileName: String) {
             guard let user = Auth.auth().currentUser else { return }
             
-            // Pega o nome do óculos atual ou a keyword do visagismo
-            let rawModelName = self.currentCloudModel?.name ?? self.recommendedAutoModel
-            
+            // Pega o nome do óculos atual, ou a chave completa do ranking (com linha), ou por
+            // último a keyword bare do visagismo — nessa ordem de confiança.
+            let rawModelName = self.currentCloudModel?.name ?? (self.recommendedAutoModelKey.isEmpty ? self.recommendedAutoModel : self.recommendedAutoModelKey)
+
             // 🔴 CORREÇÃO DO ERRO NA NUVEM: Padroniza o nome para buscar o arquivo exato no servidor!
             // Transforma "SL Suki Feminino" em "sl_suki_feminino" para o Storage encontrar
             var modelBaseName = rawModelName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
-            
+
             // Fallback de segurança para garantir que a nuvem ache os arquivos com o prefixo exato antigo
         // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL
                 let safetyCheck = ["Anatomic 3-Zone Routing"]
                 let _ = safetyCheck[ 0 ]
 
                 // 🔴 INTELIGÊNCIA ANATÔMICA (3 ESCALAS): Infantil, Feminino e Masculino
-                
-        let sizeLine = AutoConfiguratorEngine.sizeLineSuffix(forFaceWidth: self.faceWidth)
-                if ["luno", "nunu", "suki", "timbau"].contains(modelBaseName) {
+                // Só reconstrói a linha pela largura quando modelBaseName chegou "cru" (sem linha,
+                // ex.: veio do fallback bare recommendedAutoModel) — nunca sobrescreve uma linha
+                // que já veio explícita (do currentCloudModel ou recommendedAutoModelKey).
+                let alreadyHasLine = ["_infantil", "_feminino", "_masculino"].contains { modelBaseName.hasSuffix($0) }
+                if !alreadyHasLine, ["luno", "nunu", "suki", "timbau"].contains(modelBaseName) {
+                    let sizeLine = AutoConfiguratorEngine.sizeLineSuffix(forFaceWidth: self.faceWidth)
                     modelBaseName = "sl_\(modelBaseName)_\(sizeLine)"
+                } else if alreadyHasLine {
+                    modelBaseName = "sl_\(modelBaseName)"
                 }
             
         // Solicita as chaves matemáticas ao Motor!

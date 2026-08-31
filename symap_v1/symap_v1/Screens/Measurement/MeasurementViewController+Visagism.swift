@@ -693,10 +693,16 @@ extension MeasurementViewController {
             // sobravam muitas linhas ("o texto foi cortado pela caixa").
             let keyword = self.recommendedAutoModel
             var modText = ""
-            
+
+            // 🔴 Mesma correção de applyRecommendedModel: usa a chave completa do ranking
+            // (recommendedAutoModelKey, ex.: "nunu_masculino") quando disponível, nunca
+            // reconstrói a linha pela largura — senão o [DEV] mostra o encaixe de um modelo
+            // diferente do que realmente foi vestido no rosto.
             var safeKeyword = keyword.lowercased().replacingOccurrences(of: " ", with: "_")
-            let sizeLine = AutoConfiguratorEngine.sizeLineSuffix(forFaceWidth: self.faceWidth)
-            if ["luno", "nunu", "suki", "timbau"].contains(safeKeyword) {
+            if !self.recommendedAutoModelKey.isEmpty {
+                safeKeyword = self.recommendedAutoModelKey
+            } else if ["luno", "nunu", "suki", "timbau"].contains(safeKeyword) {
+                let sizeLine = AutoConfiguratorEngine.sizeLineSuffix(forFaceWidth: self.faceWidth)
                 safeKeyword = "\(safeKeyword)_\(sizeLine)"
             }
             
@@ -860,18 +866,24 @@ extension MeasurementViewController {
             self.view.viewWithTag(882)?.isHidden = false
             self.view.viewWithTag(880)?.isHidden = false
             
-            // Aplica o modelo com os parâmetros finais na face em tempo real
-            self.applyRecommendedModel(modelIdOrName: self.recommendedAutoModel)
+            // Aplica o modelo com os parâmetros finais na face em tempo real — usa a chave
+            // completa (com linha) do ranking quando disponível, nunca reconstrói a linha às
+            // cegas pela largura (ver comentário em recommendedAutoModelKey).
+            self.applyRecommendedModel(modelIdOrName: self.recommendedAutoModelKey.isEmpty ? self.recommendedAutoModel : self.recommendedAutoModelKey)
         }
     }
     
     func applyRecommendedModel(modelIdOrName: String) {
         // 🔴 1. INTELIGÊNCIA ANATÔMICA GLOBAL (3 ESCALAS)
                 var safeModelName = modelIdOrName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "_")
-        let sizeLine = AutoConfiguratorEngine.sizeLineSuffix(forFaceWidth: self.faceWidth)
-                if ["luno", "nunu", "suki", "timbau"].contains(safeModelName) {
-                    safeModelName = "\(safeModelName)_\(sizeLine)"
-                }
+        // 🔴 Só reconstrói a linha pela largura quando o nome chegou "cru" (sem linha) — se
+        // modelIdOrName já veio como chave completa do ranking (ex.: "nunu_masculino", via
+        // recommendedAutoModelKey), NUNCA sobrescreve a linha que o ranking escolheu.
+        let alreadyHasLine = ["_infantil", "_feminino", "_masculino"].contains { safeModelName.hasSuffix($0) }
+        if !alreadyHasLine, ["luno", "nunu", "suki", "timbau"].contains(safeModelName) {
+            let sizeLine = AutoConfiguratorEngine.sizeLineSuffix(forFaceWidth: self.faceWidth)
+            safeModelName = "\(safeModelName)_\(sizeLine)"
+        }
             
             // 🔴 2. BUSCA NA NUVEM (Usando o nome já traduzido com gênero)
             if let cloudModel = CloudManager.shared.availableModels.first(where: {

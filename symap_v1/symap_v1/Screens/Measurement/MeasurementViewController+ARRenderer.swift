@@ -193,9 +193,16 @@ extension MeasurementViewController {
                     // sem olhar nenhuma medida física), enquanto a lista "melhor encaixe" da tela
                     // de visagismo já usava bestOptimizedModels (ranking físico) — dois motores
                     // desconectados que podiam discordar (caso real: lista dizia "Nunu", o
-                    // try-on vestia "Luno"). Agora o modelo auto-aplicado usa o mesmo ranking
-                    // físico; só extrai o nome base ("nunu_masculino" → "Nunu") pra manter o
-                    // formato que o resto do app já espera em recommendedAutoModel.
+                    // try-on vestia "Luno"). Agora o modelo auto-aplicado usa o mesmo ranking físico.
+                    // 🔴 2ª CORREÇÃO (2026-08-27): guardamos a CHAVE COMPLETA (ex.: "nunu_masculino"),
+                    // não só o nome base. Antes só "Nunu" sobrevivia em recommendedAutoModel e todo
+                    // consumidor (applyRecommendedModel, popup, pedido de STL) reconstruía a LINHA
+                    // de novo via sizeLineSuffix(forFaceWidth:) — ou seja, mesmo quando o ranking
+                    // decidia que a linha masculina (molde maior) encaixava melhor num rosto de
+                    // largura "feminino" pela faixa, essa escolha era jogada fora na hora de
+                    // aplicar, e a linha voltava pro padrão de largura. Bug relatado como "os
+                    // modelos ainda estão pequenos" mesmo após calibrar largura/vertical — a causa
+                    // real não era a calibração, era a linha certa nunca chegar a ser usada.
                     if let bestKey = AutoConfiguratorEngine.mostOptimizedModel(
                         faceWidth: self.faceWidth, faceHeight: self.faceHeight, bridgeWidth: self.noseBridgeWidth,
                         nasalProjection: self.nasalProjection, jawWidth: self.jawWidth,
@@ -203,8 +210,10 @@ extension MeasurementViewController {
                         currentGlassesLensWidth: self.currentGlassesLensWidth, currentGlassesBridge: self.currentGlassesBridge
                     ), let baseName = bestKey.split(separator: "_").first {
                         self.recommendedAutoModel = String(baseName).capitalized
+                        self.recommendedAutoModelKey = bestKey
                     } else {
                         self.recommendedAutoModel = visagisme.recommendedModel
+                        self.recommendedAutoModelKey = ""
                     }
                 }
         
