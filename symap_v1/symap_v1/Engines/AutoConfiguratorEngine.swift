@@ -17,11 +17,16 @@ enum AutoConfiguratorEngine {
         let bridgePlus: Float
         let bridgeMinus: Float
         let nasal: Float
-        let ferradura: Float
-        let larguraR: Float
+        /// mm de largura que a PONTE move como efeito colateral, por unidade de peso, em
+        /// QUALQUER direção (medido direto na planilha — Ponte_a/Ponte_d sempre mudam Largura
+        /// em ±4.00mm nos 12 modelos, independente da capacidade própria de Largura_a/Largura_d).
+        /// Antes essa acoplagem era aproximada reaproveitando larguraA (weight*larguraA), o que
+        /// ficou errado quando larguraA passou a ser maior que a acoplagem real medida.
+        let bridgeWidthCoupling: Float
         let larguraA: Float
-        let verticalR: Float
+        let larguraD: Float
         let verticalA: Float
+        let verticalD: Float
     }
 
     struct ModelSpec {
@@ -30,58 +35,38 @@ enum AutoConfiguratorEngine {
             let baseHeight: Float
             let limits: ModelLimits
         }
-    
-    // BANCO DE DADOS ESCALÁVEL
-        static let specs: [String: ModelSpec] = [
-            // --- COLEÇÃO FEMININA (Base Larga: ~136.3mm) ---
-            // 🔴 baseWidth/baseHeight/baseBridge corrigidos com medição direta do molde 3D em
-            // repouso (peso 0) via Blender — os 4 modelos convergem pra ~136.3mm de largura
-            // (não 128-135mm variados como a estimativa manual anterior) e ~20mm de ponte (não
-            // 14.5-16.0mm). limits.bridgePlus/bridgeMinus/larguraA/larguraR/verticalA/verticalR:
-            // 1ª medição real de capacidade (peso 1.0 no Blender). larguraA/larguraR convergem
-            // pra ~3.84mm nos 4 modelos — coerente com a correção de acoplamento ponte→largura
-            // (bridgeWidthCoupling), já que aqui a largura muda a mesma coisa em ambas direções.
-            "luno_feminino": ModelSpec(baseBridge: 19.96, baseWidth: 136.26, baseHeight: 51.14, limits: ModelLimits(bridgePlus: 5.11, bridgeMinus: 3.33, nasal: 2.0, ferradura: 2.0, larguraR: 3.84, larguraA: 3.84, verticalR: 1.93, verticalA: 1.91)),
-            "nunu_feminino": ModelSpec(baseBridge: 19.79, baseWidth: 136.35, baseHeight: 47.09, limits: ModelLimits(bridgePlus: 3.88, bridgeMinus: 2.77, nasal: 2.0, ferradura: 1.5, larguraR: 3.84, larguraA: 3.84, verticalR: 1.93, verticalA: 1.91)),
-            "suki_feminino": ModelSpec(baseBridge: 20.05, baseWidth: 136.27, baseHeight: 52.34, limits: ModelLimits(bridgePlus: 3.16, bridgeMinus: 3.33, nasal: 2.0, ferradura: 1.5, larguraR: 3.85, larguraA: 3.83, verticalR: 1.91, verticalA: 1.91)),
-            "timbau_feminino": ModelSpec(baseBridge: 20.22, baseWidth: 136.27, baseHeight: 51.85, limits: ModelLimits(bridgePlus: 3.73, bridgeMinus: 2.83, nasal: 2.0, ferradura: 0.0, larguraR: 3.84, larguraA: 3.84, verticalR: 1.92, verticalA: 1.92)),
-            
-            // --- COLEÇÃO MASCULINA (Base Larga: ~142mm) ---
-            // 🔴 baseWidth/baseHeight corrigidos com medição direta do molde 3D em repouso
-            // (peso 0), extraída via Claude dentro do Blender — não é estimativa por
-            // impressão/paquímetro como o infantil. baseWidth estava uniformemente 140.0 pros
-            // 4 modelos; a medida real é ~142.0 nos 4 (mesmo desvio consistente, não é ruído).
-            // 🔴 baseBridge: 2ª remedição via Blender com metodologia consistente de "Ponte"
-            // (23.86/23.80/23.81/23.78) substitui a 1ª leitura (14.20/14.20/14.20/14.19) — a
-            // 1ª usava uma região diferente da ponte; Altura/Largura bateram igual nas duas
-            // medições, então só a leitura da ponte mudou de metodologia. Ver bridgeOffsetMasculino
-            // em VisagismClinicalRules: a meta de ponte pra essa linha agora é regra fixa
-            // (ponte do paciente + 2mm), não mais bridgeClearance calibrado por tentativa.
-            // 🔴 limits.bridgePlus/bridgeMinus: 1ª medição real de capacidade (peso 1.0 no Blender,
-            // não mais estimativa de 4.0/4.0 uniforme). larguraA/larguraR/verticalA/verticalR
-            // conferidas contra a mesma planilha e já batiam com os valores existentes — não mudaram.
-            "luno_masculino": ModelSpec(baseBridge: 23.86, baseWidth: 142.00, baseHeight: 53.31, limits: ModelLimits(bridgePlus: 6.11, bridgeMinus: 3.98, nasal: 2.0, ferradura: 2.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
-            "nunu_masculino": ModelSpec(baseBridge: 23.80, baseWidth: 142.00, baseHeight: 48.94, limits: ModelLimits(bridgePlus: 4.67, bridgeMinus: 3.33, nasal: 2.0, ferradura: 2.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
-            "suki_masculino": ModelSpec(baseBridge: 23.81, baseWidth: 142.00, baseHeight: 54.73, limits: ModelLimits(bridgePlus: 3.75, bridgeMinus: 3.95, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
-            "timbau_masculino": ModelSpec(baseBridge: 23.78, baseWidth: 141.93, baseHeight: 53.99, limits: ModelLimits(bridgePlus: 4.39, bridgeMinus: 3.33, nasal: 2.0, ferradura: 0.0, larguraR: 4.0, larguraA: 4.0, verticalR: 2.0, verticalA: 2.0)),
 
-            // --- COLEÇÃO INFANTIL (Base M: ~120.2mm) ---
-            // 🔴 baseWidth/baseHeight/baseBridge corrigidos com medição direta do molde 3D em
-            // repouso (peso 0) via Blender. baseWidth confirmado ~120.21 nos 4 (bate com o valor
-            // antigo). baseBridge sai de 17.0 fixo pra 18.70-20.04 (varia por modelo, medição
-            // precisa). limits.bridgePlus/bridgeMinus/verticalA/verticalR: 1ª medição real de
-            // capacidade (peso 1.0 no Blender). larguraR confirmado em 5.0 nos 4 (bate com o
-            // valor existente).
-            // 🔴 larguraA: substituído de 10.1/10.1/10.6/10.4 (medição de prova impressa) para
-            // 8.00mm nos 4 modelos — dado do Blender (peso 1.0), mais confiável porque reflete
-            // exatamente o que a malha digital faz na tela (a impressão física tinha uma variável
-            // de material/impressora que inflava a medida além do que a malha realmente permite).
-            // Decisão confirmada em 2026-08-26.
-            "luno_infantil": ModelSpec(baseBridge: 19.02, baseWidth: 120.21, baseHeight: 42.06, limits: ModelLimits(bridgePlus: 5.58, bridgeMinus: 4.11, nasal: 2.0, ferradura: 1.5, larguraR: 5.0, larguraA: 8.00, verticalR: 2.0, verticalA: 2.0)),
-            "nunu_infantil": ModelSpec(baseBridge: 20.02, baseWidth: 120.21, baseHeight: 38.28, limits: ModelLimits(bridgePlus: 4.11, bridgeMinus: 4.00, nasal: 2.0, ferradura: 1.5, larguraR: 5.0, larguraA: 8.00, verticalR: 2.0, verticalA: 2.0)),
-            "suki_infantil": ModelSpec(baseBridge: 18.70, baseWidth: 120.21, baseHeight: 42.67, limits: ModelLimits(bridgePlus: 4.07, bridgeMinus: 3.93, nasal: 2.0, ferradura: 0.0, larguraR: 5.0, larguraA: 8.00, verticalR: 2.0, verticalA: 2.0)),
-            "timbau_infantil": ModelSpec(baseBridge: 20.04, baseWidth: 120.21, baseHeight: 41.82, limits: ModelLimits(bridgePlus: 3.95, bridgeMinus: 4.05, nasal: 2.0, ferradura: 0.0, larguraR: 5.0, larguraA: 8.00, verticalR: 2.0, verticalA: 2.0))
-        ]
+    // BANCO DE DADOS ESCALÁVEL
+    // 🔴 REMODELAGEM COMPLETA (2026-09-01): Gabriel regerou os 12 arquivos 3D do zero e
+    // levantou uma planilha nova, com metodologia padronizada — medição em repouso (peso 0.0) E
+    // com CADA shape key isolada em peso 1.0 (as outras em 0), pra cada um dos 12 modelos.
+    // Confirmado por bounding box real extraída de dentro dos .usdc (usdcat) contra a planilha:
+    // as 12 larguras batem exatamente. Essa remodelagem também:
+    // - Renomeou as shape keys: Ponte→Ponte_a, Ponte_m→Ponte_d, Largura_r→Largura_d,
+    //   Vertical_r→Vertical_d, Nasal→Nasal_a (motivo: deixar claro o que aumenta/diminui).
+    // - REMOVEU a shape key Ferradura de todos os modelos (não tinha uso real).
+    // - Nasal_a não mudou de capacidade (ainda 2.0mm em todos, confirmado pelo Gabriel).
+    // - bridgeWidthCoupling agora é medido direto (±4.00mm uniforme nos 12), não mais aproximado
+    //   via larguraA — ver comentário em ModelLimits.
+    static let specs: [String: ModelSpec] = [
+        // --- COLEÇÃO FEMININA ---
+        "luno_feminino": ModelSpec(baseBridge: 21.42, baseWidth: 136.26, baseHeight: 51.14, limits: ModelLimits(bridgePlus: 3.95, bridgeMinus: 4.05, nasal: 2.0, bridgeWidthCoupling: 4.0, larguraA: 8.0, larguraD: 4.0, verticalA: 1.99, verticalD: 3.01)),
+        "nunu_feminino": ModelSpec(baseBridge: 23.05, baseWidth: 136.35, baseHeight: 47.09, limits: ModelLimits(bridgePlus: 4.16, bridgeMinus: 3.84, nasal: 2.0, bridgeWidthCoupling: 4.0, larguraA: 8.0, larguraD: 4.0, verticalA: 1.99, verticalD: 3.01)),
+        "suki_feminino": ModelSpec(baseBridge: 22.30, baseWidth: 136.26, baseHeight: 52.34, limits: ModelLimits(bridgePlus: 3.87, bridgeMinus: 4.13, nasal: 2.0, bridgeWidthCoupling: 4.0, larguraA: 8.0, larguraD: 4.0, verticalA: 2.00, verticalD: 2.00)),
+        "timbau_feminino": ModelSpec(baseBridge: 20.96, baseWidth: 136.27, baseHeight: 51.85, limits: ModelLimits(bridgePlus: 4.00, bridgeMinus: 4.00, nasal: 2.0, bridgeWidthCoupling: 4.0, larguraA: 8.0, larguraD: 4.0, verticalA: 2.00, verticalD: 2.00)),
+
+        // --- COLEÇÃO MASCULINA ---
+        "luno_masculino": ModelSpec(baseBridge: 23.60, baseWidth: 142.00, baseHeight: 53.31, limits: ModelLimits(bridgePlus: 4.20, bridgeMinus: 3.80, nasal: 2.0, bridgeWidthCoupling: 4.0, larguraA: 8.0, larguraD: 4.0, verticalA: 1.99, verticalD: 3.01)),
+        "nunu_masculino": ModelSpec(baseBridge: 21.99, baseWidth: 142.00, baseHeight: 48.94, limits: ModelLimits(bridgePlus: 4.17, bridgeMinus: 3.83, nasal: 2.0, bridgeWidthCoupling: 4.0, larguraA: 8.0, larguraD: 4.0, verticalA: 1.99, verticalD: 3.01)),
+        "suki_masculino": ModelSpec(baseBridge: 22.90, baseWidth: 142.00, baseHeight: 54.73, limits: ModelLimits(bridgePlus: 4.10, bridgeMinus: 3.90, nasal: 2.0, bridgeWidthCoupling: 4.0, larguraA: 8.0, larguraD: 4.0, verticalA: 2.00, verticalD: 2.00)),
+        "timbau_masculino": ModelSpec(baseBridge: 21.69, baseWidth: 141.93, baseHeight: 53.99, limits: ModelLimits(bridgePlus: 4.11, bridgeMinus: 3.89, nasal: 2.0, bridgeWidthCoupling: 4.0, larguraA: 8.0, larguraD: 4.0, verticalA: 2.00, verticalD: 2.00)),
+
+        // --- COLEÇÃO INFANTIL ---
+        "luno_infantil": ModelSpec(baseBridge: 20.49, baseWidth: 125.22, baseHeight: 44.01, limits: ModelLimits(bridgePlus: 3.61, bridgeMinus: 4.39, nasal: 2.0, bridgeWidthCoupling: 4.0, larguraA: 8.0, larguraD: 4.0, verticalA: 2.00, verticalD: 3.01)),
+        "nunu_infantil": ModelSpec(baseBridge: 22.15, baseWidth: 125.22, baseHeight: 39.97, limits: ModelLimits(bridgePlus: 4.05, bridgeMinus: 3.95, nasal: 2.0, bridgeWidthCoupling: 4.0, larguraA: 8.0, larguraD: 4.0, verticalA: 2.00, verticalD: 3.00)),
+        "suki_infantil": ModelSpec(baseBridge: 19.87, baseWidth: 125.22, baseHeight: 44.70, limits: ModelLimits(bridgePlus: 3.93, bridgeMinus: 4.07, nasal: 2.0, bridgeWidthCoupling: 4.0, larguraA: 8.0, larguraD: 4.0, verticalA: 1.99, verticalD: 2.01)),
+        "timbau_infantil": ModelSpec(baseBridge: 21.22, baseWidth: 125.22, baseHeight: 43.74, limits: ModelLimits(bridgePlus: 4.18, bridgeMinus: 3.82, nasal: 2.0, bridgeWidthCoupling: 4.0, larguraA: 8.0, larguraD: 4.0, verticalA: 2.00, verticalD: 2.00))
+    ]
     
     /// Resultado completo de uma avaliação de encaixe: os pesos das Shape Keys E se algum
     /// eixo bateu no limite físico do molde (saturou) — informação que calculateMorphWeights
@@ -148,26 +133,23 @@ enum AutoConfiguratorEngine {
             bridgeSaturated = rawDiffBridge > spec.limits.bridgePlus
             bridgeOverage = bridgeSaturated ? rawDiffBridge - spec.limits.bridgePlus : 0
             let weight = min(1.0, rawDiffBridge / spec.limits.bridgePlus)
-            weights["Ponte"] = weight
+            weights["Ponte_a"] = weight
             appliedBridgeDiff = weight * spec.limits.bridgePlus
-            bridgeWidthCoupling = weight * spec.limits.larguraA
+            bridgeWidthCoupling = weight * spec.limits.bridgeWidthCoupling
         } else {
             bridgeSaturated = abs(rawDiffBridge) > spec.limits.bridgeMinus
             bridgeOverage = bridgeSaturated ? abs(rawDiffBridge) - spec.limits.bridgeMinus : 0
             let weight = min(1.0, abs(rawDiffBridge) / spec.limits.bridgeMinus)
-            weights["Ponte_m"] = weight
+            weights["Ponte_d"] = weight
             appliedBridgeDiff = -(weight * spec.limits.bridgeMinus)
-            bridgeWidthCoupling = -(weight * spec.limits.larguraR)
+            bridgeWidthCoupling = -(weight * spec.limits.bridgeWidthCoupling)
         }
 
         // 🔴 2. CÁLCULO DE LARGURA COMPENSADA (Mágica Paramétrica)
-        // Antes subtraíamos appliedBridgeDiff (mm de MOVIMENTO da ponte) da meta de largura,
-        // assumindo 1mm de ponte = 1mm de largura já ganha. Dado real do Blender (peso 1.0)
-        // mostra que isso é falso: no Luno, a ponte abre 6.11mm no total mas a largura só
-        // acompanha 4.00mm — não é 1:1. O que acopla largura↔ponte de verdade é o PESO do shape
-        // key: nos 4 modelos masculinos, ponte no peso 1.0 (pra qualquer lado) sempre move a
-        // largura em exatamente a capacidade de larguraA/larguraR já cadastrada. Por isso usamos
-        // bridgeWidthCoupling (peso × largura) em vez de appliedBridgeDiff (mm de ponte).
+        // A ponte move a largura como efeito colateral — mas essa acoplagem (bridgeWidthCoupling,
+        // medida direto na planilha em ±4.00mm) é um número PRÓPRIO, independente da capacidade
+        // de Largura_a/Largura_d (8.0/4.0) — não dá pra aproximar um pelo outro, ficou provado
+        // quando a planilha nova trouxe capacidades diferentes pros dois.
         let diffWidth = (targetWidth - spec.baseWidth) - bridgeWidthCoupling
         var widthSaturated = false
         var appliedWidthDiff: Float = 0.0
@@ -180,11 +162,11 @@ enum AutoConfiguratorEngine {
             weights["Largura_a"] = weight
             appliedWidthDiff = weight * spec.limits.larguraA
         } else {
-            widthSaturated = abs(diffWidth) > spec.limits.larguraR
-            widthOverage = widthSaturated ? abs(diffWidth) - spec.limits.larguraR : 0
-            let weight = min(1.0, abs(diffWidth) / spec.limits.larguraR)
-            weights["Largura_r"] = weight
-            appliedWidthDiff = -(weight * spec.limits.larguraR)
+            widthSaturated = abs(diffWidth) > spec.limits.larguraD
+            widthOverage = widthSaturated ? abs(diffWidth) - spec.limits.larguraD : 0
+            let weight = min(1.0, abs(diffWidth) / spec.limits.larguraD)
+            weights["Largura_d"] = weight
+            appliedWidthDiff = -(weight * spec.limits.larguraD)
         }
 
         // 3. 🔴 APOIO NASAL PROPORCIONAL: quanto mais achatado o nariz (abaixo do limiar
@@ -199,16 +181,7 @@ enum AutoConfiguratorEngine {
 
         let flatness = (VisagismClinicalRules.nasalProminenceThreshold - nasalProjection) + jawSupportBonus
         if flatness > 0 && spec.limits.nasal > 0 {
-            weights["Nasal"] = min(VisagismClinicalRules.nasalSupportWeight, flatness / spec.limits.nasal)
-        }
-
-        // 3b. 🔴 FERRADURA PROPORCIONAL: quanto mais fino o nariz (abaixo do limiar clínico),
-        // mais reforço na ponte — capado pelo teto keyholeBridgeWeight e pelo limite físico do
-        // modelo (spec.limits.ferradura). Antes o popup/laudo PROMETIA esse reforço pro cliente
-        // sempre que o nariz era fino, mas o peso nunca era calculado em lugar nenhum — bug.
-        let thinness = VisagismClinicalRules.narrowNoseThreshold - bridgeWidth
-        if thinness > 0 && spec.limits.ferradura > 0 {
-            weights["Ferradura"] = min(VisagismClinicalRules.keyholeBridgeWeight, thinness / spec.limits.ferradura)
+            weights["Nasal_a"] = min(VisagismClinicalRules.nasalSupportWeight, flatness / spec.limits.nasal)
         }
 
         // 🔴 CÁLCULO VERTICAL ABSOLUTO (Visagismo Suave / Dampening)
@@ -261,11 +234,11 @@ enum AutoConfiguratorEngine {
             weights["Vertical_a"] = weight
             appliedVerticalDiff = weight * spec.limits.verticalA
         } else if smoothDiffHeight < 0 {
-            verticalSaturated = abs(smoothDiffHeight) > spec.limits.verticalR
-            verticalOverage = verticalSaturated ? abs(smoothDiffHeight) - spec.limits.verticalR : 0
-            let weight = min(1.0, abs(smoothDiffHeight) / spec.limits.verticalR)
-            weights["Vertical_r"] = weight
-            appliedVerticalDiff = -(weight * spec.limits.verticalR)
+            verticalSaturated = abs(smoothDiffHeight) > spec.limits.verticalD
+            verticalOverage = verticalSaturated ? abs(smoothDiffHeight) - spec.limits.verticalD : 0
+            let weight = min(1.0, abs(smoothDiffHeight) / spec.limits.verticalD)
+            weights["Vertical_d"] = weight
+            appliedVerticalDiff = -(weight * spec.limits.verticalD)
         }
 
         return FitResult(weights: weights, bridgeSaturated: bridgeSaturated, widthSaturated: widthSaturated, verticalSaturated: verticalSaturated, appliedBridgeDiff: appliedBridgeDiff, appliedWidthDiff: appliedWidthDiff, appliedVerticalDiff: appliedVerticalDiff, bridgeOverage: bridgeOverage, widthOverage: widthOverage, verticalOverage: verticalOverage)
@@ -341,9 +314,9 @@ enum AutoConfiguratorEngine {
             guard let spec = specs[key] else { return nil }
             let fit = computeFit(key: key, spec: spec, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: bridgeWidth, nasalProjection: nasalProjection, jawWidth: jawWidth, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid, currentGlassesLensWidth: currentGlassesLensWidth, currentGlassesBridge: currentGlassesBridge)
             let totalOverage = fit.bridgeOverage + fit.widthOverage + fit.verticalOverage
-            let totalEffort = (fit.weights["Ponte"] ?? fit.weights["Ponte_m"] ?? 0)
-                + (fit.weights["Largura_a"] ?? fit.weights["Largura_r"] ?? 0)
-                + (fit.weights["Vertical_a"] ?? fit.weights["Vertical_r"] ?? 0)
+            let totalEffort = (fit.weights["Ponte_a"] ?? fit.weights["Ponte_d"] ?? 0)
+                + (fit.weights["Largura_a"] ?? fit.weights["Largura_d"] ?? 0)
+                + (fit.weights["Vertical_a"] ?? fit.weights["Vertical_d"] ?? 0)
             return FitScore(key: key, fit: fit, totalOverage: totalOverage, totalEffort: totalEffort)
         }.sorted { a, b in
             if a.totalOverage != b.totalOverage { return a.totalOverage < b.totalOverage }

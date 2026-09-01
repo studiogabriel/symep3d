@@ -409,10 +409,6 @@ extension MeasurementViewController {
                         let explanation = fit.appliedVerticalDiff > 0 ? "Alongamento visual" : "Estética compacta"
                         modText += "• Design Vertical: \(sign)\(String(format: "%.1f", fit.appliedVerticalDiff)) mm (\(explanation))\n"
                     }
-                    if self.noseBridgeWidth < VisagismClinicalRules.narrowNoseThreshold {
-                        modText += "• Estrutura da Ponte: Modo Ferradura (Maior volume e aderência)\n"
-                    }
-
                     // 🔴 DIAGNÓSTICO DEV: eixo que bateu no limite físico do molde e ainda
                     // precisaria de mais — não é mostrado ao cliente em produção, só para
                     // controle enquanto o app está em desenvolvimento. A mensagem diz a DIREÇÃO
@@ -537,22 +533,10 @@ extension MeasurementViewController {
             currentGlassesBridge: self.currentGlassesBridge
         )
 
-        // 🔴 APELIDO TEMPORÁRIO: sl_luno_infantil.usdc tem a shape key de encolhimento vertical
-        // nomeada "Vertical_m" em vez do padrão "Vertical_r" usado pelos outros 11 modelos do
-        // catálogo — setWeight(forTargetNamed:) com o nome errado não dá erro, só não faz nada
-        // silenciosamente, então o ajuste calculado nunca chegava a ser aplicado nesse modelo
-        // específico. Envia pros dois nomes; setWeight num alvo inexistente é inofensivo (no-op)
-        // nos outros 11 modelos que já têm "Vertical_r" certo. Remover quando o Luno infantil for
-        // reexportado com o nome padronizado.
-        let shapeKeyAliases: [String: [String]] = ["Vertical_r": ["Vertical_m"]]
-
         node.enumerateChildNodes { (child, _) in
             if let morpher = child.morpher {
                 for (key, value) in weights {
                     morpher.setWeight(CGFloat(value), forTargetNamed: key)
-                    for alias in shapeKeyAliases[key] ?? [] {
-                        morpher.setWeight(CGFloat(value), forTargetNamed: alias)
-                    }
                 }
             }
         }

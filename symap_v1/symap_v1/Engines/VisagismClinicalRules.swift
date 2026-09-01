@@ -52,7 +52,6 @@ struct VisagismClinicalRules {
     static let nasalSupportWeight: Float = 0.7
     static let verticalStretchWeight: Float = 0.8 // Aumento da lente para baixo (Rostos Longos)
     static let verticalSquashWeight: Float = 0.8  // Achatamento da lente (Rostos Redondos)
-    static let keyholeBridgeWeight: Float = 0.9   // Engrossamento em ferradura (Nariz Fino)
 
     /// Limiares de proporção altura/largura que classificam o formato do rosto — mesmos números
     /// usados em BiometryEngine.analyzeVisagisme (ratio > 1.35 = Longo/Retangular, ratio < 1.15 =
@@ -81,8 +80,6 @@ struct VisagismClinicalRules {
     // =======================================================
     // 🔴 3. LIMITES CLÍNICOS DE GATILHO
     // =======================================================
-    static let narrowNoseThreshold: Float = 15.0  // Abaixo dessa medida (mm), a IA ativa a Ferradura
-
     /// Folga mínima (mm) entre a linha do olho e onde a bochecha começa a projetar pra frente
     /// (ver BiometryEngine.faceGeometry / eyeToCheekClearance). Abaixo disso, a lente corre risco
     /// de encostar na bochecha — comum em rostos com região malar mais projetada (ex.: traço

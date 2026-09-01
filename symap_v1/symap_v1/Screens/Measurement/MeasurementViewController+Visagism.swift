@@ -687,7 +687,7 @@ extension MeasurementViewController {
                     let headerH: CGFloat = 90
 
             // 🔴 CORREÇÃO: o texto (modText) precisa ser calculado ANTES de montar o popup,
-            // porque agora ele pode ter várias linhas (largura/ponte/vertical/ferradura + até
+            // porque agora ele pode ter várias linhas (largura/ponte/vertical + até
             // 3 avisos [DEV]) — a altura do label e da caixa precisam se ajustar ao conteúdo
             // real, não um valor fixo (140pt) que cortava o texto silenciosamente quando
             // sobravam muitas linhas ("o texto foi cortado pela caixa").
@@ -735,10 +735,6 @@ extension MeasurementViewController {
                     let sign = fit.appliedVerticalDiff > 0 ? "+" : ""
                     let explanation = fit.appliedVerticalDiff > 0 ? "Alongamento visual" : "Estética compacta"
                     modText += "• Design Vertical: \(sign)\(String(format: "%.1f", fit.appliedVerticalDiff)) mm (\(explanation))\n"
-                }
-
-                if self.noseBridgeWidth < VisagismClinicalRules.narrowNoseThreshold {
-                    modText += "• Estrutura da Ponte: Modo Ferradura (Maior volume e aderência)\n"
                 }
 
                 // 🔴 DIAGNÓSTICO DEV: eixo que bateu no limite físico do molde e ainda precisaria
