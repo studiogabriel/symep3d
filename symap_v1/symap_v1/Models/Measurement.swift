@@ -16,6 +16,7 @@ struct Measurement {
     let faceHeight: Float
     let noseBridgeWidth: Float
     let jawWidth: Float
+    let cheekboneWidth: Float
     let pupillaryHeight: Float
     let verticalPupilDiff: Float
     let nasalProfile: String

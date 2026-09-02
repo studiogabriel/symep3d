@@ -46,6 +46,15 @@ enum BiometryEngine {
         /// Ver comentário em faceGeometry para o método (varredura de profundidade por faixa de Y).
         let eyeToCheekClearance: Float
         let eyeToCheekClearanceValid: Bool
+
+        /// Pontos 3D (espaço local do ARFaceAnchor) que geraram cada extremo acima — só pra
+        /// desenho de referência visual (laudo PDF), não influenciam nenhum cálculo de encaixe.
+        /// nil quando a banda correspondente não teve nenhum vértice válido.
+        let widthPointLeft, widthPointRight: simd_float3?
+        let bridgePointLeft, bridgePointRight: simd_float3?
+        let jawPointLeft, jawPointRight: simd_float3?
+        let cheekPointLeft, cheekPointRight: simd_float3?
+        let foreheadPoint, chinPoint: simd_float3?
     }
     
     // MARK: - Equivalente esférico (EE)
@@ -238,6 +247,12 @@ enum BiometryEngine {
         var minJawX: Float = 100;  var maxJawX: Float = -100
         var minCheekX: Float = 100; var maxCheekX: Float = -100
         var maxNoseZ: Float = -100
+        var widthPointLeft: simd_float3? = nil;  var widthPointRight: simd_float3? = nil
+        var bridgePointLeft: simd_float3? = nil; var bridgePointRight: simd_float3? = nil
+        var jawPointLeft: simd_float3? = nil;    var jawPointRight: simd_float3? = nil
+        var cheekPointLeft: simd_float3? = nil;  var cheekPointRight: simd_float3? = nil
+        var foreheadPoint: simd_float3? = nil;   var chinPoint: simd_float3? = nil
+        let midlineX: Float = 0.015
         let bridgeHeightY = eyeLevelY + 0.000
         let jawLevelY = eyeLevelY - 0.065
         // 🔴 Terceiro ponto da tríade clássica de visagismo (testa/maçã do rosto/mandíbula).
@@ -275,24 +290,33 @@ enum BiometryEngine {
 
             if v.y >= searchYMin && v.y <= searchYMax {
                 if v.z > maxDepthLimit && abs(v.x) < maxWidthLimit {
-                    if v.x < minX { minX = v.x }
-                    if v.x > maxX { maxX = v.x }
+                    if v.x < minX { minX = v.x; widthPointRight = v }
+                    if v.x > maxX { maxX = v.x; widthPointLeft = v }
                 }
             }
 
             if abs(v.y - bridgeHeightY) < 0.002 && abs(v.x) < 0.010 {
-                if v.x < minNX { minNX = v.x }
-                if v.x > maxNX { maxNX = v.x }
+                if v.x < minNX { minNX = v.x; bridgePointRight = v }
+                if v.x > maxNX { maxNX = v.x; bridgePointLeft = v }
             }
 
             if abs(v.y - jawLevelY) < 0.010 && v.z > maxDepthLimit {
-                if v.x < minJawX { minJawX = v.x }
-                if v.x > maxJawX { maxJawX = v.x }
+                if v.x < minJawX { minJawX = v.x; jawPointRight = v }
+                if v.x > maxJawX { maxJawX = v.x; jawPointLeft = v }
             }
 
             if abs(v.y - cheekboneLevelY) < 0.010 && v.z > maxDepthLimit {
-                if v.x < minCheekX { minCheekX = v.x }
-                if v.x > maxCheekX { maxCheekX = v.x }
+                if v.x < minCheekX { minCheekX = v.x; cheekPointRight = v }
+                if v.x > maxCheekX { maxCheekX = v.x; cheekPointLeft = v }
+            }
+
+            // 🔴 Ponto de referência visual (laudo PDF) pra altura do rosto: testa/queixo na
+            // linha média (abs(x) pequeno), não os extremos brutos de minY/maxY (que podem cair
+            // em qualquer lugar da malha, ex. orelha) — mesmo padrão de faixa central já usado
+            // na ponte nasal (abs(x) < 0.010) só que numa janela um pouco mais larga.
+            if abs(v.x) < midlineX {
+                if foreheadPoint == nil || v.y > foreheadPoint!.y { foreheadPoint = v }
+                if chinPoint == nil || v.y < chinPoint!.y { chinPoint = v }
             }
 
             if v.y <= eyeLevelY && v.y >= clearanceScanBottom && abs(v.x) > clearanceXInner && abs(v.x) < clearanceXOuter {
@@ -340,7 +364,7 @@ enum BiometryEngine {
         let eyeToCheekClearanceValid = cheekStartBandIndex != nil
         let eyeToCheekClearance = eyeToCheekClearanceValid ? (Float(cheekStartBandIndex!) * clearanceStepY) * 1000 : 0.0
 
-        return FaceGeometryResult(minX: minX, maxX: maxX, minY: minY, maxY: maxY, minNX: minNX, maxNX: maxNX, minJawX: minJawX, maxJawX: maxJawX, maxNoseZ: maxNoseZ, faceWidthLeft: faceWidthLeft, faceWidthRight: faceWidthRight, faceWidth: faceWidth, noseBridgeWidth: noseBridgeWidth, bridgeValid: bridgeValid, nasalProfile: nasalProfile, nasalProjection: projNasal, jawWidth: jawWidth, jawValid: jawValid, cheekboneWidth: cheekboneWidth, cheekboneValid: cheekboneValid, faceHeight: faceHeight, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid)
+        return FaceGeometryResult(minX: minX, maxX: maxX, minY: minY, maxY: maxY, minNX: minNX, maxNX: maxNX, minJawX: minJawX, maxJawX: maxJawX, maxNoseZ: maxNoseZ, faceWidthLeft: faceWidthLeft, faceWidthRight: faceWidthRight, faceWidth: faceWidth, noseBridgeWidth: noseBridgeWidth, bridgeValid: bridgeValid, nasalProfile: nasalProfile, nasalProjection: projNasal, jawWidth: jawWidth, jawValid: jawValid, cheekboneWidth: cheekboneWidth, cheekboneValid: cheekboneValid, faceHeight: faceHeight, eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid, widthPointLeft: widthPointLeft, widthPointRight: widthPointRight, bridgePointLeft: bridgePointLeft, bridgePointRight: bridgePointRight, jawPointLeft: jawPointLeft, jawPointRight: jawPointRight, cheekPointLeft: cheekPointLeft, cheekPointRight: cheekPointRight, foreheadPoint: foreheadPoint, chinPoint: chinPoint)
     }
     
     // MARK: - Seam de projeção AR

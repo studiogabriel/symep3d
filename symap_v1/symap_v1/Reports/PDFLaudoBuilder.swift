@@ -14,6 +14,8 @@ struct PDFLaudoBuilder {
     let faceWidth: Float
     let faceHeight: Float
     let noseBridgeWidth: Float
+    let jawWidth: Float
+    let cheekboneWidth: Float
     let pupillaryHeight: Float
     let verticalPupilDiff: Float
     let manualFrameHeight: Float
@@ -24,7 +26,7 @@ struct PDFLaudoBuilder {
     let currentGlassesHaste: Float
     let headMoveScore: Float
     let eyeMoveScore: Float
-
+ 
     // Receita (String)
     let rxEsfOD: String
     let rxCilOD: String
@@ -53,10 +55,26 @@ struct PDFLaudoBuilder {
     // Imagem (snapshot frontal)
     let image: UIImage
 
-    init(measurement m: Measurement, image: UIImage) {
+    /// Pontos de referência (bolinhas do gêmeo digital) no espaço de tela do snapshot — nil quando
+    /// a captura não gerou nenhum ponto válido (ex.: laudo antigo sem esse dado).
+    let referencePoints: MeasurementViewController.ReferencePointsScreen?
+
+    /// Medidas finais do óculos "ideal" recriado pro paciente (ponte/largura/vertical alvo, já
+    /// com o ajuste físico aplicado) — mesma fonte usada nas barras de capacidade do Resumo Clínico.
+    struct IdealGlasses {
+        let modelName: String
+        let bridge: Float
+        let width: Float
+        let vertical: Float
+    }
+    let idealGlasses: IdealGlasses?
+
+    init(measurement m: Measurement, image: UIImage, referencePoints: MeasurementViewController.ReferencePointsScreen? = nil, idealGlasses: IdealGlasses? = nil) {
+        self.referencePoints = referencePoints
+        self.idealGlasses = idealGlasses
         self.dnpDir = m.dnpDir;  self.dnpEsq = m.dnpEsq;  self.dnpTotal = m.dnpTotal
         self.dnpPertoDir = m.dnpPertoDir;  self.dnpPertoEsq = m.dnpPertoEsq;  self.dnpPertoTotal = m.dnpPertoTotal
-        self.faceWidth = m.faceWidth;  self.faceHeight = m.faceHeight;  self.noseBridgeWidth = m.noseBridgeWidth;  self.pupillaryHeight = m.pupillaryHeight
+        self.faceWidth = m.faceWidth;  self.faceHeight = m.faceHeight;  self.noseBridgeWidth = m.noseBridgeWidth;  self.jawWidth = m.jawWidth;  self.cheekboneWidth = m.cheekboneWidth;  self.pupillaryHeight = m.pupillaryHeight
         self.verticalPupilDiff = m.verticalPupilDiff;  self.manualFrameHeight = m.manualFrameHeight
         self.manualFrameWidth = m.manualFrameWidth;  self.manualFrameDiagonal = m.manualFrameDiagonal
         self.currentGlassesLensWidth = m.currentGlassesLensWidth;  self.currentGlassesBridge = m.currentGlassesBridge
@@ -767,6 +785,101 @@ struct PDFLaudoBuilder {
             UIColor.lightGray.setStroke(); cgContext.setLineDash(phase: 0, lengths: [4.0, 4.0])
             cgContext.move(to: CGPoint(x: 0, y: 810)); cgContext.addLine(to: CGPoint(x: 595.2, y: 810)); cgContext.strokePath()
             "IMPRIMIR SEMPRE EM ESCALA 100% (SEM AJUSTAR À PÁGINA) MANTENDO PROPORÇÃO 1:1 A4".draw(at: CGPoint(x: 45, y: 815), withAttributes: [.font: UIFont.systemFont(ofSize: 10, weight: .bold), .foregroundColor: UIColor.red])
+
+            // =========================================================================
+            // 📄 PÁGINA 5: GÊMEO DIGITAL — REFERÊNCIAS DE MEDIÇÃO
+            // =========================================================================
+            context.beginPage()
+            cgContext.saveGState()
+            cgContext.setStrokeColor(techLine.cgColor); cgContext.setLineWidth(0.5)
+            for x in stride(from: 0.0, through: 595.2, by: 30.0) { cgContext.move(to: CGPoint(x: x, y: 0)); cgContext.addLine(to: CGPoint(x: x, y: 841.8)) }
+            for y in stride(from: 0.0, through: 841.8, by: 30.0) { cgContext.move(to: CGPoint(x: 0, y: y)); cgContext.addLine(to: CGPoint(x: 595.2, y: y)) }
+            cgContext.strokePath()
+            cgContext.restoreGState()
+
+            desenharCabecalhoWhiteLabel(titulo: "GÊMEO DIGITAL — REFERÊNCIAS DE MEDIÇÃO")
+
+            // --- Caixa da imagem (aspect-fit, sem distorcer) ---
+            let twinBoxRect = CGRect(x: 30, y: 105, width: 535, height: 480)
+            UIColor(white: 0.94, alpha: 1.0).setFill(); UIBezierPath(roundedRect: twinBoxRect, cornerRadius: 8).fill()
+
+            let originalSize = self.referencePoints?.imageSize ?? self.image.size
+            let fitScale = originalSize.width > 0 && originalSize.height > 0
+                ? min(twinBoxRect.width / originalSize.width, twinBoxRect.height / originalSize.height)
+                : 1.0
+            let drawnW = originalSize.width * fitScale
+            let drawnH = originalSize.height * fitScale
+            let imgOriginX = twinBoxRect.minX + (twinBoxRect.width - drawnW) / 2.0
+            let imgOriginY = twinBoxRect.minY + (twinBoxRect.height - drawnH) / 2.0
+            let imageDrawnRect = CGRect(x: imgOriginX, y: imgOriginY, width: drawnW, height: drawnH)
+            self.image.draw(in: imageDrawnRect)
+            UIColor.lightGray.withAlphaComponent(0.6).setStroke(); cgContext.setLineWidth(1.0)
+            UIBezierPath(roundedRect: twinBoxRect, cornerRadius: 8).stroke()
+
+            // Ponto salvo (espaço do sceneView no instante do snapshot) -> ponto no PDF, aplicando
+            // o mesmo fator de escala + centralização usado pra encaixar a imagem na caixa.
+            func mapToTwin(_ p: CGPoint) -> CGPoint {
+                return CGPoint(x: imgOriginX + p.x * fitScale, y: imgOriginY + p.y * fitScale)
+            }
+
+            struct RefMetric { let label: String; let desc: String; let value: Float; let color: UIColor; let a: CGPoint?; let b: CGPoint? }
+            let rp = self.referencePoints
+            let metrics: [RefMetric] = [
+                RefMetric(label: "DNP", desc: "Centro das duas pupilas", value: self.dnpTotal, color: UIColor(red: 0.86, green: 0.0, blue: 0.55, alpha: 1.0), a: rp?.pupilLeft, b: rp?.pupilRight),
+                RefMetric(label: "Largura do Rosto", desc: "Têmpora a têmpora, altura dos olhos", value: self.faceWidth, color: techCyan, a: rp?.widthLeft, b: rp?.widthRight),
+                RefMetric(label: "Ponte Nasal", desc: "Largura do apoio nasal", value: self.noseBridgeWidth, color: UIColor.systemOrange, a: rp?.bridgeLeft, b: rp?.bridgeRight),
+                RefMetric(label: "Mandíbula", desc: "Largura da linha do maxilar", value: self.jawWidth, color: UIColor(red: 0.80, green: 0.62, blue: 0.0, alpha: 1.0), a: rp?.jawLeft, b: rp?.jawRight),
+                RefMetric(label: "Maçã do Rosto", desc: "Ponto mais largo da região malar", value: self.cheekboneWidth, color: UIColor.systemPurple, a: rp?.cheekLeft, b: rp?.cheekRight),
+                RefMetric(label: "Altura do Rosto", desc: "Da testa à base do queixo", value: self.faceHeight, color: UIColor.systemBlue, a: rp?.foreheadTop, b: rp?.chinBottom)
+            ]
+
+            for (index, m) in metrics.enumerated() {
+                guard let a = m.a, let b = m.b else { continue }
+                let pa = mapToTwin(a); let pb = mapToTwin(b)
+                cgContext.saveGState()
+                m.color.setStroke(); cgContext.setLineWidth(1.2); cgContext.setLineDash(phase: 0, lengths: [3.0, 2.0])
+                cgContext.move(to: pa); cgContext.addLine(to: pb); cgContext.strokePath()
+                cgContext.setLineDash(phase: 0, lengths: [])
+                m.color.setFill()
+                let dotR: CGFloat = 3.5
+                cgContext.fillEllipse(in: CGRect(x: pa.x - dotR, y: pa.y - dotR, width: dotR*2, height: dotR*2))
+                cgContext.fillEllipse(in: CGRect(x: pb.x - dotR, y: pb.y - dotR, width: dotR*2, height: dotR*2))
+                UIColor.white.setStroke(); cgContext.setLineWidth(1.0)
+                cgContext.strokeEllipse(in: CGRect(x: pa.x - dotR, y: pa.y - dotR, width: dotR*2, height: dotR*2))
+                cgContext.strokeEllipse(in: CGRect(x: pb.x - dotR, y: pb.y - dotR, width: dotR*2, height: dotR*2))
+                cgContext.restoreGState()
+                let badgeFont = UIFont.boldSystemFont(ofSize: 8)
+                "\(index + 1)".draw(at: CGPoint(x: pa.x + 6, y: pa.y - 10), withAttributes: [.font: badgeFont, .foregroundColor: m.color])
+            }
+
+            // --- Legenda (grid 2 colunas x 3 linhas) ---
+            let legendY: CGFloat = twinBoxRect.maxY + 15
+            let legendColW: CGFloat = 267.5
+            let legendRowH: CGFloat = 40
+            for (index, m) in metrics.enumerated() {
+                let col = index % 2
+                let row = index / 2
+                let lx = 30.0 + CGFloat(col) * legendColW
+                let ly = legendY + CGFloat(row) * legendRowH
+                m.color.setFill(); cgContext.fillEllipse(in: CGRect(x: lx, y: ly + 2, width: 9, height: 9))
+                "\(index + 1). \(m.label): \(self.f(m.value)) mm".draw(at: CGPoint(x: lx + 15, y: ly), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 10), .foregroundColor: techBlack])
+                m.desc.draw(at: CGPoint(x: lx + 15, y: ly + 14), withAttributes: [.font: UIFont.systemFont(ofSize: 8), .foregroundColor: UIColor.gray])
+            }
+
+            // --- Óculos ideal recriado ---
+            let idealY = legendY + (legendRowH * 3) + 10
+            let idealRect = CGRect(x: 30, y: idealY, width: 535, height: 60)
+            UIColor(white: 0.97, alpha: 0.95).setFill(); UIBezierPath(roundedRect: idealRect, cornerRadius: 6).fill()
+            techCyan.setFill(); UIBezierPath(roundedRect: CGRect(x: 30, y: idealY + 5, width: 4, height: 50), cornerRadius: 2).fill()
+            "ÓCULOS IDEAL RECRIADO".draw(at: CGPoint(x: 42, y: idealY + 8), withAttributes: [.font: UIFont.systemFont(ofSize: 9, weight: .bold), .foregroundColor: UIColor.gray])
+
+            if let ideal = self.idealGlasses {
+                ideal.modelName.draw(at: CGPoint(x: 42, y: idealY + 22), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 14), .foregroundColor: techCyan])
+                let idealText = "Ponte: \(self.f(ideal.bridge))mm   |   Largura: \(self.f(ideal.width))mm   |   Altura: \(self.f(ideal.vertical))mm"
+                idealText.draw(at: CGPoint(x: 42, y: idealY + 40), withAttributes: [.font: UIFont(name: "Courier-Bold", size: 11) ?? UIFont.boldSystemFont(ofSize: 11), .foregroundColor: techBlack])
+            } else {
+                "Aguardando seleção do modelo recomendado.".draw(at: CGPoint(x: 42, y: idealY + 25), withAttributes: [.font: UIFont.systemFont(ofSize: 10), .foregroundColor: UIColor.gray])
+            }
         }
     }
 }

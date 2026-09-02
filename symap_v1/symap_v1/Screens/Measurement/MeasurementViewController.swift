@@ -12,7 +12,22 @@ import FirebaseStorage
 import AVFoundation
 
 class MeasurementViewController: UIViewController, ARSCNViewDelegate, PKCanvasViewDelegate, UITextFieldDelegate {
-    
+
+    /// Coordenadas de tela (espaço do `sceneView`, mesmo sistema do `UIImage` retornado por
+    /// `sceneView.snapshot()`) dos pontos anatômicos usados em cada medida — só pra desenhar as
+    /// bolinhas de referência na página final do laudo PDF. `imageSize` guarda o tamanho do
+    /// `sceneView` no instante da captura, necessário pra reescalar os pontos junto com a imagem
+    /// quando ela é redesenhada num tamanho diferente no PDF.
+    struct ReferencePointsScreen {
+        var pupilLeft: CGPoint?; var pupilRight: CGPoint?
+        var widthLeft: CGPoint?; var widthRight: CGPoint?
+        var bridgeLeft: CGPoint?; var bridgeRight: CGPoint?
+        var jawLeft: CGPoint?; var jawRight: CGPoint?
+        var cheekLeft: CGPoint?; var cheekRight: CGPoint?
+        var foreheadTop: CGPoint?; var chinBottom: CGPoint?
+        var imageSize: CGSize
+    }
+
     // --- ELEMENTOS DE UI ---
     var sceneView: ARSCNView!
     
@@ -186,7 +201,12 @@ class MeasurementViewController: UIViewController, ARSCNViewDelegate, PKCanvasVi
     // Cache de Posição
     var lastLeftEyeWorldPos: SCNVector3?
     var lastRightEyeWorldPos: SCNVector3?
-    
+
+    // Pontos de referência (bolinhas do laudo PDF) — atualizados todo frame, congelados no
+    // momento da aprovação da foto (ver startApprovalStep em +Wizard.swift).
+    var lastReferencePointsScreen: ReferencePointsScreen?
+    var savedReferencePointsScreen: ReferencePointsScreen?
+
     var pupillaryHeight: Float = 0.0
     var verticalPupilDiff: Float = 0.0
     

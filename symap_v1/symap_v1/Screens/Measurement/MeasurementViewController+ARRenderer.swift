@@ -158,6 +158,32 @@ extension MeasurementViewController {
         
         let fg = BiometryEngine.faceGeometry(vertices: verts, eyeLevelY: eyeLevelY, eyeDepthZ: eyeDepthZ)
 
+        // 🔴 Pontos de referência (laudo PDF): projeta cada landmark (espaço local do
+        // ARFaceAnchor) pra tela via faceAnchor.transform + sceneView.projectPoint, mesmo padrão
+        // já usado pra lastLeftEyeWorldPos/lastRightEyeWorldPos. Roda todo frame — é lido só no
+        // instante do snapshot (startApprovalStep), então não precisa suavização.
+        func projectLocal(_ local: simd_float3?) -> CGPoint? {
+            guard let local = local else { return nil }
+            let w = simd_mul(faceAnchor.transform, simd_float4(local.x, local.y, local.z, 1))
+            let screen = sceneView.projectPoint(SCNVector3(w.x, w.y, w.z))
+            guard screen.z >= 0 && screen.z <= 1 else { return nil }
+            return CGPoint(x: CGFloat(screen.x), y: CGFloat(screen.y))
+        }
+        var refPoints = ReferencePointsScreen(imageSize: sceneView.bounds.size)
+        if let lEyePos = self.lastLeftEyeWorldPos { let s = sceneView.projectPoint(lEyePos); refPoints.pupilLeft = CGPoint(x: CGFloat(s.x), y: CGFloat(s.y)) }
+        if let rEyePos = self.lastRightEyeWorldPos { let s = sceneView.projectPoint(rEyePos); refPoints.pupilRight = CGPoint(x: CGFloat(s.x), y: CGFloat(s.y)) }
+        refPoints.widthLeft = projectLocal(fg.widthPointLeft)
+        refPoints.widthRight = projectLocal(fg.widthPointRight)
+        refPoints.bridgeLeft = projectLocal(fg.bridgePointLeft)
+        refPoints.bridgeRight = projectLocal(fg.bridgePointRight)
+        refPoints.jawLeft = projectLocal(fg.jawPointLeft)
+        refPoints.jawRight = projectLocal(fg.jawPointRight)
+        refPoints.cheekLeft = projectLocal(fg.cheekPointLeft)
+        refPoints.cheekRight = projectLocal(fg.cheekPointRight)
+        refPoints.foreheadTop = projectLocal(fg.foreheadPoint)
+        refPoints.chinBottom = projectLocal(fg.chinPoint)
+        self.lastReferencePointsScreen = refPoints
+
                 let minX = fg.minX
                 let maxX = fg.maxX
                 let minNX = fg.minNX

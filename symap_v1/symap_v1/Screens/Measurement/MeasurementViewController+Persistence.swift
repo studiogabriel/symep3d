@@ -31,7 +31,7 @@ extension MeasurementViewController {
             dnpPertoTotal: dnpPertoTotal, dnpPertoEsq: dnpPertoEsq, dnpPertoDir: dnpPertoDir,
             faceWidth: faceWidth, faceWidthLeft: faceWidthLeft, faceWidthRight: faceWidthRight,
             faceHeight: faceHeight,
-            noseBridgeWidth: noseBridgeWidth, jawWidth: jawWidth, pupillaryHeight: pupillaryHeight,
+            noseBridgeWidth: noseBridgeWidth, jawWidth: jawWidth, cheekboneWidth: cheekboneWidth, pupillaryHeight: pupillaryHeight,
             verticalPupilDiff: verticalPupilDiff, nasalProfile: nasalProfile, faceShape: faceShape,
             frameSuggestion: frameSuggestion, manualFrameHeight: manualFrameHeight,
             manualFrameWidth: manualFrameWidth, manualFrameDiagonal: manualFrameDiagonal,
@@ -57,6 +57,28 @@ extension MeasurementViewController {
     func createPDF(image: UIImage) -> Data {
         // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL:
         // A tela NÃO desenha o PDF. Ela delega para a camada 'Reports'.
-        return PDFLaudoBuilder(measurement: currentMeasurement(), image: image).build()
+        return PDFLaudoBuilder(measurement: currentMeasurement(), image: image,
+                                referencePoints: savedReferencePointsScreen,
+                                idealGlasses: idealGlassesSummary()).build()
+    }
+
+    /// Medidas finais do óculos "ideal" recriado pro paciente — mesma fonte de verdade já usada
+    /// nas barras de capacidade do Resumo Clínico (AutoConfiguratorEngine.fitDetails), pra não
+    /// reimplementar a fórmula em paralelo (já causou divergência de números nesta sessão antes).
+    private func idealGlassesSummary() -> PDFLaudoBuilder.IdealGlasses? {
+        let key = recommendedAutoModelKey.isEmpty ? recommendedAutoModel : recommendedAutoModelKey
+        guard !key.isEmpty, let spec = AutoConfiguratorEngine.specs[key.lowercased()],
+              let fit = AutoConfiguratorEngine.fitDetails(
+                forKeyword: key, faceWidth: faceWidth, faceHeight: faceHeight, bridgeWidth: noseBridgeWidth,
+                nasalProjection: nasalProjection, jawWidth: jawWidth,
+                eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid,
+                currentGlassesLensWidth: currentGlassesLensWidth, currentGlassesBridge: currentGlassesBridge)
+        else { return nil }
+
+        return PDFLaudoBuilder.IdealGlasses(
+            modelName: key.capitalized,
+            bridge: spec.baseBridge + fit.appliedBridgeDiff,
+            width: spec.baseWidth + fit.appliedWidthDiff,
+            vertical: spec.baseHeight + fit.appliedVerticalDiff)
     }
 }

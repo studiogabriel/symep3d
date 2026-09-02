@@ -263,6 +263,7 @@ extension MeasurementViewController {
             self.safeFaceCache = self.faceNode?.clone()
             self.safeSnapshotCache = snap
             self.savedFrontalSnapshot = snap
+            self.savedReferencePointsScreen = self.lastReferencePointsScreen
             capturedImageView.image = snap
             
             levelContainerView.isHidden = true ; levelLabel.isHidden = true
