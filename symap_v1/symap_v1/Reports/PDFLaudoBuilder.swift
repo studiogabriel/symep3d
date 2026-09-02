@@ -69,9 +69,14 @@ struct PDFLaudoBuilder {
     }
     let idealGlasses: IdealGlasses?
 
-    init(measurement m: Measurement, image: UIImage, referencePoints: MeasurementViewController.ReferencePointsScreen? = nil, idealGlasses: IdealGlasses? = nil) {
+    /// Modificações aplicadas na armação (ex.: "Largura Temporal: +2.0 mm") — mesmo texto do
+    /// popup de diagnóstico exibido na hora do try-on, agora também persistido no laudo.
+    let appliedModifications: [String]
+
+    init(measurement m: Measurement, image: UIImage, referencePoints: MeasurementViewController.ReferencePointsScreen? = nil, idealGlasses: IdealGlasses? = nil, appliedModifications: [String] = []) {
         self.referencePoints = referencePoints
         self.idealGlasses = idealGlasses
+        self.appliedModifications = appliedModifications
         self.dnpDir = m.dnpDir;  self.dnpEsq = m.dnpEsq;  self.dnpTotal = m.dnpTotal
         self.dnpPertoDir = m.dnpPertoDir;  self.dnpPertoEsq = m.dnpPertoEsq;  self.dnpPertoTotal = m.dnpPertoTotal
         self.faceWidth = m.faceWidth;  self.faceHeight = m.faceHeight;  self.noseBridgeWidth = m.noseBridgeWidth;  self.jawWidth = m.jawWidth;  self.cheekboneWidth = m.cheekboneWidth;  self.pupillaryHeight = m.pupillaryHeight
@@ -800,7 +805,7 @@ struct PDFLaudoBuilder {
             desenharCabecalhoWhiteLabel(titulo: "GÊMEO DIGITAL — REFERÊNCIAS DE MEDIÇÃO")
 
             // --- Caixa da imagem (aspect-fit, sem distorcer) ---
-            let twinBoxRect = CGRect(x: 30, y: 105, width: 535, height: 480)
+            let twinBoxRect = CGRect(x: 30, y: 105, width: 535, height: 380)
             UIColor(white: 0.94, alpha: 1.0).setFill(); UIBezierPath(roundedRect: twinBoxRect, cornerRadius: 8).fill()
 
             let originalSize = self.referencePoints?.imageSize ?? self.image.size
@@ -879,6 +884,20 @@ struct PDFLaudoBuilder {
                 idealText.draw(at: CGPoint(x: 42, y: idealY + 40), withAttributes: [.font: UIFont(name: "Courier-Bold", size: 11) ?? UIFont.boldSystemFont(ofSize: 11), .foregroundColor: techBlack])
             } else {
                 "Aguardando seleção do modelo recomendado.".draw(at: CGPoint(x: 42, y: idealY + 25), withAttributes: [.font: UIFont.systemFont(ofSize: 10), .foregroundColor: UIColor.gray])
+            }
+
+            // --- Modificações aplicadas na armação (mesmo texto do popup de diagnóstico) ---
+            let modsY = idealRect.maxY + 10
+            let modsRect = CGRect(x: 30, y: modsY, width: 535, height: 125)
+            UIColor(white: 0.97, alpha: 0.95).setFill(); UIBezierPath(roundedRect: modsRect, cornerRadius: 6).fill()
+            techCyan.setFill(); UIBezierPath(roundedRect: CGRect(x: 30, y: modsY + 5, width: 4, height: modsRect.height - 10), cornerRadius: 2).fill()
+            "MODIFICAÇÕES APLICADAS NA ARMAÇÃO".draw(at: CGPoint(x: 42, y: modsY + 8), withAttributes: [.font: UIFont.systemFont(ofSize: 9, weight: .bold), .foregroundColor: UIColor.gray])
+
+            var modLineY = modsY + 26
+            let modFont = UIFont(name: "Inter-Medium", size: 11) ?? UIFont.systemFont(ofSize: 11, weight: .medium)
+            for mod in self.appliedModifications {
+                "• \(mod)".draw(at: CGPoint(x: 42, y: modLineY), withAttributes: [.font: modFont, .foregroundColor: techBlack])
+                modLineY += 16
             }
         }
     }

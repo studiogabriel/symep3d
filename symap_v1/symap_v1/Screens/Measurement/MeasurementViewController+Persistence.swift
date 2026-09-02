@@ -55,17 +55,21 @@ extension MeasurementViewController {
     }
     
     func createPDF(image: UIImage) -> Data {
+        let (ideal, mods) = idealGlassesAndModifications()
         // 🔴 DIRETRIZ ARQUITETURAL INEGOCIÁVEL:
         // A tela NÃO desenha o PDF. Ela delega para a camada 'Reports'.
         return PDFLaudoBuilder(measurement: currentMeasurement(), image: image,
                                 referencePoints: savedReferencePointsScreen,
-                                idealGlasses: idealGlassesSummary()).build()
+                                idealGlasses: ideal, appliedModifications: mods).build()
     }
 
-    /// Medidas finais do óculos "ideal" recriado pro paciente — mesma fonte de verdade já usada
-    /// nas barras de capacidade do Resumo Clínico (AutoConfiguratorEngine.fitDetails), pra não
-    /// reimplementar a fórmula em paralelo (já causou divergência de números nesta sessão antes).
-    private func idealGlassesSummary() -> PDFLaudoBuilder.IdealGlasses? {
+    /// Medidas finais do óculos "ideal" recriado pro paciente + a lista de modificações aplicadas
+    /// na armação (largura/ponte/vertical/apoio nasal) — mesma fonte de verdade já usada nas
+    /// barras de capacidade do Resumo Clínico e no popup de diagnóstico (showModificationsPopup em
+    /// +Visagism.swift), pra não reimplementar a fórmula em paralelo (já causou divergência de
+    /// números nesta sessão antes). Hoje essa lista só aparecia no popup e sumia depois — o
+    /// paciente não tinha como conferir de novo, daí entrar no laudo também.
+    private func idealGlassesAndModifications() -> (PDFLaudoBuilder.IdealGlasses?, [String]) {
         let key = recommendedAutoModelKey.isEmpty ? recommendedAutoModel : recommendedAutoModelKey
         guard !key.isEmpty, let spec = AutoConfiguratorEngine.specs[key.lowercased()],
               let fit = AutoConfiguratorEngine.fitDetails(
@@ -73,12 +77,33 @@ extension MeasurementViewController {
                 nasalProjection: nasalProjection, jawWidth: jawWidth,
                 eyeToCheekClearance: eyeToCheekClearance, eyeToCheekClearanceValid: eyeToCheekClearanceValid,
                 currentGlassesLensWidth: currentGlassesLensWidth, currentGlassesBridge: currentGlassesBridge)
-        else { return nil }
+        else { return (nil, []) }
 
-        return PDFLaudoBuilder.IdealGlasses(
+        let ideal = PDFLaudoBuilder.IdealGlasses(
             modelName: key.capitalized,
             bridge: spec.baseBridge + fit.appliedBridgeDiff,
             width: spec.baseWidth + fit.appliedWidthDiff,
             vertical: spec.baseHeight + fit.appliedVerticalDiff)
+
+        var mods: [String] = []
+        if abs(fit.appliedWidthDiff) > 0.1 {
+            let sign = fit.appliedWidthDiff > 0 ? "+" : ""
+            mods.append("Largura Temporal: \(sign)\(String(format: "%.1f", fit.appliedWidthDiff)) mm")
+        }
+        if abs(fit.appliedBridgeDiff) > 0.1 {
+            let sign = fit.appliedBridgeDiff > 0 ? "+" : ""
+            mods.append("Ponte Nasal: \(sign)\(String(format: "%.1f", fit.appliedBridgeDiff)) mm")
+        }
+        if nasalProfile == "Plano" {
+            mods.append("Apoio Nasal: Expandido (Perfil Plano)")
+        }
+        if abs(fit.appliedVerticalDiff) > 0.1 {
+            let sign = fit.appliedVerticalDiff > 0 ? "+" : ""
+            let explanation = fit.appliedVerticalDiff > 0 ? "Alongamento visual" : "Estética compacta"
+            mods.append("Design Vertical: \(sign)\(String(format: "%.1f", fit.appliedVerticalDiff)) mm (\(explanation))")
+        }
+        if mods.isEmpty { mods.append("Proporções originais perfeitas para sua face.") }
+
+        return (ideal, mods)
     }
 }
