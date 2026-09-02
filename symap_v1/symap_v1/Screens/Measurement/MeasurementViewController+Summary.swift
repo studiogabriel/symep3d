@@ -139,52 +139,93 @@ extension MeasurementViewController {
             ])
             summaryContainer.addSubview(techDesc)
             
-            let info = UITextView(frame: CGRect(x: 30, y: 440, width: view.bounds.width - 60, height: view.bounds.height - 610))
-            info.backgroundColor = .clear
-            info.isEditable = false
-            info.showsVerticalScrollIndicator = false
-            
-            // 🔴 DESIGN: Formatação Avançada do Prontuário Clínico em Atributos (Inter)
-            let rawInfoText = """
-            👤 Paciente: \(self.patientName)
-            👓 Lente: \(self.selectedLensType)
-            📏 DNP Total: \(self.f(self.dnpTotal)) mm | Ponte: \(self.f(self.noseBridgeWidth)) mm
-            📏 Largura do Rosto: \(self.f(self.faceWidth)) mm | Altura: \(self.f(self.faceHeight)) mm
-            - Altura de Montagem (H): \(self.f(self.pupillaryHeight)) mm
-            - Lente Horizontal: \(self.f(self.manualFrameWidth)) mm
-            - Lente Vertical: \(self.f(self.manualFrameHeight)) mm
-            - Diagonal da Lente: \(self.f(self.manualFrameDiagonal)) mm
-            - Visão Longe OD: \(self.rxEsfOD) | \(self.rxCilOD) | \(self.rxEixoOD)
-            - Visão Longe OE: \(self.rxEsfOE) | \(self.rxCilOE) | \(self.rxEixoOE)
-            - Comportamento Visual IA:
-            \(self.visionBehaviorResult)
-            """
-            
-            let infoParagraph = NSMutableParagraphStyle()
-            infoParagraph.lineSpacing = 5
-            
-            let infoAttributed = NSMutableAttributedString(string: rawInfoText, attributes: [
-                .font: UIFont(name: "Inter-Medium", size: 13) ?? UIFont.systemFont(ofSize: 13, weight: .medium),
-                .foregroundColor: slateColor,
-                .paragraphStyle: infoParagraph
+            // 🔴 REDESIGN (2026-09): antes era um único UITextView com tudo empilhado — trocado
+            // por accordion (mesmo padrão de showVisagismResults, ver +UIHelpers.swift) pra não
+            // sobrecarregar a tela com informação toda junta. Identidade do paciente fica sempre
+            // visível (não vale esconder atrás de um clique); o resto vira cards retráteis.
+            let identityLabel = UILabel(frame: CGRect(x: 20, y: 440, width: view.bounds.width - 40, height: 36))
+            identityLabel.numberOfLines = 2
+            identityLabel.textAlignment = .center
+            identityLabel.attributedText = NSAttributedString(string: "👤 \(self.patientName)   👓 \(self.selectedLensType)", attributes: [
+                .font: UIFont(name: "Inter-Bold", size: 14) ?? UIFont.boldSystemFont(ofSize: 14),
+                .foregroundColor: offWhite
             ])
-            
-            // Destaque de cor no nome do paciente e nos títulos numéricos
-            let nsText = rawInfoText as NSString
-            let highlightRanges = [
-                nsText.range(of: "👤 Paciente: \(self.patientName)"),
-                nsText.range(of: "👓 Lente: \(self.selectedLensType)")
-            ]
-            for range in highlightRanges {
-                if range.location != NSNotFound {
-                    infoAttributed.addAttribute(.foregroundColor, value: offWhite, range: range)
-                    infoAttributed.addAttribute(.font, value: UIFont(name: "Inter-Bold", size: 13) ?? UIFont.boldSystemFont(ofSize: 13), range: range)
-                }
+            summaryContainer.addSubview(identityLabel)
+
+            let scrollTop: CGFloat = 482
+            let scrollHeight = max(100, (view.bounds.height - 200) - scrollTop)
+            let scrollView = UIScrollView(frame: CGRect(x: 20, y: scrollTop, width: view.bounds.width - 40, height: scrollHeight))
+            scrollView.showsVerticalScrollIndicator = false
+            scrollView.backgroundColor = .clear
+            summaryContainer.addSubview(scrollView)
+
+            let summaryStack = UIStackView()
+            summaryStack.axis = .vertical
+            summaryStack.spacing = 12
+            summaryStack.distribution = .fill
+            summaryStack.alignment = .fill
+            summaryStack.translatesAutoresizingMaskIntoConstraints = false
+            scrollView.addSubview(summaryStack)
+
+            NSLayoutConstraint.activate([
+                summaryStack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
+                summaryStack.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
+                summaryStack.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
+                summaryStack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
+                summaryStack.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor)
+            ])
+
+            // Card: Medidas Faciais (começa aberto — validação clínica instantânea)
+            let facialText = """
+            • DNP Total: \(self.f(self.dnpTotal)) mm
+            • Ponte: \(self.f(self.noseBridgeWidth)) mm
+            • Largura do Rosto: \(self.f(self.faceWidth)) mm
+            • Altura do Rosto: \(self.f(self.faceHeight)) mm
+            """
+            let facialCard = makeAccordionCard(title: "Medidas Faciais", text: facialText, startExpanded: true, stackToRelayout: summaryStack)
+            summaryStack.addArrangedSubview(facialCard)
+
+            // Card: Encaixe do modelo recomendado — barras de % de capacidade usada por eixo,
+            // em vez de só o número em mm (mais rápido de escanear, e alerta visual natural
+            // quando um eixo está perto do limite físico do molde).
+            let fitKeyword = self.recommendedAutoModelKey.isEmpty ? self.recommendedAutoModel : self.recommendedAutoModelKey
+            if !fitKeyword.isEmpty, let fit = AutoConfiguratorEngine.fitDetails(forKeyword: fitKeyword, faceWidth: self.faceWidth, faceHeight: self.faceHeight, bridgeWidth: self.noseBridgeWidth, nasalProjection: self.nasalProjection, jawWidth: self.jawWidth, eyeToCheekClearance: self.eyeToCheekClearance, eyeToCheekClearanceValid: self.eyeToCheekClearanceValid, currentGlassesLensWidth: self.currentGlassesLensWidth, currentGlassesBridge: self.currentGlassesBridge) {
+                let widthPercent = fit.weights["Largura_a"] ?? fit.weights["Largura_d"] ?? 0
+                let bridgePercent = fit.weights["Ponte_a"] ?? fit.weights["Ponte_d"] ?? 0
+                let verticalPercent = fit.weights["Vertical_a"] ?? fit.weights["Vertical_d"] ?? 0
+
+                let widthBar = makeCapacityBar(label: "Largura Temporal", percent: widthPercent, valueText: "\(fit.appliedWidthDiff >= 0 ? "+" : "")\(self.f(fit.appliedWidthDiff)) mm")
+                let bridgeBar = makeCapacityBar(label: "Ponte Nasal", percent: bridgePercent, valueText: "\(fit.appliedBridgeDiff >= 0 ? "+" : "")\(self.f(fit.appliedBridgeDiff)) mm")
+                let verticalBar = makeCapacityBar(label: "Vertical", percent: verticalPercent, valueText: "\(fit.appliedVerticalDiff >= 0 ? "+" : "")\(self.f(fit.appliedVerticalDiff)) mm")
+                let barsStack = makeCapacityBarsStack([widthBar, bridgeBar, verticalBar])
+
+                let fitModelName = self.recommendedAutoModel.isEmpty ? "Recomendado" : self.recommendedAutoModel
+                let fitCard = makeAccordionCard(title: "Encaixe do Modelo (\(fitModelName))", contentView: barsStack, startExpanded: true, stackToRelayout: summaryStack)
+                summaryStack.addArrangedSubview(fitCard)
             }
-            
-            info.attributedText = infoAttributed
-            summaryContainer.addSubview(info)
-            
+
+            // Card: Medidas da Armação (Manual)
+            let frameText = """
+            • Altura de Montagem (H): \(self.f(self.pupillaryHeight)) mm
+            • Lente Horizontal: \(self.f(self.manualFrameWidth)) mm
+            • Lente Vertical: \(self.f(self.manualFrameHeight)) mm
+            • Diagonal da Lente: \(self.f(self.manualFrameDiagonal)) mm
+            """
+            let frameCard = makeAccordionCard(title: "Medidas da Armação (Manual)", text: frameText, startExpanded: false, stackToRelayout: summaryStack)
+            summaryStack.addArrangedSubview(frameCard)
+
+            // Card: Receita
+            let rxText = """
+            • Visão Longe OD: \(self.rxEsfOD) | \(self.rxCilOD) | \(self.rxEixoOD)
+            • Visão Longe OE: \(self.rxEsfOE) | \(self.rxCilOE) | \(self.rxEixoOE)
+            """
+            let rxCard = makeAccordionCard(title: "Receita", text: rxText, startExpanded: false, stackToRelayout: summaryStack)
+            summaryStack.addArrangedSubview(rxCard)
+
+            // Card: Comportamento Visual (IA)
+            let behaviorCard = makeAccordionCard(title: "Comportamento Visual (IA)", text: self.visionBehaviorResult, startExpanded: false, stackToRelayout: summaryStack)
+            summaryStack.addArrangedSubview(behaviorCard)
+
             let btnPDF = UIButton()
             btnPDF.backgroundColor = opticalCyan
             btnPDF.setTitle("Gerar Laudo PDF", for: .normal)

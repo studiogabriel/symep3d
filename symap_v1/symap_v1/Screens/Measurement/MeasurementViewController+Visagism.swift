@@ -310,92 +310,8 @@ extension MeasurementViewController {
                 ])
                 stackView.addArrangedSubview(recommendedCard)
                 
-                // 5. 🔴 ENGENHARIA DO ACCORDION INTERATIVO (UI CLOSURE)
-                // Função inline que monta os cards retráteis de forma atômica
-                let createAccordionCard: (String, String, Bool) -> UIView = { cardTitle, cardContent, startExpanded in
-                    let cardContainer = UIStackView()
-                    cardContainer.axis = .vertical
-                    cardContainer.backgroundColor = UIColor(red: 0.118, green: 0.227, blue: 0.431, alpha: 0.25) // Navy Medium translúcido
-                    cardContainer.layer.cornerRadius = 12
-                    cardContainer.layer.borderWidth = 1.0
-                    cardContainer.layer.borderColor = opticalCyan.withAlphaComponent(0.2).cgColor
-                    cardContainer.clipsToBounds = true
-                    
-                    let headerView = UIView()
-                    headerView.translatesAutoresizingMaskIntoConstraints = false
-                    headerView.heightAnchor.constraint(equalToConstant: 48).isActive = true
-                    
-                    let titleLabel = UILabel()
-                    titleLabel.text = cardTitle
-                    titleLabel.font = UIFont(name: "Inter-Bold", size: 13) ?? UIFont.boldSystemFont(ofSize: 13)
-                    titleLabel.textColor = offWhite
-                    titleLabel.translatesAutoresizingMaskIntoConstraints = false
-                    headerView.addSubview(titleLabel)
-                    
-                    let arrowLabel = UILabel()
-                    arrowLabel.text = startExpanded ? "▼" : "▶"
-                    arrowLabel.textColor = opticalCyan
-                    arrowLabel.font = UIFont.systemFont(ofSize: 11, weight: .bold)
-                    arrowLabel.translatesAutoresizingMaskIntoConstraints = false
-                    headerView.addSubview(arrowLabel)
-                    
-                    let invisibleBtn = UIButton(type: .custom)
-                    invisibleBtn.translatesAutoresizingMaskIntoConstraints = false
-                    headerView.addSubview(invisibleBtn)
-                    
-                    NSLayoutConstraint.activate([
-                        titleLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
-                        titleLabel.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 16),
-                        
-                        arrowLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
-                        arrowLabel.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -16),
-                        
-                        invisibleBtn.topAnchor.constraint(equalTo: headerView.topAnchor),
-                        invisibleBtn.leadingAnchor.constraint(equalTo: headerView.leadingAnchor),
-                        invisibleBtn.trailingAnchor.constraint(equalTo: headerView.trailingAnchor),
-                        invisibleBtn.bottomAnchor.constraint(equalTo: headerView.bottomAnchor)
-                    ])
-                    
-                    let bodyView = UIView()
-                    bodyView.translatesAutoresizingMaskIntoConstraints = false
-                    bodyView.isHidden = !startExpanded
-                    
-                    let bodyLabel = UILabel()
-                    bodyLabel.numberOfLines = 0
-                    bodyLabel.textColor = slateColor
-                    bodyLabel.font = UIFont(name: "Inter-Regular", size: 12) ?? UIFont.systemFont(ofSize: 12)
-                    
-                    let paragraphStyle = NSMutableParagraphStyle()
-                    paragraphStyle.lineSpacing = 4
-                    paragraphStyle.alignment = .justified
-                    bodyLabel.attributedText = NSAttributedString(string: cardContent, attributes: [
-                        .paragraphStyle: paragraphStyle
-                    ])
-                    bodyLabel.translatesAutoresizingMaskIntoConstraints = false
-                    bodyView.addSubview(bodyLabel)
-                    
-                    NSLayoutConstraint.activate([
-                        bodyLabel.topAnchor.constraint(equalTo: bodyView.topAnchor, constant: 4),
-                        bodyLabel.leadingAnchor.constraint(equalTo: bodyView.leadingAnchor, constant: 16),
-                        bodyLabel.trailingAnchor.constraint(equalTo: bodyView.trailingAnchor, constant: -16),
-                        bodyLabel.bottomAnchor.constraint(equalTo: bodyView.bottomAnchor, constant: -12)
-                    ])
-                    
-                    cardContainer.addArrangedSubview(headerView)
-                    cardContainer.addArrangedSubview(bodyView)
-                    
-                    invisibleBtn.addAction(UIAction { _ in
-                        UIView.animate(withDuration: 0.25) {
-                            bodyView.isHidden.toggle()
-                            arrowLabel.text = bodyView.isHidden ? "▶" : "▼"
-                            stackView.layoutIfNeeded()
-                        }
-                    }, for: .touchUpInside)
-                    
-                    return cardContainer
-                }
-                
-        // 6. ADIÇÃO DOS CARDS DO ACCORDION NO STACK
+                // 5. 🔴 CARDS DO ACCORDION — ver MeasurementViewController+UIHelpers.swift
+                // (makeAccordionCard), reutilizado também na tela de Resumo Clínico.
                 // 👤 BIOMETRIA DETECTADA (MINI RESUMO): Começa aberto (true) para validação clínica instantânea!
                 let patientStatsText = """
                 • Largura do Rosto: \(self.f(self.faceWidth)) mm
@@ -403,11 +319,11 @@ extension MeasurementViewController {
                 • Base Nasal (Ponte): \(self.f(self.noseBridgeWidth)) mm
                 • Formato de Rosto Mapeado: \(self.faceShape.uppercased())
                 """
-                let biometricsCard = createAccordionCard("Biometria Detectada (\(patientFirstName.uppercased()))", patientStatsText, true)
-                
-                let conceptCard = createAccordionCard("Conceito & Storytelling do Design", profile.storytelling, false)
-                let proportionsCard = createAccordionCard("Análise de Proporções (IA)", "• \(eyesAdvice)\n\n• \(noseAdvice)", false)
-                let colorsCard = createAccordionCard("Sugestão de Paleta Cromática", colorsAdvice, false)
+                let biometricsCard = makeAccordionCard(title: "Biometria Detectada (\(patientFirstName.uppercased()))", text: patientStatsText, startExpanded: true, stackToRelayout: stackView)
+
+                let conceptCard = makeAccordionCard(title: "Conceito & Storytelling do Design", text: profile.storytelling, startExpanded: false, stackToRelayout: stackView)
+                let proportionsCard = makeAccordionCard(title: "Análise de Proporções (IA)", text: "• \(eyesAdvice)\n\n• \(noseAdvice)", startExpanded: false, stackToRelayout: stackView)
+                let colorsCard = makeAccordionCard(title: "Sugestão de Paleta Cromática", text: colorsAdvice, startExpanded: false, stackToRelayout: stackView)
                 
                 // Empilhamento seguro na UI
                 stackView.addArrangedSubview(biometricsCard)
